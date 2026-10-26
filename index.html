@@ -815,7 +815,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 10/27 05:20 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 10/27 05:40 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
@@ -5253,6 +5253,23 @@ svg.leaflet-image-layer.leaflet-interactive path {
       ss.speak(u);
     }
     const jbClean = el => { const c = el.cloneNode(true); c.querySelectorAll('.jb-say').forEach(b => b.remove()); return c; };
+
+    // 경로 설명: 바다·광역 지명은 빼고 주요 도시만 (출발 → 중간 최대 4곳 → 도착)
+    function jbRouteBrief() {
+      let rp = []; try { rp = routePlaces(); } catch (e) { }
+      if (rp.length < 2) return null;
+      const skip = new Set(['강원', '충청', '시베리아', '캐나다', '미국', '몽골', '알래스카', '캐나다 북부', '그린란드']);
+      const areas = new Set(ROUTE_AREAS.map(a => a[0]));
+      const cities = rp.filter((x, i) => i === 0 || i === rp.length - 1 || (!areas.has(x) && !SEA_RE.test(x) && !skip.has(x)));
+      const first = cities[0], last = cities[cities.length - 1], mid = cities.slice(1, -1);
+      const pick = mid.length <= 4 ? mid : [0, 1, 2, 3].map(k => mid[Math.round(k * (mid.length - 1) / 3)]).filter((x, i, a) => a.indexOf(x) === i);
+      const bc = w => { const c = String(w).charCodeAt(String(w).length - 1) - 0xAC00; return c >= 0 && c < 11172 ? c % 28 : 0; };   // 받침
+      const eul = w => w + (bc(w) ? '을' : '를'), ro = w => w + (bc(w) && bc(w) !== 8 ? '으로' : '로');
+      const ko = pick.length ? `경로는 ${first}에서 ${pick.slice(0, -1).concat(eul(pick[pick.length - 1])).join(', ')} 거쳐 ${ro(last)} 갑니다.` : `경로는 ${first}에서 ${ro(last)} 갑니다.`;
+      const E2 = x => placeEn(x);
+      const en = pick.length ? `Our route goes from ${E2(first)} via ${pick.map(E2).join(', ').replace(/, ([^,]*)$/, ' and $1')} to ${E2(last)}.` : `Our route goes from ${E2(first)} to ${E2(last)}.`;
+      return { ko, en };
+    }
     function buildJointBrief() {
       const p = pdfFlt || {}, fpl = $('fpl-input').value, w = flightWindow();
       const cs = p.callsign || (fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '';
@@ -5275,7 +5292,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const h = [];
       const E = jbEnMap({ p, w, pax, trip, altn }), en = k => jbEnLine(E, k);
       const WB = (typeof wxOf === 'function' && wxOf()) || null, WC = WB && WB.crew;
-      if (WC) { E.wx = (E.wx || []).concat([[WC.wxKo, WC.wxEn]]); E.turb = [[WC.turbKo, WC.turbEn]]; }
+      if (WC) { E.turb = [[WC.turbKo, WC.turbEn]]; }
+      // Enroute = 경로 설명 (주요 도시만), Enroute Weather = 이륙 후·착륙 전 시간 기준 기상
+      const RB = jbRouteBrief();
       h.push(`<h1>JOINT BRIEFING</h1><p class="jb-sub">${esc(jbFlightNo(cs))} · ${esc(info.dep || '')} → ${esc(info.dest || '')} · ${esc(info.flightDate || '')} · 작성 ${new Date().toISOString().slice(0, 16).replace('T', ' ')}Z</p>` + jbGreetHtml());
       h.push(`<h2>1. Flight Information: CREW</h2><ul>
         ${li(`<b>가. Flight Number / Flight Leg :</b> ${esc(cs || '--')} / ${esc(aptKoEn(info.dep))} → ${esc(aptKoEn(info.dest))}`)}
@@ -5292,8 +5311,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
         ${li(`<b>가. Departure &amp; Destination, Enroute :</b><ul>
           ${li(`Departure (${esc(info.dep || '')}): ${esc(jbWx(info.dep, w && w.etd, 'ETD'))}`)}
           ${li(`Destination (${esc(info.dest || '')}): ${esc(jbWx(info.dest, w && w.eta, 'ETA'))}`)}
-          ${li(`Alternate (${esc(altn)}): ${esc(jbWx(altn, altnT, 'ETA'))}`)}
-          ${li(`Enroute: ${WC ? `<b>기상 차트</b> ${esc(WC.wxKo)}` : blank}`)}</ul>${en('wx')}`)}
+          ${li(`Alternate (${esc(altn)}): ${esc(jbWx(altn, altnT, 'ETA'))}${en('wx')}`)}
+          ${li(`Enroute: ${RB ? esc(RB.ko) + `<div class="jb-el">${esc(RB.en)}</div>` : blank}`)}
+          ${li(`Enroute Weather: ${WC && WC.enrouteKo ? esc(WC.enrouteKo) + `<div class="jb-el">${esc(WC.enrouteEn || '')}</div>` : blank}`)}</ul>`)}
         ${li(`<b>나. Expected Turbulence Time &amp; Severity (SR 6 이상) :</b><ul>${jbTurb(w && w.etd, trip).map(t => li(esc(t))).join('')}${WC ? li(`<b>기상 차트</b> ${esc(WC.turbKo)}`) : ''}</ul>${en('turb')}`)}
         ${li(`<b>Seat Belt Sign &amp; PA :</b> 기내표준신호에 맞게 차임 실시<ul>
           ${li('Moderate 이상 시 차임 2회 / 기장 PA 실시 (없는 경우는 우선 Cabin PA)')}

@@ -1,6 +1,6 @@
 {
  "note": "OFP 기상 차트 분석 (Claude 작성). 키 = 콜사인|출발|도착|운항일(UTC). 비행 전날 OFP를 주면 추가",
- "version": "2026-10-27",
+ "version": "2026-10-27b",
  "items": {
   "KAL476|VVTS|RKSI|2026-10-26": {
    "flight": "KE476 호찌민(VVTS) → 인천(RKSI)",
@@ -45,8 +45,10 @@
    "crew": {
     "wxKo": "출발 직후 호찌민 주변과 이륙 약 1시간 20분 후 하이난 동쪽에 소나기구름이 있어 기상 회피가 있을 수 있습니다.",
     "wxEn": "Thunderstorm clouds around Ho Chi Minh after departure and near Hainan about 1 hour 20 minutes after takeoff — we may deviate around weather.",
-    "turbKo": "도착 약 1시간 전부터 강하와 접근 중 보통 정도의 흔들림이 예상됩니다. 객실 서비스는 도착 1시간 전까지 마쳐 주시기 바랍니다.",
-    "turbEn": "Moderate turbulence is expected from about 1 hour before landing through descent and approach. Please finish the cabin service before then."
+    "turbKo": "착륙 약 1시간 전부터 착륙까지 보통 정도의 흔들림이 예상됩니다. 객실 서비스는 착륙 1시간 전까지 마쳐 주시기 바랍니다.",
+    "turbEn": "Moderate turbulence is expected from about 1 hour before landing until landing. Please finish the cabin service before then.",
+    "enrouteKo": "이륙 직후 상승 중 소나기구름 회피가 있을 수 있고, 이륙 약 1시간 20분 후에도 소나기구름 구역을 지납니다. 그 뒤 착륙 약 1시간 전까지는 대체로 안정적이고, 착륙 약 1시간 전부터 착륙까지 보통 정도의 흔들림이 예상됩니다.",
+    "enrouteEn": "We may deviate around thunderstorms right after takeoff and again about 1 hour 20 minutes after takeoff. Then mostly smooth until about 1 hour before landing, with moderate turbulence from then until landing."
    },
    "charts": [
     {
@@ -138,8 +140,10 @@
    "crew": {
     "wxKo": "도착 호찌민 남쪽에 소나기구름이 있어 강하와 접근 중 기상 회피가 있을 수 있습니다. 경로 동쪽 멀리 태풍이 있지만 경로와는 떨어져 있습니다.",
     "wxEn": "Thunderstorm clouds south of Ho Chi Minh — we may deviate during descent and approach. A typhoon is far east of our route.",
-    "turbKo": "이륙 후 약 45분, 제주 남쪽을 지날 때까지 보통 정도의 흔들림이 예상됩니다. 서비스는 그 이후에 시작해 주시기 바랍니다.",
-    "turbEn": "Moderate turbulence is expected for about 45 minutes after takeoff, until we pass south of Jeju. Please start the service after that."
+    "turbKo": "이륙 후 약 45분까지 보통 정도의 흔들림이 예상됩니다. 서비스는 그 이후에 시작해 주시기 바랍니다.",
+    "turbEn": "Moderate turbulence is expected for about 45 minutes after takeoff. Please start the service after that.",
+    "enrouteKo": "이륙 후 약 45분까지 보통 정도의 흔들림이 예상됩니다. 그 뒤로는 착륙 약 20분 전까지 대체로 안정적입니다. 착륙 약 20분 전 강하부터 접근까지 소나기구름 회피가 있을 수 있습니다.",
+    "enrouteEn": "Moderate turbulence for about 45 minutes after takeoff, then mostly smooth until about 20 minutes before landing. During descent and approach we may deviate around thunderstorms."
    },
    "charts": [
     {
@@ -235,8 +239,10 @@
    "crew": {
     "wxKo": "이륙 약 3시간 후 홍콩 남쪽, 다낭 부근, 그리고 호찌민 도착 전에 소나기구름이 있어 기상 회피와 흔들림이 있을 수 있습니다.",
     "wxEn": "Thunderstorm clouds about 3 hours after takeoff south of Hong Kong, near Da Nang, and before arrival at Ho Chi Minh — we may deviate and it may be bumpy.",
-    "turbKo": "이륙 후 약 45분, 제주 남쪽을 지날 때까지 보통 정도의 흔들림이 예상됩니다. 서비스는 그 이후에 시작해 주시고, 이륙 3시간 후 홍콩 남쪽 구간 전에 마쳐 주시면 좋겠습니다.",
-    "turbEn": "Moderate turbulence is expected for about 45 minutes after takeoff, until we pass south of Jeju. Please start the service after that, and try to finish before about 3 hours after takeoff."
+    "turbKo": "이륙 후 약 45분까지 보통 정도의 흔들림이 예상됩니다. 서비스는 그 이후에 시작해 주시고, 착륙 약 2시간 20분 전(이륙 후 약 3시간)까지 마쳐 주시면 좋겠습니다.",
+    "turbEn": "Moderate turbulence is expected for about 45 minutes after takeoff. Please start the service after that and finish by about 2 hours 20 minutes before landing.",
+    "enrouteKo": "이륙 후 약 45분까지 보통 정도의 흔들림이 예상됩니다. 그 뒤 착륙 약 2시간 20분 전까지는 대체로 안정적입니다. 착륙 약 2시간 20분 전부터 1시간 50분 전까지 소나기구름 구역을 지나 기상 회피와 흔들림이 있을 수 있고, 착륙 약 1시간 10분 전에도 소나기구름 부근을 지납니다. 착륙 약 20분 전 강하부터 접근까지 소나기구름 회피가 있을 수 있습니다.",
+    "enrouteEn": "Moderate turbulence for about 45 minutes after takeoff, then mostly smooth. From about 2 hours 20 minutes to 1 hour 50 minutes before landing we pass a thunderstorm area — possible deviation and turbulence — and again about 1 hour 10 minutes before landing. From about 20 minutes before landing, during descent and approach, we may deviate around thunderstorms."
    },
    "charts": [
     {
