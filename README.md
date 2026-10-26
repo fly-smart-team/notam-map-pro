@@ -11,6 +11,12 @@
 - 서비스 워커 캐시 이름 `notam-pro-v1` (배포 버전과 같은 도메인이라 분리), 자기 캐시만 정리
 - 앱 이름·제목 "NOTAM Pro"
 
+## 앱의 AI 기능
+- 노탐 브리핑 위쪽 **🤖 AI 요약 (n)**: 지금 보이는 노탐 중 규칙 번역이 "요약 어려움"이거나 비어 있는 것만 AI로 요약
+- 노탐을 펼치면 **🤖 AI로 요약**: 그 노탐 하나만 요약
+- **🔑**: 접근 토큰 입력·변경 (이 기기에만 저장, `notamPro.aiToken`)
+- AI 결과는 보라색 "AI 요약" 표시 + 원문 함께 표시, 이 기기에 저장(최근 800건)
+
 ## AI Worker (`ai-worker/worker.js`, v0.2)
 별도 Cloudflare Worker `notam-ai` (GitHub 연결로 자동 배포, Root directory `/ai-worker`).
 - `GET /health` · `POST /ai/notam-summary` (헤더 `X-Access-Token` 필요)

@@ -3438,6 +3438,68 @@ svg.leaflet-image-layer.leaflet-interactive path {
     function textHash(s) { let h = 5381; s = String(s || '').replace(/\s+/g, ' ').trim(); for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
     const isStar = n => !!brfStar[n.notamId];
     function setStar(n, on) { if (on) brfStar[n.notamId] = { h: textHash(n.etext), t: Date.now() }; else delete brfStar[n.notamId]; starSave(); }
+    // ───── AI 요약 (개인용 NOTAM Pro) ─────
+    // 앱 → notam-ai Worker → DeepSeek/Claude. 키는 Worker에만 있고, 앱에는 개인 접근 토큰만 저장.
+    const AI_DEFAULT = 'https://notam-ai.flyacelee.workers.dev';
+    const AI_SUM_KEY = 'notamPro.aiSum.v1', AI_TOKEN_KEY = 'notamPro.aiToken', AI_BASE_KEY = 'notamPro.aiBase';
+    const AI_DIFFICULT = '요약 어려움 · 원문 확인';
+    const aiBase = () => { try { return (localStorage.getItem(AI_BASE_KEY) || AI_DEFAULT).trim().replace(/\/+$/, ''); } catch (e) { return AI_DEFAULT; } };
+    const aiToken = () => { try { return localStorage.getItem(AI_TOKEN_KEY) || ''; } catch (e) { return ''; } };
+    let aiSum = (() => { try { return JSON.parse(localStorage.getItem(AI_SUM_KEY) || '{}') || {}; } catch (e) { return {}; } })();
+    let aiBusy = false, aiMsg = '';
+    const aiText = n => String(n.rawText || n.etext || '');
+    const aiKey = n => textHash(aiText(n));
+    const aiOf = n => aiSum[aiKey(n)] || null;
+    function aiSave() {
+      try {
+        const ks = Object.keys(aiSum);
+        if (ks.length > 800) ks.sort((a, b) => (aiSum[a].t || 0) - (aiSum[b].t || 0)).slice(0, ks.length - 800).forEach(k => delete aiSum[k]);
+        localStorage.setItem(AI_SUM_KEY, JSON.stringify(aiSum));
+      } catch (e) { }
+    }
+    // 규칙 번역 결과 (목록 표시와 같은 기준)
+    function koRuleOf(n) {
+      let ko = ''; try { ko = getKoreanNotamSummary(n.rawText || n.etext, n.category, n.notamId) || ''; } catch (e) { }
+      if (!/[A-Z0-9]/.test(ko) || /^\s*[A-G]\)/.test(ko) || String(n.etext || '').replace(/\s+/g, ' ').startsWith(ko.replace(/\.\.\.$|…$/, '').trim().slice(0, 20))) ko = '';
+      return ko;
+    }
+    // AI가 필요한 노탐: 규칙 번역이 "요약 어려움"이거나 비어 있는 것
+    const aiNeeds = n => !aiOf(n) && (() => { const k = koRuleOf(n); return !k || k === AI_DIFFICULT; })();
+    function aiAskToken() {
+      const v = prompt('AI 접근 토큰을 입력하세요 (np-로 시작)\n이 기기에만 저장됩니다.', aiToken());
+      if (v == null) return false;
+      try { if (v.trim()) localStorage.setItem(AI_TOKEN_KEY, v.trim()); else localStorage.removeItem(AI_TOKEN_KEY); } catch (e) { }
+      return !!v.trim();
+    }
+    async function aiSummarize(list) {
+      list = list.filter(n => aiText(n).trim());
+      if (!list.length || aiBusy) return;
+      if (!aiToken() && !aiAskToken()) return;
+      aiBusy = true; aiMsg = `AI 요약 중… 0/${list.length}`; renderBriefing();
+      let done = 0, fail = '', prov = '';
+      for (let i = 0; i < list.length; i += 20) {
+        const chunk = list.slice(i, i + 20);
+        try {
+          const res = await fetch(aiBase() + '/ai/notam-summary', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Access-Token': aiToken() },
+            body: JSON.stringify({ notams: chunk.map((n, k) => ({ id: 'n' + k, text: aiText(n).slice(0, 4000) })) }),
+          });
+          const d = await res.json().catch(() => ({}));
+          if (res.status === 401) { try { localStorage.removeItem(AI_TOKEN_KEY); } catch (e) { } fail = '접근 토큰이 맞지 않습니다. 다시 눌러 토큰을 입력하세요.'; break; }
+          if (!res.ok) { fail = d.error || `AI 서버 오류 ${res.status}`; break; }
+          (d.items || []).forEach(it => { const n = chunk[+String(it.id).slice(1)]; if (n && it.summary) aiSum[aiKey(n)] = { s: it.summary, u: !!it.uncertain, p: it.provider || d.provider || '', t: Date.now() }; });
+          if (d.provider && d.provider !== 'cache') prov = d.provider;
+          done += chunk.length; aiMsg = `AI 요약 중… ${done}/${list.length}`; aiSave(); renderBriefing();
+        } catch (e) { fail = 'AI 서버에 연결할 수 없습니다 (인터넷 연결 확인)'; break; }
+      }
+      aiSave(); aiBusy = false;
+      aiMsg = fail ? `⚠ ${fail}` : `AI 요약 완료 ${done}건${prov ? ` · ${prov === 'deepseek' ? 'DeepSeek' : prov === 'anthropic' ? 'Claude' : prov}` : ''}`;
+      renderBriefing();
+    }
+    function aiBlock(a) {
+      return `<div class="text-[12px] leading-snug rounded-md border border-violet-600/60 bg-violet-950/40 px-2 py-1 text-violet-100"><span class="mr-1 px-1 py-0.5 rounded bg-violet-700 text-white text-[9px] font-bold align-middle">AI 요약</span>${esc(a.s)}${a.u ? ' <span class="text-amber-300 font-bold">⚠ 원문 확인</span>' : ''}<span class="ml-1 text-[9px] text-violet-300/70">${esc(a.p === 'deepseek' ? 'DeepSeek' : a.p === 'anthropic' ? 'Claude' : a.p || '')}</span></div>`;
+    }
     const PKG2_SECS = ['ERA', 'EDTO', 'REFILE'];
     const STAR_GROUPS = [['DEP', '🛫 출발'], ['DEST', '🛬 도착'], ['ALTN', '🔀 교체'], ['ERA', '🛟 ERA (EDTO·REFILE 포함)'], ['FIR', '🗺️ PACKAGE 3 (FIR)']];
     const starGroupOf = n => PKG2_SECS.includes(n.sec) ? 'ERA' : n.sec;
@@ -3848,18 +3910,20 @@ svg.leaflet-image-layer.leaflet-interactive path {
           return `<button type="button" data-brf-secf="${k || ''}" class="px-2 py-0.5 rounded-md border text-[11px] ${brfSecF === k ? 'bg-sky-700 border-sky-400 text-white font-bold' : 'bg-slate-900 border-slate-700 text-slate-300'}">${l}${c != null ? ` <span class="opacity-70">${c}</span>` : ''}</button>`;
         }).join('') + `<button type="button" data-brf-valid class="ml-2 px-2 py-0.5 rounded-md border text-[11px] ${brfValidOnly ? 'bg-emerald-700 border-emerald-400 text-white font-bold' : 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300'}">${brfValidOnly ? '✓ ' : ''}유효 노탐만</button>`;
       const rows = allRows.filter(r => (!PKG2_SECS.includes(r.n.sec) || eraOn(r.n.secCode)) && (!brfSecF || starGroupOf(r.n) === brfSecF) && (!brfValidOnly || r.active || r.qt));
+      window.__brfShown = rows;
       const cnt = k => rows.filter(r => r.tier === k).length;
       const nStar = allRows.filter(r => r.star).length;
       $('brf-sum').innerHTML = `<div class="flex items-center gap-2 flex-wrap text-[11px]">
           ${[['R', '영향', 'bg-rose-600 text-white'], ['Y', '확인', 'bg-amber-400 text-slate-950'], ['W', '참고', 'bg-slate-600 text-slate-100']].map(([k, l, c]) => `<button type="button" data-brf-tier="${k}" class="px-2.5 py-1 rounded font-bold ${c} ${brfTier === k ? 'ring-2 ring-white shadow-lg' : brfTier ? 'opacity-35' : ''}">${l} ${cnt(k)}</button>`).join('')}
           ${brfTier ? '<button type="button" data-brf-tier="" class="px-2 py-1 rounded border border-slate-600 text-slate-300">전체 ✕</button>' : ''}
           <span class="text-slate-500">표시 ${rows.length} / 전체 ${allRows.length}건</span>
+          ${(() => { const k = rows.filter(r => aiNeeds(r.n)).length; return `<button type="button" data-ai-run class="px-2.5 py-1 rounded-lg border font-bold bg-violet-950/50 border-violet-500 text-violet-100" ${aiBusy ? 'disabled' : ''}>🤖 AI 요약${k ? ` (${k})` : ''}</button><button type="button" data-ai-token class="px-1.5 py-1 rounded border border-slate-700 text-[10px] text-slate-400" title="AI 접근 토큰 변경">🔑</button>`; })()}${aiMsg ? `<span class="text-[10px] ${/^⚠/.test(aiMsg) ? 'text-amber-300' : 'text-violet-300'}">${esc(aiMsg)}</span>` : ''}
           <button type="button" data-brf-starview class="ml-auto px-2.5 py-1 rounded-lg border font-bold ${brfStarView ? 'bg-amber-500 border-amber-400 text-slate-950' : 'bg-amber-950/40 border-amber-600 text-amber-200'}">${brfStarView ? '← 전체 목록' : `⭐ 중요 노탐 모아보기 (${nStar})`}</button></div>`;
       const isOpen = r => (r.tier === 'W' && r.grp !== 1 && !brfShowWhite && !brfTier) ? brfOpenW.has(r.n.notamId) : !brfClosed.has(r.n.notamId);
       const item = (r, full) => {
         const T = TIER[r.tier], n = r.n, open = full || isOpen(r);
-        let ko = ''; try { ko = getKoreanNotamSummary(n.rawText || n.etext, n.category, n.notamId) || ''; } catch (e) { }
-        if (!/[A-Z0-9]/.test(ko) || /^\s*[A-G]\)/.test(ko) || String(n.etext || '').replace(/\s+/g, ' ').startsWith(ko.replace(/\.\.\.$|…$/, '').trim().slice(0, 20))) ko = '';
+        let ko = koRuleOf(n);
+        const ai = aiOf(n); if (ai && ko === AI_DIFFICULT) ko = '';
         const line = String(n.etext || n.summary || '').replace(/\s+/g, ' ').trim();
         let koHtml = ko ? `<div class="text-[11px] text-sky-200/90 leading-snug">${esc(ko)}</div>` : '';
         if (isAkaraToc(n)) { const A = akaraTocApply(n); if (A && A.off) koHtml = `<div class="text-[12px] text-slate-400">🧭 내 경로는 AKARA-FUKUE 회랑을 지나지 않습니다.</div>`; else if (A) koHtml = `<div class="text-[13px] leading-snug rounded-md border border-violet-600/60 bg-violet-950/50 px-2 py-1 text-violet-100">🧭 <b>내 비행 적용</b> · ${A.line}</div>`; }
@@ -3868,10 +3932,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <button type="button" data-brf-star="${esc(n.notamId)}" class="shrink-0 w-7 h-7 mt-0.5 rounded-md border text-base leading-none ${r.star ? 'bg-amber-400 border-amber-300 text-slate-950' : 'border-slate-600 text-slate-500'}" title="중요 노탐 지정">${r.star ? '★' : '☆'}</button>
             <div class="min-w-0 flex-1" data-brf-toggle>
               <div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${T.pill}">${T.label}</span><span class="mono text-[11px] font-bold ${T.txt}">${esc(n.notamId)}</span><span class="text-[10px] text-sky-300 mono whitespace-nowrap">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${r.tb}${r.qt ? `<span class="px-1 rounded text-[10px] font-bold bg-sky-900/70 border border-sky-500/60 text-sky-200">🔄 ${esc(r.qt)}</span>` : ''}<span class="text-[10px] ${T.txt}">${esc(r.why)}</span>${r.same && r.same.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">같은 내용 +${r.same.length}건</span>` : ''}${r.rel && r.rel.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">관련 노탐 ${r.rel.length}건 묶음</span>` : ''}${n.dupIn && n.dupIn.length ? `<span class="text-[9px] text-slate-500">+${esc(n.dupIn.join('·'))} 중복</span>` : ''}${n.geo ? `<button type="button" data-brf-map="${esc(n.notamId)}" class="text-[10px] text-sky-300 border border-sky-800/60 px-1 rounded">📍지도</button>` : ''}<span data-brf-caret class="ml-auto text-[10px] text-slate-500">${open ? '▾ 접기' : '▸ 펼치기'}</span></div>
-              <div data-brf-line class="${open ? 'hidden' : ''}"><div class="mono text-[11px] text-slate-300 leading-snug line-clamp-1">${esc(line)}</div></div>
+              <div data-brf-line class="${open ? 'hidden' : ''}">${ai ? `<div class="text-[11px] text-violet-200 leading-snug line-clamp-1">🤖 ${esc(ai.s)}</div>` : `<div class="mono text-[11px] text-slate-300 leading-snug line-clamp-1">${esc(line)}</div>`}</div>
             </div>
           </div>
-          <div class="${open ? '' : 'hidden'} px-2 pb-2 flex flex-col gap-1" data-brf-raw>${koHtml}<pre class="mono text-[10.5px] whitespace-pre-wrap break-words text-slate-200 bg-slate-900 rounded p-2">${esc(n.validity || '')}\n${brfHl(n)}</pre>${brfLegend(n)}${abbrPanel(n.rawText || n.etext)}</div>
+          <div class="${open ? '' : 'hidden'} px-2 pb-2 flex flex-col gap-1" data-brf-raw>${ai ? aiBlock(ai) : `<button type="button" data-ai-one="${esc(n.notamId)}" class="self-start px-2 py-0.5 rounded border border-violet-600/60 bg-violet-950/40 text-violet-200 text-[11px] font-bold" ${aiBusy ? 'disabled' : ''}>🤖 AI로 요약</button>`}${koHtml}<pre class="mono text-[10.5px] whitespace-pre-wrap break-words text-slate-200 bg-slate-900 rounded p-2">${esc(n.validity || '')}\n${brfHl(n)}</pre>${brfLegend(n)}${abbrPanel(n.rawText || n.etext)}</div>
         </div>`;
       };
       const groupTitle = (sec, code) => { const nm = getAirportNameInfo(code); return `${BRF_SEC[sec] || sec} · ${code}${sec === 'FIR' ? (FIR_NAMES[code] ? ' ' + FIR_NAMES[code] : '') : nm && nm.ko ? ' ' + nm.ko : ''}`; };
@@ -3932,6 +3996,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (!t.closest || !t.closest('#brf-list, #brf-controls, #brf-sum, #brf-era, #brf-secf')) return;
       const byId = id => ofpOrdered.find(n => n.notamId === id);
       let b;
+      if (t.closest('[data-ai-token]')) { aiAskToken(); return; }
+      if (t.closest('[data-ai-run]')) {
+        const rows = (brfStarView ? (window.__brfRows || []).filter(r => r.star) : (window.__brfShown || [])).map(r => r.n), need = rows.filter(aiNeeds);
+        if (need.length) aiSummarize(need);
+        else { aiMsg = '규칙 번역이 어려운 노탐이 없습니다. 개별 노탐을 펼쳐 🤖 버튼을 누르세요.'; renderBriefing(); }
+        return;
+      }
+      if ((b = t.closest('[data-ai-one]'))) { const n = byId(b.dataset.aiOne); if (n) aiSummarize([n]); return; }
       if ((b = t.closest('[data-brf-star]'))) { const n = byId(b.dataset.brfStar); if (n) { const L = $('brf-list'), st = L.scrollTop; setStar(n, !isStar(n)); renderBriefing(); L.scrollTop = st; } return; }
       if ((b = t.closest('[data-brf-tier]'))) { const k = b.dataset.brfTier || null; brfTier = brfTier === k ? null : k; brfStarView = false; renderBriefing(); brfScrollTop(); return; }
       if ((b = t.closest('[data-brf-secf]'))) { const k = b.dataset.brfSecf || null; brfSecF = brfSecF === k ? null : k; brfStarView = false; renderBriefing(); brfScrollTop(); return; }
