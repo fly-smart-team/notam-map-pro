@@ -3474,31 +3474,62 @@ svg.leaflet-image-layer.leaflet-interactive path {
       try { if (v.trim()) localStorage.setItem(AI_TOKEN_KEY, v.trim()); else localStorage.removeItem(AI_TOKEN_KEY); } catch (e) { }
       return !!v.trim();
     }
+    // 10건씩 나눠 4묶음을 동시에 보냄 → 결과가 오는 대로 화면에 표시
     async function aiSummarize(list) {
       list = list.filter(n => aiText(n).trim());
       if (!list.length || aiBusy) return;
       if (!aiToken() && !aiAskToken()) return;
+      const chunks = []; for (let i = 0; i < list.length; i += 10) chunks.push(list.slice(i, i + 10));
       aiBusy = true; aiMsg = `AI 요약 중… 0/${list.length}`; renderBriefing();
-      let done = 0, fail = '', prov = '';
-      for (let i = 0; i < list.length; i += 20) {
-        const chunk = list.slice(i, i + 20);
-        try {
-          const res = await fetch(aiBase() + '/ai/notam-summary', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Access-Token': aiToken() },
-            body: JSON.stringify({ notams: chunk.map((n, k) => ({ id: 'n' + k, text: aiText(n).slice(0, 4000) })) }),
-          });
-          const d = await res.json().catch(() => ({}));
-          if (res.status === 401) { try { localStorage.removeItem(AI_TOKEN_KEY); } catch (e) { } fail = '접근 토큰이 맞지 않습니다. 다시 눌러 토큰을 입력하세요.'; break; }
-          if (!res.ok) { fail = d.error || `AI 서버 오류 ${res.status}`; break; }
-          (d.items || []).forEach(it => { const n = chunk[+String(it.id).slice(1)]; if (n && it.summary) aiSum[aiKey(n)] = { s: it.summary, u: !!it.uncertain, p: it.provider || d.provider || '', t: Date.now() }; });
-          if (d.provider && d.provider !== 'cache') prov = d.provider;
-          done += chunk.length; aiMsg = `AI 요약 중… ${done}/${list.length}`; aiSave(); renderBriefing();
-        } catch (e) { fail = 'AI 서버에 연결할 수 없습니다 (인터넷 연결 확인)'; break; }
-      }
+      let done = 0, fail = '', prov = '', next = 0;
+      const send = async chunk => {
+        const res = await fetch(aiBase() + '/ai/notam-summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Access-Token': aiToken() },
+          body: JSON.stringify({ notams: chunk.map((n, k) => ({ id: 'n' + k, text: aiText(n).slice(0, 4000) })) }),
+        });
+        const d = await res.json().catch(() => ({}));
+        if (res.status === 401) { try { localStorage.removeItem(AI_TOKEN_KEY); } catch (e) { } throw new Error('접근 토큰이 맞지 않습니다. 🔑을 눌러 다시 입력하세요.'); }
+        if (!res.ok) throw new Error(d.error || `AI 서버 오류 ${res.status}`);
+        (d.items || []).forEach(it => { const n = chunk[+String(it.id).slice(1)]; if (n && it.summary) aiSum[aiKey(n)] = { s: it.summary, u: !!it.uncertain, p: it.provider || d.provider || '', t: Date.now() }; });
+        if (d.provider && d.provider !== 'cache') prov = d.provider;
+      };
+      const lane = async () => {
+        while (!fail && next < chunks.length) {
+          const chunk = chunks[next++];
+          try { await send(chunk); done += chunk.length; }
+          catch (e) { const m = String((e && e.message) || ''); fail = m && !/fetch|network|load failed/i.test(m) ? m : 'AI 서버에 연결할 수 없습니다 (인터넷 연결 확인)'; }
+          aiMsg = `AI 요약 중… ${done}/${list.length}`; aiSave(); renderBriefing();
+        }
+      };
+      await Promise.all([lane(), lane(), lane(), lane()]);
       aiSave(); aiBusy = false;
-      aiMsg = fail ? `⚠ ${fail}` : `AI 요약 완료 ${done}건${prov ? ` · ${prov === 'deepseek' ? 'DeepSeek' : prov === 'anthropic' ? 'Claude' : prov}` : ''}`;
+      aiMsg = fail ? `⚠ ${fail}${done ? ` (완료 ${done}건)` : ''}` : `AI 요약 완료 ${done}건${prov ? ` · ${prov === 'deepseek' ? 'DeepSeek' : prov === 'anthropic' ? 'Claude' : prov}` : ''}`;
       renderBriefing();
+    }
+    // ───── 일괄 AI 요약 범위 선택 (구간 + ERA 공항) ─────
+    const AI_SEL_KEY = 'notamPro.aiSel.v1';
+    let aiPanel = false;
+    let aiSel = (() => { try { const v = JSON.parse(localStorage.getItem(AI_SEL_KEY) || 'null'); if (v) return { secs: new Set(v.secs), era: new Set(v.era) }; } catch (e) { } return { secs: new Set(['DEP', 'DEST', 'ALTN', 'FIR']), era: new Set() }; })();
+    const aiSelSave = () => { try { localStorage.setItem(AI_SEL_KEY, JSON.stringify({ secs: [...aiSel.secs], era: [...aiSel.era] })); } catch (e) { } };
+    const aiPending = n => !aiOf(n) && !coadOf(n) && !!aiText(n).trim();
+    const aiInScope = n => { const g = starGroupOf(n); return g === 'ERA' ? aiSel.era.has(n.secCode) : aiSel.secs.has(g); };
+    const aiTargets = () => (window.__brfRows || []).map(r => r.n).filter(n => aiPending(n) && aiInScope(n));
+    function aiPanelHtml(allRows) {
+      if (!aiPanel) return '';
+      const ns = allRows.map(r => r.n), pend = ns.filter(aiPending);
+      const secBtn = ([k, l]) => { const c = pend.filter(n => starGroupOf(n) === k).length, tot = ns.filter(n => starGroupOf(n) === k).length; if (!tot) return ''; const on = aiSel.secs.has(k);
+        return `<button type="button" data-ai-sec="${k}" class="px-2 py-0.5 rounded-md border text-[11px] ${on ? 'bg-violet-700 border-violet-400 text-white font-bold' : 'bg-slate-900 border-slate-700 text-slate-400'}">${on ? '✓ ' : ''}${l} <span class="opacity-70">${c}</span></button>`; };
+      const eraCodes = [...new Set(ns.filter(n => starGroupOf(n) === 'ERA').map(n => n.secCode))];
+      const eraBtn = c => { const k = pend.filter(n => starGroupOf(n) === 'ERA' && n.secCode === c).length, on = aiSel.era.has(c); let nm = null; try { nm = getAirportNameInfo(c); } catch (e) { }
+        return `<button type="button" data-ai-era="${esc(c)}" class="px-2 py-0.5 rounded-md border text-[11px] mono ${on ? 'bg-violet-700 border-violet-400 text-white font-bold' : 'bg-slate-900 border-slate-700 text-slate-400'}">${on ? '✓ ' : ''}${esc(c)}${nm && nm.ko ? `<span class="font-sans text-[10px] opacity-80 ml-0.5">${esc(nm.ko)}</span>` : ''} <span class="opacity-70">${k}</span></button>`; };
+      const nT = aiTargets().length;
+      return `<div class="mt-2 rounded-lg border border-violet-600/60 bg-violet-950/30 p-2 flex flex-col gap-1.5 text-[11px]">
+        <div class="flex items-center gap-1 flex-wrap"><span class="text-violet-200 font-bold w-10">구간</span>${[['DEP', '🛫 출발'], ['DEST', '🛬 도착'], ['ALTN', '🔀 교체'], ['FIR', '🗺️ FIR']].map(secBtn).join('')}</div>
+        ${eraCodes.length ? `<div class="flex items-center gap-1 flex-wrap"><span class="text-violet-200 font-bold w-10">ERA</span>${eraCodes.map(eraBtn).join('')}<button type="button" data-ai-era-all="1" class="px-1.5 py-0.5 rounded border border-slate-700 text-[10px] text-slate-400">전체</button><button type="button" data-ai-era-all="0" class="px-1.5 py-0.5 rounded border border-slate-700 text-[10px] text-slate-400">해제</button></div>` : ''}
+        <div class="flex items-center gap-2 flex-wrap"><button type="button" data-ai-go class="px-3 py-1 rounded-lg bg-violet-600 text-white font-bold ${nT && !aiBusy ? '' : 'opacity-40'}" ${nT && !aiBusy ? '' : 'disabled'}>🤖 요약 시작 ${nT}건</button>
+          <span class="text-[10px] text-slate-400">숫자 = 아직 요약 안 된 노탐 · 이미 요약된 노탐과 COAD 저장 요약은 다시 보내지 않음 · 선택은 이 기기에 저장</span></div>
+      </div>`;
     }
     // ───── COAD 저장 요약 (coad-ko.json, Claude가 미리 작성) ─────
     // 키 = 원문 정규화 해시. 회사가 COAD를 고치면 해시가 달라져 "변경됨"으로 표시되고 AI 요약 대상이 됨
@@ -3936,8 +3967,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
           ${[['R', '영향', 'bg-rose-600 text-white'], ['Y', '확인', 'bg-amber-400 text-slate-950'], ['W', '참고', 'bg-slate-600 text-slate-100']].map(([k, l, c]) => `<button type="button" data-brf-tier="${k}" class="px-2.5 py-1 rounded font-bold ${c} ${brfTier === k ? 'ring-2 ring-white shadow-lg' : brfTier ? 'opacity-35' : ''}">${l} ${cnt(k)}</button>`).join('')}
           ${brfTier ? '<button type="button" data-brf-tier="" class="px-2 py-1 rounded border border-slate-600 text-slate-300">전체 ✕</button>' : ''}
           <span class="text-slate-500">표시 ${rows.length} / 전체 ${allRows.length}건</span>
-          ${(() => { const k = rows.filter(r => aiNeeds(r.n)).length; return `<button type="button" data-ai-run class="px-2.5 py-1 rounded-lg border font-bold bg-violet-950/50 border-violet-500 text-violet-100" ${aiBusy ? 'disabled' : ''}>🤖 AI 요약${k ? ` (${k})` : ''}</button><button type="button" data-ai-token class="px-1.5 py-1 rounded border border-slate-700 text-[10px] text-slate-400" title="AI 접근 토큰 변경">🔑</button>`; })()}${aiMsg ? `<span class="text-[10px] ${/^⚠/.test(aiMsg) ? 'text-amber-300' : 'text-violet-300'}">${esc(aiMsg)}</span>` : ''}
-          <button type="button" data-brf-starview class="ml-auto px-2.5 py-1 rounded-lg border font-bold ${brfStarView ? 'bg-amber-500 border-amber-400 text-slate-950' : 'bg-amber-950/40 border-amber-600 text-amber-200'}">${brfStarView ? '← 전체 목록' : `⭐ 중요 노탐 모아보기 (${nStar})`}</button></div>`;
+          <button type="button" data-ai-run class="px-2.5 py-1 rounded-lg border font-bold ${aiPanel ? 'bg-violet-600 border-violet-300 text-white' : 'bg-violet-950/50 border-violet-500 text-violet-100'}">🤖 AI 일괄 요약 ${aiPanel ? '▴' : '▾'}</button><button type="button" data-ai-token class="px-1.5 py-1 rounded border border-slate-700 text-[10px] text-slate-400" title="AI 접근 토큰 변경">🔑</button>${aiMsg ? `<span class="text-[10px] ${/^⚠/.test(aiMsg) ? 'text-amber-300' : 'text-violet-300'}">${esc(aiMsg)}</span>` : ''}
+          <button type="button" data-brf-starview class="ml-auto px-2.5 py-1 rounded-lg border font-bold ${brfStarView ? 'bg-amber-500 border-amber-400 text-slate-950' : 'bg-amber-950/40 border-amber-600 text-amber-200'}">${brfStarView ? '← 전체 목록' : `⭐ 중요 노탐 모아보기 (${nStar})`}</button></div>${aiPanelHtml(allRows)}`;
       const isOpen = r => (r.tier === 'W' && r.grp !== 1 && !brfShowWhite && !brfTier) ? brfOpenW.has(r.n.notamId) : !brfClosed.has(r.n.notamId);
       const item = (r, full) => {
         const T = TIER[r.tier], n = r.n, open = full || isOpen(r);
@@ -4016,12 +4047,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const byId = id => ofpOrdered.find(n => n.notamId === id);
       let b;
       if (t.closest('[data-ai-token]')) { aiAskToken(); return; }
-      if (t.closest('[data-ai-run]')) {
-        const rows = (brfStarView ? (window.__brfRows || []).filter(r => r.star) : (window.__brfShown || [])).map(r => r.n), need = rows.filter(aiNeeds);
-        if (need.length) aiSummarize(need);
-        else { aiMsg = '규칙 번역이 어려운 노탐이 없습니다. 개별 노탐을 펼쳐 🤖 버튼을 누르세요.'; renderBriefing(); }
-        return;
-      }
+      if (t.closest('[data-ai-run]')) { aiPanel = !aiPanel; renderBriefing(); return; }
+      if ((b = t.closest('[data-ai-sec]'))) { const k = b.dataset.aiSec; aiSel.secs.has(k) ? aiSel.secs.delete(k) : aiSel.secs.add(k); aiSelSave(); renderBriefing(); return; }
+      if ((b = t.closest('[data-ai-era]'))) { const k = b.dataset.aiEra; aiSel.era.has(k) ? aiSel.era.delete(k) : aiSel.era.add(k); aiSelSave(); renderBriefing(); return; }
+      if ((b = t.closest('[data-ai-era-all]'))) { const all = (window.__brfRows || []).map(r => r.n).filter(n => starGroupOf(n) === 'ERA').map(n => n.secCode); aiSel.era = b.dataset.aiEraAll === '1' ? new Set(all) : new Set(); aiSelSave(); renderBriefing(); return; }
+      if (t.closest('[data-ai-go]')) { const list = aiTargets(); if (list.length) aiSummarize(list); return; }
       if ((b = t.closest('[data-ai-one]'))) { const n = byId(b.dataset.aiOne); if (n) aiSummarize([n]); return; }
       if ((b = t.closest('[data-brf-star]'))) { const n = byId(b.dataset.brfStar); if (n) { const L = $('brf-list'), st = L.scrollTop; setStar(n, !isStar(n)); renderBriefing(); L.scrollTop = st; } return; }
       if ((b = t.closest('[data-brf-tier]'))) { const k = b.dataset.brfTier || null; brfTier = brfTier === k ? null : k; brfStarView = false; renderBriefing(); brfScrollTop(); return; }
