@@ -1,10 +1,9 @@
-// NOTAM Pro — AI 중계 Worker (개인용) v0.4
+// NOTAM Pro — AI 중계 Worker (개인용) v0.3
 // 여러 AI를 순서대로 시도: 앞의 AI가 실패하면 다음 AI로 자동 전환
 //
 // 경로
 //   GET  /health                : 상태 확인 (토큰 불필요)
 //   POST /ai/notam-summary      : 노탐 한글 요약 (토큰 필요)
-//   POST /ai/crew-brief         : 승무원 브리핑 원고 (한국어·영어, 토큰 필요)
 //        본문: { "notams": [ { "id": "A1234/26", "text": "원문..." }, ... ] }
 //        응답: { "provider", "model", "items": [ { "id", "summary", "uncertain" } ] }
 //
@@ -17,7 +16,7 @@
 //   DEEPSEEK_MODEL     : 기본 deepseek-flash
 //   ANTHROPIC_MODEL    : 기본 claude-haiku-5-5
 
-const VERSION = '0.4';
+const VERSION = '0.3';
 const ALLOWED_ORIGINS = ['https://fly-smart-team.github.io'];
 const MAX_NOTAMS = 30;           // 한 번에 보낼 수 있는 노탐 수
 const MAX_CHARS = 4000;          // 노탐 하나 최대 글자 수
@@ -182,106 +181,6 @@ const PROVIDERS = {
   },
 };
 
-// ───────── 범용 JSON 호출 (브리핑 원고 등) ─────────
-async function deepseekJson(env, { system, user, maxTokens }) {
-  const res = await fetchWithTimeout('https://api.deepseek.com/chat/completions', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${env.DEEPSEEK_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: PROVIDERS.deepseek.model(env), max_tokens: maxTokens || 4096, temperature: 0.2,
-      response_format: { type: 'json_object' },
-      messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
-    }),
-  });
-  if (!res.ok) throw new Error(`DeepSeek ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  const data = await res.json();
-  const text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-  try { return JSON.parse(text || ''); } catch { throw new Error('DeepSeek 응답이 JSON이 아님'); }
-}
-async function claudeJson(env, { system, user, schema, toolName, maxTokens }) {
-  const res = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-    body: JSON.stringify({
-      model: PROVIDERS.anthropic.model(env), max_tokens: maxTokens || 4096, system,
-      tools: [{ name: toolName, description: '결과를 기록한다.', input_schema: schema }],
-      tool_choice: { type: 'tool', name: toolName },
-      messages: [{ role: 'user', content: user }],
-    }),
-  });
-  if (!res.ok) throw new Error(`Claude ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  const data = await res.json();
-  const block = (data.content || []).find(b => b.type === 'tool_use');
-  return (block && block.input) || {};
-}
-const JSON_CALLERS = { deepseek: deepseekJson, anthropic: claudeJson };
-async function jsonWithFallback(env, opts, check) {
-  const errors = [];
-  for (const name of activeProviders(env)) {
-    try {
-      const out = await JSON_CALLERS[name](env, opts);
-      check(out);
-      return { provider: name, model: PROVIDERS[name].model(env), out, errors };
-    } catch (e) { errors.push(`${name}: ${String((e && e.message) || e)}`); }
-  }
-  throw new Error(errors.length ? `모든 AI 실패 — ${errors.join(' / ')}` : '사용할 수 있는 AI 키가 없습니다');
-}
-
-// ───────── 승무원 브리핑 원고 ─────────
-const BRIEF_PROMPT = `너는 민항기 기장의 출발 전 승무원 브리핑 원고를 쓰는 도우미다.
-입력: 비행 정보와, 앱이 골라 보낸 노탐·회사 공지(COAD) 목록. 각 항목에는 ref(번호), sec(DEP 출발/DEST 도착/ALTN 교체/ERA/FIR), tier(R 영향/Y 확인/W 참고), star(true면 기장이 직접 중요 표시), 원문 또는 요약이 있다.
-
-할 일: 조종실 합동 브리핑에서 소리 내어 읽을 짧은 원고를 한국어와 영어로 같이 만든다.
-규칙:
-- star가 true인 항목은 반드시 포함하고, 해당 줄의 star를 true로 한다.
-- 섹션 순서: DEP(출발) → ENR(항로·FIR) → DEST(도착) → ALTN(교체) → ERA. 해당 내용이 없는 섹션은 뺀다.
-- 한 줄 = 승무원이 알아야 할 하나의 사실 또는 행동. 관련 노탐 여러 개는 한 줄로 묶고 refs에 모두 넣는다.
-- 기체(기종·등록부호), ETD·ETA와 대조해 의미를 판단한다: 다른 기종 대상이면 "본 기체 해당 없음", 시간이 겹치지 않으면 "ETA와 겹치지 않음"처럼 명확히 쓴다. 단, 원문에 근거가 없으면 판단하지 않는다.
-- 해야 할 행동(관제 요청, 확인할 것)이 있으면 문장에 드러낸다.
-- 숫자·활주로·주파수·고도·시간·식별부호는 원문 그대로. 추측·과장 금지.
-- tier R 또는 star 항목 위주로, 짧게 모드는 전체 6~12줄, 자세히 모드는 10~20줄.
-- en은 조종사끼리 쓰는 간결한 항공 영어(표준 약어 허용: RWY, TWY, ILS, OCA, MOCA, EDCT 등). ko와 같은 내용.
-- 마지막에 key(핵심 3가지 이내)를 ko·en으로 한 줄씩.
-
-출력은 아래 JSON 하나만:
-{"sections":[{"sec":"DEP","lines":[{"ko":"...","en":"...","refs":["RKSI COAD05/26"],"tier":"R","star":false}]}],"key":{"ko":"...","en":"..."}}`;
-
-const BRIEF_SCHEMA = {
-  type: 'object',
-  properties: {
-    sections: { type: 'array', items: { type: 'object', properties: {
-      sec: { type: 'string', enum: ['DEP', 'ENR', 'DEST', 'ALTN', 'ERA'] },
-      lines: { type: 'array', items: { type: 'object', properties: {
-        ko: { type: 'string' }, en: { type: 'string' }, refs: { type: 'array', items: { type: 'string' } },
-        tier: { type: 'string' }, star: { type: 'boolean' } }, required: ['ko', 'en', 'refs'] } } },
-      required: ['sec', 'lines'] } },
-    key: { type: 'object', properties: { ko: { type: 'string' }, en: { type: 'string' } } },
-  },
-  required: ['sections'],
-};
-
-async function crewBrief(request, env, origin) {
-  let body;
-  try { body = await request.json(); } catch { return json({ error: 'JSON 형식이 아닙니다' }, 400, origin); }
-  const items = Array.isArray(body && body.items) ? body.items.slice(0, 120) : [];
-  if (!items.length) return json({ error: '브리핑할 항목이 없습니다' }, 400, origin);
-  const flight = body.flight || {};
-  const mode = body.mode === 'long' ? 'long' : 'short';
-  const user = `비행: ${JSON.stringify(flight)}\n모드: ${mode === 'long' ? '자세히' : '짧게'}\n\n` + items.map(it =>
-    `<item ref="${String(it.ref || '').slice(0, 40)}" sec="${it.sec || ''}" code="${it.code || ''}" tier="${it.tier || ''}" star="${!!it.star}">\n${String(it.text || '').slice(0, 900)}\n</item>`).join('\n');
-
-  const cache = caches.default;
-  const key = new Request(`https://notam-ai.cache/brief-v1/${await sha256(user)}`);
-  const hit = await cache.match(key);
-  if (hit) return json({ ...(await hit.json()), cached: true }, 200, origin);
-
-  const r = await jsonWithFallback(env, { system: BRIEF_PROMPT, user, schema: BRIEF_SCHEMA, toolName: 'record_brief', maxTokens: 6000 },
-    out => { if (!out || !Array.isArray(out.sections) || !out.sections.length) throw new Error('빈 원고'); });
-  const res = { provider: r.provider, model: r.model, sections: r.out.sections, key: r.out.key || null };
-  await cache.put(key, new Response(JSON.stringify(res), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=86400' } }));
-  return json(res, 200, origin);
-}
-
 // 키가 있는 AI만, 정한 순서대로
 function activeProviders(env) {
   const order = String(env.AI_ORDER || 'deepseek,anthropic').split(',').map(s => s.trim()).filter(Boolean);
@@ -374,7 +273,6 @@ export default {
       }
       try {
         if (url.pathname === '/ai/notam-summary' && request.method === 'POST') return await notamSummary(request, env, origin);
-        if (url.pathname === '/ai/crew-brief' && request.method === 'POST') return await crewBrief(request, env, origin);
       } catch (e) {
         return json({ error: String((e && e.message) || e) }, 502, origin);
       }

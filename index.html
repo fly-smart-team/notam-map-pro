@@ -3531,86 +3531,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <span class="text-[10px] text-slate-400">숫자 = 아직 요약 안 된 노탐 · 이미 요약된 노탐과 COAD 저장 요약은 다시 보내지 않음 · 선택은 이 기기에 저장</span></div>
       </div>`;
     }
-    // ───── 승무원 브리핑 원고 (한국어·영어) ─────
-    // 재료: ⭐ 중요 표시 전부 + 출발·도착·교체·FIR의 영향·확인 노탐 + 일괄 요약에서 고른 ERA 공항의 영향 노탐
-    const BRF_AI_KEY = 'notamPro.brief.v1';
-    let brPanel = false, brBusy = false, brMsg = '', brMode = 'short', brLang = 'both';
-    let brRes = (() => { try { return JSON.parse(localStorage.getItem(BRF_AI_KEY) || 'null'); } catch (e) { return null; } })();
-    try { brLang = localStorage.getItem('notamPro.briefLang') || 'both'; } catch (e) { }
-    function brFlight() {
-      const f = (document.getElementById('fpl-input') || {}).value || '';
-      const g = re => ((f.match(re) || [])[1] || '');
-      let w = null; try { w = flightWindow(); } catch (e) { }
-      const z = ms => { if (!ms) return ''; const d = new Date(ms); return `${String(d.getUTCDate()).padStart(2, '0')}${'JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC'.substr(d.getUTCMonth() * 3, 3)} ${d.toISOString().slice(11, 16)}Z`; };
-      const altn = [...new Set((window.__brfRows || []).filter(r => r.n.sec === 'ALTN').map(r => r.n.secCode))];
-      const cs = g(/\(FPL-([A-Z0-9]+)/).replace(/^AAR/, 'OZ').replace(/^KAL/, 'KE');
-      return { callsign: cs, type: g(/\n-([A-Z0-9]{2,4})\//), reg: g(/REG\/([A-Z0-9-]+)/), dep: (typeof info !== 'undefined' && info.dep) || '', dest: (typeof info !== 'undefined' && info.dest) || '', altn, etd: z(w && w.etd), eta: z(w && w.eta) };
-    }
-    const brKey = () => { const f = brFlight(); return [f.callsign, f.dep, f.dest, f.etd].join('|'); };
-    function brItems() {
-      const rows = window.__brfRows || [];
-      return rows.filter(r => { const g = starGroupOf(r.n); if (r.star) return true; if (g === 'ERA') return aiSel.era.has(r.n.secCode) && r.tier === 'R'; return r.tier === 'R' || r.tier === 'Y'; })
-        .map(r => { const n = r.n, cd = coadOf(n), ai = aiOf(n);
-          const head = `[유효 ${n.validity || ((n.validFrom || '') + ' ~ ' + (n.validTo || ''))}] [앱 분류: ${r.why || ''}${r.active ? '' : ' · 비행 시간대 밖'}]`;
-          const body = cd ? `[회사 공지 요약] ${cd.s}` : (ai ? `[AI 요약] ${ai.s}\n` : '') + aiText(n).slice(0, 700);
-          return { ref: n.notamId, sec: starGroupOf(n) === 'ERA' ? 'ERA' : n.sec, code: n.secCode, tier: r.tier, star: !!r.star, text: head + '\n' + body }; });
-    }
-    async function brMake() {
-      const items = brItems();
-      if (!items.length) { brMsg = '브리핑할 노탐이 없습니다. OFP를 먼저 올리세요.'; renderBriefing(); return; }
-      if (!aiToken() && !aiAskToken()) return;
-      brBusy = true; brMsg = `원고 만드는 중… (노탐 ${items.length}건, 20~40초)`; renderBriefing();
-      try {
-        const res = await fetch(aiBase() + '/ai/crew-brief', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Access-Token': aiToken() },
-          body: JSON.stringify({ flight: brFlight(), mode: brMode, items }) });
-        const d = await res.json().catch(() => ({}));
-        if (res.status === 401) { try { localStorage.removeItem(AI_TOKEN_KEY); } catch (e) { } throw new Error('접근 토큰이 맞지 않습니다. 🔑을 눌러 다시 입력하세요.'); }
-        if (!res.ok) throw new Error(d.error || `AI 서버 오류 ${res.status}`);
-        brRes = { k: brKey(), t: Date.now(), n: items.length, nStar: items.filter(x => x.star).length, mode: brMode, provider: d.provider, sections: d.sections || [], key: d.key || null };
-        try { localStorage.setItem(BRF_AI_KEY, JSON.stringify(brRes)); } catch (e) { }
-        brMsg = '';
-      } catch (e) { const m = String((e && e.message) || ''); brMsg = '⚠ ' + (m && !/fetch|network|load failed/i.test(m) ? m : 'AI 서버에 연결할 수 없습니다 (인터넷 연결 확인)'); }
-      brBusy = false; renderBriefing();
-    }
-    const BR_SEC = { DEP: ['🛫', '출발', 'Departure'], ENR: ['🗺️', '항로', 'En route'], DEST: ['🛬', '도착', 'Arrival'], ALTN: ['🔀', '교체', 'Alternate'], ERA: ['🛟', 'ERA', 'ERA'] };
-    function brText(lang) {
-      if (!brRes) return '';
-      const f = brFlight(), L = [];
-      L.push(`${f.callsign} ${f.dep}→${f.dest}${f.reg ? ' ' + f.reg : ''} · ETD ${f.etd} / ETA ${f.eta}`);
-      brRes.sections.forEach(sc => { const h = BR_SEC[sc.sec] || ['', sc.sec, sc.sec];
-        L.push('', lang === 'en' ? `[${h[2]}]` : lang === 'ko' ? `[${h[1]}]` : `[${h[1]} / ${h[2]}]`);
-        (sc.lines || []).forEach(l => { const st = l.star ? '★ ' : '';
-          if (lang !== 'en') L.push(`- ${st}${l.ko}`); if (lang !== 'ko') L.push(`${lang === 'both' ? '  ' : '- '}${lang === 'both' ? '' : st}${l.en}`); }); });
-      if (brRes.key) { L.push(''); if (lang !== 'en') L.push(`핵심: ${brRes.key.ko || ''}`); if (lang !== 'ko') L.push(`Key: ${brRes.key.en || ''}`); }
-      return L.join('\n');
-    }
-    function brPanelHtml() {
-      if (!brPanel) return '';
-      const items = brItems(), nStar = items.filter(x => x.star).length, nEra = aiSel.era.size;
-      const stale = brRes && brRes.k !== brKey();
-      const tb = (on, attr, label) => `<button type="button" ${attr} class="px-2 py-0.5 rounded-md border text-[11px] ${on ? 'bg-violet-700 border-violet-400 text-white font-bold' : 'bg-slate-900 border-slate-700 text-slate-400'}">${label}</button>`;
-      const dot = t => t === 'R' ? '#e11d48' : t === 'Y' ? '#f59e0b' : '#14b8a6';
-      const refBtn = r => `<button type="button" data-br-ref="${esc(r)}" class="ml-1 px-1 rounded border border-blue-900 bg-blue-950/60 text-blue-300 mono text-[10px] whitespace-nowrap">${esc(r)}</button>`;
-      let body = '';
-      if (brRes && !stale) {
-        body = brRes.sections.map(sc => { const h = BR_SEC[sc.sec] || ['', sc.sec, sc.sec];
-          return `<div class="border-t border-slate-800 pt-1.5 mt-1.5"><div class="text-[12px] font-bold text-violet-200 mb-0.5">${h[0]} ${brLang === 'en' ? h[2] : h[1]}${brLang === 'both' ? ` <span class="text-slate-500 font-normal">${h[2]}</span>` : ''}</div>` +
-            (sc.lines || []).map(l => `<div class="flex gap-2 items-start py-0.5"><span class="mt-1.5 w-2 h-2 rounded-full shrink-0" style="background:${l.star ? '#fbbf24' : dot(l.tier)}"></span><div class="flex-1 text-[12.5px] leading-snug">${l.star ? '<b class="text-amber-300">★</b> ' : ''}${brLang !== 'en' ? esc(l.ko) : ''}${brLang === 'both' ? `<div class="text-[12px] text-slate-400">${esc(l.en)}</div>` : brLang === 'en' ? esc(l.en) : ''}<span class="inline">${(l.refs || []).map(refBtn).join('')}</span></div></div>`).join('') + '</div>'; }).join('');
-        if (brRes.key) body += `<div class="mt-2 rounded-md border border-violet-700/60 bg-violet-950/40 px-2 py-1 text-[12px]"><b class="text-violet-200">핵심</b> ${brLang !== 'en' ? esc(brRes.key.ko || '') : ''}${brLang === 'both' ? `<div class="text-slate-400">${esc(brRes.key.en || '')}</div>` : brLang === 'en' ? esc(brRes.key.en || '') : ''}</div>`;
-        body += `<div class="mt-2 text-[10.5px] text-amber-300/90">⚠ AI가 노탐을 모아 정리한 원고입니다. 판단 근거는 각 줄의 노탐 원문 — 번호를 누르면 이동합니다.</div><div class="text-[10px] text-slate-500">노탐 ${brRes.n}건(★ ${brRes.nStar}) · ${brRes.mode === 'long' ? '자세히' : '짧게'} · ${esc(brRes.provider === 'deepseek' ? 'DeepSeek' : brRes.provider === 'anthropic' ? 'Claude' : brRes.provider || '')} · ${new Date(brRes.t).toTimeString().slice(0, 5)} · ★ 표시를 바꾸면 "다시 만들기"</div>`;
-      } else if (stale) body = `<div class="text-[11px] text-slate-400 mt-1">다른 비행의 원고가 저장돼 있습니다. "원고 만들기"를 누르세요.</div>`;
-      return `<div class="mt-2 rounded-lg border border-violet-600/60 bg-slate-950/60 p-2 flex flex-col text-slate-100">
-        <div class="flex items-center gap-1 flex-wrap text-[11px]"><span class="font-bold text-[13px] mr-1">🎙️ 승무원 브리핑 원고</span>
-          ${tb(brLang === 'ko', 'data-br-lang="ko"', '한국어')}${tb(brLang === 'en', 'data-br-lang="en"', 'English')}${tb(brLang === 'both', 'data-br-lang="both"', '한·영')}
-          <span class="mx-1 text-slate-600">|</span>${tb(brMode === 'short', 'data-br-mode="short"', '짧게')}${tb(brMode === 'long', 'data-br-mode="long"', '자세히')}
-          <span class="flex-1"></span>
-          <button type="button" data-br-make class="px-2.5 py-1 rounded-lg bg-violet-600 text-white font-bold ${brBusy ? 'opacity-40' : ''}" ${brBusy ? 'disabled' : ''}>${brRes && !stale ? '↻ 다시 만들기' : '🎙️ 원고 만들기'}</button>
-          ${brRes && !stale ? '<button type="button" data-br-copy class="px-2 py-1 rounded-lg border border-violet-500 text-violet-100 font-bold">📋 복사</button>' : ''}</div>
-        <div class="text-[10.5px] text-slate-400 mt-1">재료: ⭐ 중요 ${nStar}건 포함 · 출발·도착·교체·FIR 영향·확인 · ERA ${nEra ? `${nEra}개 공항(일괄 요약에서 선택)` : '제외'} → 총 ${items.length}건 · 언어 전환은 다시 만들 필요 없음</div>
-        ${brMsg ? `<div class="text-[11px] mt-1 ${/^⚠/.test(brMsg) ? 'text-amber-300' : 'text-violet-300'}">${esc(brMsg)}</div>` : ''}
-        ${body}
-      </div>`;
-    }
     // ───── COAD 저장 요약 (coad-ko.json, Claude가 미리 작성) ─────
     // 키 = 원문 정규화 해시. 회사가 COAD를 고치면 해시가 달라져 "변경됨"으로 표시되고 AI 요약 대상이 됨
     let coadKo = { items: {}, ids: new Set(), version: '' };
@@ -4047,8 +3967,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
           ${[['R', '영향', 'bg-rose-600 text-white'], ['Y', '확인', 'bg-amber-400 text-slate-950'], ['W', '참고', 'bg-slate-600 text-slate-100']].map(([k, l, c]) => `<button type="button" data-brf-tier="${k}" class="px-2.5 py-1 rounded font-bold ${c} ${brfTier === k ? 'ring-2 ring-white shadow-lg' : brfTier ? 'opacity-35' : ''}">${l} ${cnt(k)}</button>`).join('')}
           ${brfTier ? '<button type="button" data-brf-tier="" class="px-2 py-1 rounded border border-slate-600 text-slate-300">전체 ✕</button>' : ''}
           <span class="text-slate-500">표시 ${rows.length} / 전체 ${allRows.length}건</span>
-          <button type="button" data-ai-run class="px-2.5 py-1 rounded-lg border font-bold ${aiPanel ? 'bg-violet-600 border-violet-300 text-white' : 'bg-violet-950/50 border-violet-500 text-violet-100'}">🤖 AI 일괄 요약 ${aiPanel ? '▴' : '▾'}</button><button type="button" data-ai-token class="px-1.5 py-1 rounded border border-slate-700 text-[10px] text-slate-400" title="AI 접근 토큰 변경">🔑</button><button type="button" data-br-open class="px-2.5 py-1 rounded-lg border font-bold ${brPanel ? 'bg-violet-600 border-violet-300 text-white' : 'bg-violet-950/50 border-violet-500 text-violet-100'}">🎙️ 브리핑 원고 ${brPanel ? '▴' : '▾'}</button>${aiMsg ? `<span class="text-[10px] ${/^⚠/.test(aiMsg) ? 'text-amber-300' : 'text-violet-300'}">${esc(aiMsg)}</span>` : ''}
-          <button type="button" data-brf-starview class="ml-auto px-2.5 py-1 rounded-lg border font-bold ${brfStarView ? 'bg-amber-500 border-amber-400 text-slate-950' : 'bg-amber-950/40 border-amber-600 text-amber-200'}">${brfStarView ? '← 전체 목록' : `⭐ 중요 노탐 모아보기 (${nStar})`}</button></div>${aiPanelHtml(allRows)}${brPanelHtml()}`;
+          <button type="button" data-ai-run class="px-2.5 py-1 rounded-lg border font-bold ${aiPanel ? 'bg-violet-600 border-violet-300 text-white' : 'bg-violet-950/50 border-violet-500 text-violet-100'}">🤖 AI 일괄 요약 ${aiPanel ? '▴' : '▾'}</button><button type="button" data-ai-token class="px-1.5 py-1 rounded border border-slate-700 text-[10px] text-slate-400" title="AI 접근 토큰 변경">🔑</button>${aiMsg ? `<span class="text-[10px] ${/^⚠/.test(aiMsg) ? 'text-amber-300' : 'text-violet-300'}">${esc(aiMsg)}</span>` : ''}
+          <button type="button" data-brf-starview class="ml-auto px-2.5 py-1 rounded-lg border font-bold ${brfStarView ? 'bg-amber-500 border-amber-400 text-slate-950' : 'bg-amber-950/40 border-amber-600 text-amber-200'}">${brfStarView ? '← 전체 목록' : `⭐ 중요 노탐 모아보기 (${nStar})`}</button></div>${aiPanelHtml(allRows)}`;
       const isOpen = r => (r.tier === 'W' && r.grp !== 1 && !brfShowWhite && !brfTier) ? brfOpenW.has(r.n.notamId) : !brfClosed.has(r.n.notamId);
       const item = (r, full) => {
         const T = TIER[r.tier], n = r.n, open = full || isOpen(r);
@@ -4132,21 +4052,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if ((b = t.closest('[data-ai-era]'))) { const k = b.dataset.aiEra; aiSel.era.has(k) ? aiSel.era.delete(k) : aiSel.era.add(k); aiSelSave(); renderBriefing(); return; }
       if ((b = t.closest('[data-ai-era-all]'))) { const all = (window.__brfRows || []).map(r => r.n).filter(n => starGroupOf(n) === 'ERA').map(n => n.secCode); aiSel.era = b.dataset.aiEraAll === '1' ? new Set(all) : new Set(); aiSelSave(); renderBriefing(); return; }
       if (t.closest('[data-ai-go]')) { const list = aiTargets(); if (list.length) aiSummarize(list); return; }
-      if (t.closest('[data-br-open]')) { brPanel = !brPanel; renderBriefing(); return; }
-      if ((b = t.closest('[data-br-lang]'))) { brLang = b.dataset.brLang; try { localStorage.setItem('notamPro.briefLang', brLang); } catch (e) { } renderBriefing(); return; }
-      if ((b = t.closest('[data-br-mode]'))) { brMode = b.dataset.brMode; renderBriefing(); return; }
-      if (t.closest('[data-br-make]')) { if (!brBusy) brMake(); return; }
-      if ((b = t.closest('[data-br-copy]'))) { const txt = brText(brLang); (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => { b.textContent = '✓ 복사됨'; setTimeout(() => { b.textContent = '📋 복사'; }, 1500); }).catch(() => { prompt('복사하세요', txt); }); return; }
-      if ((b = t.closest('[data-br-ref]'))) {
-        const ref = b.dataset.brRef, n = ofpOrdered.find(x => x.notamId === ref) || ofpOrdered.find(x => x.notamId.endsWith(ref) || ref.endsWith(x.notamId.replace(/^[A-Z]{4}\s+/, '')));
-        if (!n) return;
-        brfTier = null; brfSecF = null; brfValidOnly = false; brfStarView = false;
-        if (PKG2_SECS.includes(n.sec) && brfEraSel) brfEraSel.add(n.secCode);
-        brfClosed.delete(n.notamId); brfOpenW.add(n.notamId); renderBriefing();
-        const card = document.querySelector(`[data-brf-id="${CSS.escape(n.notamId)}"]`);
-        if (card) { card.scrollIntoView({ block: 'center' }); card.style.outline = '2px solid #a78bfa'; setTimeout(() => { card.style.outline = ''; }, 2000); }
-        return;
-      }
       if ((b = t.closest('[data-ai-one]'))) { const n = byId(b.dataset.aiOne); if (n) aiSummarize([n]); return; }
       if ((b = t.closest('[data-brf-star]'))) { const n = byId(b.dataset.brfStar); if (n) { const L = $('brf-list'), st = L.scrollTop; setStar(n, !isStar(n)); renderBriefing(); L.scrollTop = st; } return; }
       if ((b = t.closest('[data-brf-tier]'))) { const k = b.dataset.brfTier || null; brfTier = brfTier === k ? null : k; brfStarView = false; renderBriefing(); brfScrollTop(); return; }
