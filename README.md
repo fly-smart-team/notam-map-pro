@@ -11,8 +11,10 @@
 - 서비스 워커 캐시 이름 `notam-pro-v1` (배포 버전과 같은 도메인이라 분리), 자기 캐시만 정리
 - 앱 이름·제목 "NOTAM Pro"
 
-## AI Worker (`ai-worker/worker.js`)
-별도 Cloudflare Worker `notam-ai`. 기존 `notam-proxy`와 분리.
+## AI Worker (`ai-worker/worker.js`, v0.2)
+별도 Cloudflare Worker `notam-ai` (GitHub 연결로 자동 배포, Root directory `/ai-worker`).
 - `GET /health` · `POST /ai/notam-summary` (헤더 `X-Access-Token` 필요)
-- 비밀값: `ANTHROPIC_API_KEY`, `ACCESS_TOKEN` / 선택 변수: `AI_MODEL`
+- 여러 AI를 순서대로 시도: 기본 DeepSeek → 실패 시 Claude
+- 비밀값: `ACCESS_TOKEN`(필수), `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY` (키 있는 AI만 사용)
+- 선택 변수: `AI_ORDER`(기본 `deepseek,anthropic`), `DEEPSEEK_MODEL`, `ANTHROPIC_MODEL`
 - 같은 원문 요약은 7일 캐시 (요금 절약)
