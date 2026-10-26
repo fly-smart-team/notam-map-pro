@@ -22,6 +22,12 @@
 - 주요 항목 바로 아래 짧은 영어 한 줄 (승객, 출발·도착 현지 시각, 교체 공항, 승무원용 날씨, SR 6 이상 흔들림, Seat belt·Moderate PA, 보안 등급, 의심 승객, EMER, 10,000ft 이하, 비상 PA 3가지, 택시 시간, 마무리 질문)
 - 값은 OFP에서 자동, 없는 값은 빈칸. 복사·저장·인쇄에서 🔊 버튼 제외
 
+## 이륙 성능 EFB 입력 (활주로 단축 · 장애물 추가)
+- OFP 'AIRPORT TECHNICAL INFORMATION'의 `EFB:` 지시를 읽어 2번 칸 맨 위에 빨간 카드로 표시
+- 활주로 단축: `NNNN FT (TAKEOFF SHORTENING FROM RWY START/END)` → RUNWAY LENGTH REDUCTION FROM · RWY START/END
+- 장애물 추가: `ADD 1 OBST (HT: h FT, DIST: d FT / FROM LIFTOFF END)` → ADD ONE OBSTACLE · FROM RWY END = d, HEIGHT = h
+- 노탐 번호·유효 일자·시간, Flysmart(A321) 단계별 입력 방법, OTHER INFORMATION(RWY ID 선택 등) 함께 표시. OFP를 올리면 알림
+
 ## 기상 차트 분석 (`wx-brief.json`)
 - 비행 전날 OFP를 Claude에게 주면 기상 차트(바람·기온, SIGWX, 난기류, 단면도)를 읽고 분석해 저장 (API 요금 없음)
 - 키 = 콜사인|출발|도착|운항일(UTC) — 예: `KAL476|VVTS|RKSI|2026-10-26`

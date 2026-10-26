@@ -815,7 +815,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 10/27 05:40 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 10/27 06:00 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
@@ -3296,7 +3296,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         airNotams = parsed.airspace;
         otherNotams = parsed.others;
         ofpOrdered = parsed.ordered; brfEraSel = null; brfStarView = false;
-        pdfFlt = parseFlightInfo(fullText, fplToApply); pdfTaf = parseTafs(fullText); pdfExtras = parseOfpExtras(fullText); setTimeout(() => { refreshLiveWx(true); startAcLive(); try { renderWxBrief(); } catch (e) { } }, 0); window.__ofpText = fullText;
+        pdfFlt = parseFlightInfo(fullText, fplToApply); pdfTaf = parseTafs(fullText); pdfExtras = parseOfpExtras(fullText); setTimeout(() => { refreshLiveWx(true); startAcLive(); try { renderWxBrief(); } catch (e) { } try { renderEfbPerf(); const k = parseEfbPerf(fullText).items.length; if (k) showToast(`⚠️ 이륙 성능 EFB 입력 ${k}건 — 2번 칸 확인`); } catch (e) { } }, 0); window.__ofpText = fullText;
         package1AirportNotams = parsed.airport.filter(n => n.pkg !== 2);
         package2AirportNotams = parsed.airport.filter(n => n.pkg === 2);
         package2AreaNotams = [];
@@ -3586,8 +3586,97 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
     loadWxBrief();
     document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-wx-reload]'); if (b) { b.textContent = '불러오는 중…'; loadWxBrief(); } });
+
+    // ===== 이륙 성능 EFB 입력 (OFP 'AIRPORT TECHNICAL INFORMATION'의 EFB 지시) =====
+    // 활주로 단축(TAKEOFF SHORTENING) · 장애물 추가(ADD OBST)를 찾아 Flysmart 입력값과 방법을 보여줌
+    function parseEfbPerf(text) {
+      const T = String(text || '').replace(/\r/g, ''), out = [], other = [];
+      const re = /◼\s*([A-Z ]*?)\s*TECHNICAL INFORMATION([\s\S]*?)(?=◼|\n[^\n]*NOTAM PACKAGE|$)/g;
+      let m;
+      while ((m = re.exec(T))) {
+        const before = T.slice(0, m.index), hs = [...before.matchAll(/\[(DEP|DEST|ALTN)\]([A-Z]{4})\//g)], hd = hs[hs.length - 1];
+        const code = hd ? hd[2] : '', role = hd ? hd[1] : '', kind = (m[1] || '').trim();
+        const body = m[2];
+        const oi = body.search(/\bOTHER INFORMATION\b/);
+        if (oi >= 0) other.push({ code, text: body.slice(oi).replace(/^OTHER INFORMATION\s*/, '').trim() });
+        let ref = '', valid = '', sched = '', rwy = '', phase = '';
+        body.split('\n').map(x => x.trim()).filter(Boolean).forEach(L => {
+          if (/^CHECK RWY ID|^OTHER INFORMATION/.test(L)) { ref = ''; return; }
+          let x;
+          if ((x = L.match(/^(?:\d+\.\s*)?((?:NOTAM|AIP SUP|AIP AMDT|AIC|SUP)\b[^()]*?)\s*(?:\(([^)]*)\))?\s*$/))) { ref = x[1].trim(); valid = (x[2] || '').trim(); sched = ''; rwy = ''; return; }
+          if ((x = L.match(/^-\s*((?:\d{1,2}(?:-\d{1,2})?\s+)+\d{4}\/\d{4})$/))) { sched = x[1]; return; }
+          if ((x = L.match(/^(\d{2}[LRC]?(?:\/\d{2}[LRC]?)?)\s+(TAKEOFF|LANDING)\b/))) { rwy = x[1]; phase = x[2]; return; }
+          if ((x = L.match(/^-?\s*EFB\s*:\s*(.+)$/))) {
+            const e = x[1].trim(), it = { code, role, kind, ref, valid, sched, rwy, phase, raw: e, type: 'other' };
+            let y;
+            if ((y = e.match(/(\d+)\s*FT\s*\(\s*(?:TAKEOFF\s+|LANDING\s+)?SHORTENING\s+FROM\s+(?:RWY\s+)?(START|END)\s*\)/))) Object.assign(it, { type: 'short', ft: +y[1], from: y[2] });
+            else if ((y = e.match(/ADD\s+(\d+)\s+OBST\w*\s*\(\s*HT\s*:\s*(\d+)\s*FT\s*,\s*DIST\s*:\s*(\d+)\s*FT\s*\/\s*FROM\s+([A-Z ]+?)\s*\)/))) {
+              const f = y[4].trim(); Object.assign(it, { type: 'obst', n: +y[1], ht: +y[2], dist: +y[3], ref0: f, field: /START|BRAKE/.test(f) ? 'FROM RWY START' : 'FROM RWY END' });
+            }
+            out.push(it);
+          }
+        });
+      }
+      return { items: out, other };
+    }
+    function renderEfbPerf() {
+      const box = $('efb-perf'); if (!box) return;
+      const P = parseEfbPerf(window.__ofpText);
+      if (!P.items.length && !P.other.length) { box.innerHTML = ''; return; }
+      const ftm = ft => `${ft.toLocaleString()} ft (약 ${Math.round(ft * 0.3048).toLocaleString()} m)`;
+      const card = it => {
+        const head = `<div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded bg-rose-600 text-white text-[12px] font-bold">${it.type === 'short' ? '활주로 단축' : it.type === 'obst' ? '장애물 추가' : 'EFB 지시'}</span>
+          <span class="text-[15px] font-bold text-white">${esc(it.code)} RWY ${esc(it.rwy || '?')} ${it.phase === 'LANDING' ? '착륙' : '이륙'}</span>
+          <span class="mono text-[11px] text-amber-200">${esc(it.ref || '')}</span></div>
+          ${it.valid || it.sched ? `<div class="text-[11.5px] text-amber-300 mt-0.5">⏱ 유효: ${esc(it.valid || '')}${it.sched ? ` · 해당 일자·시간만 ${esc(it.sched)} (UTC)` : ''} — 내 출발 시각에 해당하는지 확인</div>` : ''}
+          <div class="mono text-[11px] text-slate-300 mt-1 bg-slate-950/70 rounded px-2 py-1">EFB: ${esc(it.raw)}</div>`;
+        let input = '', steps = '';
+        if (it.type === 'short') {
+          input = `<table class="mt-1.5 text-[13px]"><tr><td class="pr-3 text-slate-400">메뉴</td><td class="font-bold text-white">RUNWAY LENGTH REDUCTION FROM</td></tr>
+            <tr><td class="pr-3 text-slate-400">입력 칸</td><td class="font-bold text-sky-300">RWY ${it.from}</td></tr>
+            <tr><td class="pr-3 text-slate-400">입력값</td><td class="font-bold text-emerald-300 text-[15px]">${it.ft}</td></tr></table>
+            <div class="text-[11.5px] text-slate-300 mt-1">활주로 ${it.from === 'START' ? '시단(이륙 시작 쪽)' : '말단(끝 쪽)'}에서 ${ftm(it.ft)}가 줄어든다는 뜻입니다.${it.from === 'START' ? ' 입력 후 활주로 그림 아래에 <b>T.O SHIFT</b>가 표시됩니다.' : ''}</div>`;
+          steps = [`TAKEOFF 화면에서 <b>RWY</b> 칸을 눌러 활주로 목록을 엽니다.`,
+            `<b>${esc(it.rwy || '')}</b> 활주로의 <b>Modify RWY</b>를 누릅니다. (방법 1: 목록 아래 [Modify RWY] → 해당 RWY 옆 [Modify RWY] / 방법 2: RWY ID 선택 → 정보창의 [Modify RWY])`,
+            `<b>RUNWAY LENGTH REDUCTION FROM</b> → <b>RWY ${it.from}</b> 칸을 눌러 <b>${it.ft}</b> 입력 → <b>Done</b>`,
+            `값이 <b>파란 글씨(${it.ft} ft)</b>로 들어갔는지 확인 → 아래 <b>Done</b>`,
+            `TAKEOFF 화면 RWY 칸에 <b>[MOD]</b>, 위쪽에 <b>[MODIFIED]</b> 표시 확인${it.from === 'START' ? ', 활주로 그림 아래 <b>T.O SHIFT</b> 확인' : ''} → <b>COMPUTE</b>`];
+        } else if (it.type === 'obst') {
+          input = `<table class="mt-1.5 text-[13px]"><tr><td class="pr-3 text-slate-400">메뉴</td><td class="font-bold text-white">ADD ONE OBSTACLE${it.n > 1 ? ` (×${it.n})` : ''}</td></tr>
+            <tr><td class="pr-3 text-slate-400">입력 칸</td><td class="font-bold text-sky-300">${it.field}</td><td class="pl-3 font-bold text-emerald-300 text-[15px]">${it.dist}</td><td class="pl-1 text-slate-400">ft</td></tr>
+            <tr><td class="pr-3 text-slate-400"></td><td class="font-bold text-sky-300">HEIGHT</td><td class="pl-3 font-bold text-emerald-300 text-[15px]">${it.ht}</td><td class="pl-1 text-slate-400">ft</td></tr></table>
+            <div class="text-[11.5px] text-slate-300 mt-1">높이 ${ftm(it.ht)}의 장애물이 ${/LIFTOFF END|RWY END/.test(it.ref0) ? '활주로 말단(LIFTOFF END = RWY END)' : esc(it.ref0)}에서 ${ftm(it.dist)} 떨어져 있다는 뜻입니다. 기준점이 <b>LIFTOFF END</b>이면 <b>FROM RWY END</b> 칸에 넣습니다.</div>`;
+          steps = [`TAKEOFF 화면에서 <b>RWY</b> 칸을 눌러 활주로 목록을 엽니다.`,
+            `<b>${esc(it.rwy || '')}</b> 활주로의 <b>Modify RWY</b>를 누릅니다. (방법 1: 목록 아래 [Modify RWY] → 해당 RWY 옆 [Modify RWY] / 방법 2: RWY ID 선택 → 정보창의 [Modify RWY])`,
+            `<b>ADD ONE OBSTACLE</b> → <b>${it.field}</b> 칸에 <b>${it.dist}</b> 입력 → <b>Done</b>`,
+            `<b>HEIGHT</b> 칸에 <b>${it.ht}</b> 입력 → <b>Done</b>`,
+            `두 값이 <b>파란 글씨</b>로 들어갔는지 확인 → 아래 <b>Done</b>`,
+            `정보창 위에 <b>OBSTACLE ADDED</b>, <b>OBSTACLES</b> 수가 1 늘었는지 확인 (예: 9 → 10) → <b>Done</b>`,
+            `TAKEOFF 화면 RWY 칸에 <b>[MOD]</b>, 위쪽에 <b>[MODIFIED]</b> 표시 확인 → <b>COMPUTE</b>`];
+        } else {
+          input = `<div class="text-[12px] text-amber-200 mt-1">형식을 자동으로 읽지 못했습니다. 위 EFB 원문대로 입력하세요.</div>`;
+        }
+        return `<div class="rounded-lg border border-rose-500/70 bg-rose-950/30 p-2.5">${head}${input}
+          ${steps ? `<details class="mt-1.5"><summary class="cursor-pointer select-none text-[12px] font-bold text-sky-300">📲 Flysmart (iPad) 입력 방법</summary>
+            <ol class="mt-1 text-[12.5px] leading-snug text-slate-200" style="list-style:decimal;padding-left:22px">${steps.map(x => `<li class="my-0.5">${x}</li>`).join('')}</ol></details>` : ''}</div>`;
+      };
+      box.innerHTML = `<div class="rounded-xl border-2 border-rose-500 bg-rose-950/20 p-2.5 flex flex-col gap-2">
+        <div class="flex items-center gap-2 flex-wrap"><span class="text-[14px] font-bold text-rose-200">⚠️ 이륙 성능 EFB 입력 필요</span><span class="text-[11px] text-slate-400">OFP Technical Information · ${P.items.length}건 — 성능 계산 전에 Modify RWY로 입력</span></div>
+        ${P.items.map(card).join('')}
+        ${P.other.map(o => `<details class="rounded-md border border-slate-700 bg-slate-900/70"><summary class="cursor-pointer select-none px-2 py-1 text-[12px] font-bold text-amber-200">📋 ${esc(o.code)} 기타 성능 정보 (RWY ID 선택 등)</summary><pre class="mono text-[11px] whitespace-pre-wrap text-slate-200 px-2 pb-2">${esc(o.text)}</pre></details>`).join('')}
+        <details class="text-[11.5px] text-slate-300"><summary class="cursor-pointer select-none font-bold text-slate-200">ℹ️ 입력할 때 주의</summary>
+          <ul class="mt-1" style="list-style:disc;padding-left:20px">
+            <li>입력한 수정은 <b>그 RWY ID에만</b> 적용됩니다. 인터섹션(예: 18L-T1)으로 계산하면 그 ID에서 다시 입력합니다.</li>
+            <li>값은 ft 그대로 넣습니다 (m로 넣으면 ft로 바뀌어 들어감).</li>
+            <li>NOTAM에 일자·시간이 붙어 있으면 그 시간대에만 유효합니다 — 출발 시각과 비교하세요.</li>
+            <li>장애물 기준점 <b>LIFTOFF END</b> = 활주로 말단 → <b>FROM RWY END</b>. 활주로 단축은 <b>RWY START</b>(시단)/<b>RWY END</b>(말단) 구분.</li>
+            <li>잘못 넣었으면 MODIFY 화면 아래 <b>Restore</b>로 원래대로 돌립니다.</li>
+            <li>A321 Flysmart 기준 설명입니다. A350(LPC-NG)·A380(OIS)·보잉(OPT)은 화면이 다릅니다.</li>
+          </ul></details>
+      </div>`;
+    }
     // 2번 칸(Flight Information)이 다시 그려질 때마다 기상 차트 분석도 다시 넣음 (기상·기온 바로 아래)
-    { const _rfi = renderFlightInfo; renderFlightInfo = function () { const r = _rfi.apply(this, arguments); try { renderWxBrief(); } catch (e) { } return r; }; }
+    { const _rfi = renderFlightInfo; renderFlightInfo = function () { const r = _rfi.apply(this, arguments); try { renderWxBrief(); } catch (e) { } try { renderEfbPerf(); } catch (e) { } return r; }; }
     function renderWxBrief() {
       const box = $('wx-ai'); if (!box) return;
       if (!info.dep || !info.dest) { box.innerHTML = ''; return; }
@@ -5806,6 +5895,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           </div>
           ${endpoint('ALTN', altnCode, null, null, true, 'text-purple-300', true)}` : ''}
         </div>
+        <div id="efb-perf"></div>
         <div id="ac-live" class="rounded-lg border border-slate-800 bg-slate-900/70 px-2.5 py-2 flex flex-col gap-1"></div>
         <div class="flex flex-col gap-1.5">
           <div class="flex items-center justify-between gap-2 flex-wrap"><span class="text-[11px] font-bold text-slate-300">🌤️ 기상 · 기온</span><span class="flex items-center gap-2 text-[10px] text-slate-500">${wxLiveAt ? '실시간 ' + new Date(wxLiveAt).toISOString().slice(11, 16) + 'Z 조회' : ''}<button type="button" data-wx-refresh class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-sky-300 font-bold">🔄 실시간 조회</button></span></div>
