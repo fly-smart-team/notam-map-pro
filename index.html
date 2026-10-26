@@ -3571,7 +3571,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const coadHash = n => textHash(coadNorm(aiText(n)));
     const coadOf = n => isCoad(n) ? coadKo.items[coadHash(n)] || null : null;
     const coadChanged = n => isCoad(n) && !coadOf(n) && coadKo.ids.has(String(n.notamId).replace(/\s+/g, ' '));
-    fetch('coad-ko.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).then(d => {
+    fetch('coad-ko.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => {
       if (!d || !d.items) return;
       coadKo = { items: d.items, version: d.version || '', ids: new Set(Object.values(d.items).map(x => x.id)) };
       try { renderBriefing(); } catch (e) { }
@@ -3581,14 +3581,18 @@ svg.leaflet-image-layer.leaflet-interactive path {
     let wxBrief = { items: {} };
     const wxKey = () => { const f = (document.getElementById('fpl-input') || {}).value || ''; const cs = (f.match(/\(FPL-([A-Z0-9]+)/) || [])[1] || ''; return [cs, info.dep || '', info.dest || '', info.flightDate || ''].join('|'); };
     const wxOf = () => wxBrief.items[wxKey()] || null;
-    fetch('wx-brief.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).then(d => { if (d && d.items) { wxBrief = d; try { renderWxBrief(); } catch (e) { } } }).catch(() => { });
+    function loadWxBrief() {
+      return fetch('wx-brief.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => { if (d && d.items) { wxBrief = d; } try { renderWxBrief(); } catch (e) { } }).catch(() => { try { renderWxBrief(); } catch (e) { } });
+    }
+    loadWxBrief();
+    document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-wx-reload]'); if (b) { b.textContent = '불러오는 중…'; loadWxBrief(); } });
     // 2번 칸(Flight Information)이 다시 그려질 때마다 기상 차트 분석도 다시 넣음 (기상·기온 바로 아래)
     { const _rfi = renderFlightInfo; renderFlightInfo = function () { const r = _rfi.apply(this, arguments); try { renderWxBrief(); } catch (e) { } return r; }; }
     function renderWxBrief() {
       const box = $('wx-ai'); if (!box) return;
       if (!info.dep || !info.dest) { box.innerHTML = ''; return; }
       const W = wxOf();
-      if (!W) { box.innerHTML = `<div class="text-[11px] text-slate-500 border border-dashed border-slate-700 rounded-lg px-2 py-1.5">🌦️ 이 비행의 기상 차트 분석이 없습니다 — 비행 전 OFP를 Claude에게 주면 추가됩니다. <span class="mono">${esc(wxKey())}</span></div>`; return; }
+      if (!W) { box.innerHTML = `<div class="text-[11px] text-slate-400 border border-dashed border-slate-700 rounded-lg px-2 py-1.5 flex items-center gap-2 flex-wrap">🌦️ 이 비행의 기상 차트 분석이 없습니다 <span class="mono text-slate-500">${esc(wxKey())}</span><span class="text-slate-500">· 자료 ${esc(wxBrief.version || '없음')} · ${Object.keys(wxBrief.items || {}).length}편</span><button type="button" data-wx-reload class="ml-auto px-2 py-0.5 rounded border border-sky-700 text-sky-300">↻ 다시 불러오기</button></div>`; return; }
       const sec = (t, inner) => `<div class="mt-2"><div class="text-[12px] font-bold text-sky-200 mb-1">${t}</div>${inner}</div>`;
       box.innerHTML = `<details open class="rounded-xl border border-sky-700/60 bg-sky-950/30 p-2.5">
         <summary class="cursor-pointer select-none font-bold text-[13px] text-sky-100">🌦️ 기상 차트 분석 <span class="ml-1 text-[10px] font-normal text-slate-400">${esc(W.flight || '')} · ETD ${esc(W.etd || '')} / ETA ${esc(W.eta || '')} · Claude 작성 ${esc(W.made || '')}</span></summary>
@@ -3627,7 +3631,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const preNorm = n => coadNorm(aiText(n)).split(/\n\s*SECY \/ |\n\s*COMPANY ADVISORY\b|\n\s*END OF /)[0];
     const preKey = n => textHash(preNorm(n));
     const preOf = n => isCoad(n) ? null : preKo.items[preKey(n)] || null;
-    fetch('notam-ko.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).then(d => {
+    fetch('notam-ko.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => {
       if (!d || !d.items) return; preKo = { items: d.items, version: d.version || '' };
       try { renderBriefing(); } catch (e) { }
     }).catch(() => { });
