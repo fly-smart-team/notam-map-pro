@@ -1,0 +1,8 @@
+{
+  // Cloudflare Workers Builds(Git 연결)용 설정
+  // 비밀값 ANTHROPIC_API_KEY, ACCESS_TOKEN은 대시보드에서 따로 넣음
+  "name": "notam-ai",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-01",
+  "keep_vars": true
+}
