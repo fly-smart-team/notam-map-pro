@@ -10,3 +10,9 @@
 ## v104 대비 바뀐 점
 - 서비스 워커 캐시 이름 `notam-pro-v1` (배포 버전과 같은 도메인이라 분리), 자기 캐시만 정리
 - 앱 이름·제목 "NOTAM Pro"
+
+## AI Worker (`ai-worker/worker.js`)
+별도 Cloudflare Worker `notam-ai`. 기존 `notam-proxy`와 분리.
+- `GET /health` · `POST /ai/notam-summary` (헤더 `X-Access-Token` 필요)
+- 비밀값: `ANTHROPIC_API_KEY`, `ACCESS_TOKEN` / 선택 변수: `AI_MODEL`
+- 같은 원문 요약은 7일 캐시 (요금 절약)
