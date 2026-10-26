@@ -815,8 +815,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">FIR NOTAM 지도 & FMS 변환</h1><span id="app-ver" class="text-[10px] text-slate-500 font-mono-code" title="앱 버전">v104</span>
-      <button id="btn-hidden" type="button" aria-label="도구" title="도구" class="ml-auto w-7 h-7 rounded-md text-slate-600 hover:text-slate-300 hover:bg-slate-800 text-sm leading-none">⋯</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><span id="app-ver" class="text-[10px] text-slate-500 font-mono-code" title="앱 버전">v104</span>
+      <span class="ml-auto flex items-center gap-1.5">
+        <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
+        <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
+        <button id="btn-claude-set" type="button" title="Claude 연결 주소 바꾸기" class="w-7 h-7 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-800 text-xs">⚙</button>
+      </span>
     </div>
     <!-- 히든 메뉴: FOM S13.1 위험물 검색 (보조배터리 Wh 계산 포함) · 파일 내장 -->
     <div id="hidden-menu" class="hidden max-w-[1800px] mx-auto mt-3">
@@ -6225,6 +6229,18 @@ svg.leaflet-image-layer.leaflet-interactive path {
       }
       $('btn-hidden').addEventListener('click', () => { const m = $('hidden-menu'); m.classList.toggle('hidden'); if (!m.classList.contains('hidden')) load(); });
       $('hm-close').addEventListener('click', () => $('hidden-menu').classList.add('hidden'));
+    })();
+    // ===== Claude 연결: 비행 전 OFP를 붙여 노탐·COAD 사전 요약과 기상 차트 분석을 요청하는 대화로 이동 =====
+    (function () {
+      const KEY = 'notamPro.claudeUrl', DEF = 'https://claude.ai/code/session_01DAoW3rschdahNvSqYTHrvQ';
+      const url = () => { try { return localStorage.getItem(KEY) || DEF; } catch (e) { return DEF; } };
+      $('btn-claude').addEventListener('click', () => { window.open(url(), '_blank', 'noopener'); });
+      $('btn-claude-set').addEventListener('click', () => {
+        const v = prompt('Claude 연결 주소 (claude.ai 대화·프로젝트 링크)\n비우면 기본 주소로 돌아갑니다.', url());
+        if (v == null) return;
+        try { if (/^https:\/\/(claude\.ai|.*\.claude\.ai)\//.test(v.trim())) localStorage.setItem(KEY, v.trim()); else if (!v.trim()) localStorage.removeItem(KEY); else { alert('claude.ai 주소만 넣을 수 있습니다.'); return; } } catch (e) { }
+        showToast('Claude 연결 주소를 저장했습니다');
+      });
     })();
 
     // ===== 섹션 접기/펼치기 (제목만 남기고 숨김 · 상태는 이 기기에 저장) =====
