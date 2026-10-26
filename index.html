@@ -5080,7 +5080,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (/\bWS\b|WIND ?SHEAR/.test(String(raw || ''))) { ko.push('윈드시어 주의'); en.push('wind shear reported'); }
       return { ko: ko.join(', '), en: en.join(', ') };
     }
-    function jbScriptLines(o) {
+    function jbEnMap(o) {
       const { p, w, pax, trip, altn } = o, B = '<span class="jb-blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>';
       const dep = aptShort(info.dep), dest = aptShort(info.dest), al = aptShort(altn);
       const lt = (c, ms) => { const x = ms != null ? localTime(c, ms) : null; return x ? x.hm : null; };
@@ -5088,16 +5088,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const enT = hm => { if (!hm) return B; const [h, m] = hm.split(':').map(Number); return `${h}:${String(m).padStart(2, '0')}`; };
       const koDur = m => m < 60 ? `${m}분` : `${Math.floor(m / 60)}시간${m % 60 ? ' ' + m % 60 + '분' : ''}`;
       const enDur = m => m < 60 ? `${m} minutes` : `${Math.floor(m / 60)} hour${m >= 120 ? 's' : ''}${m % 60 ? ' ' + m % 60 + ' minutes' : ''}`;
-      const L = [];
+      const E = {}, L = { push: (k, a) => (E[k] = E[k] || []).push(a) };
       // 승객
       if (pax) { const tot = pax.f + pax.c + pax.y, prem = [pax.f ? [`퍼스트 ${pax.f}명`, `${pax.f} in first`] : null, pax.c ? [`비즈니스 ${pax.c}명`, `${pax.c} in business`] : null].filter(Boolean);
-        L.push([`금일 탑승 승객은 ${prem.length ? prem.map(x => x[0]).join(', ') + ' 포함해서 ' : ''}총 ${tot}명입니다.`, `Today we have ${tot} passengers${prem.length ? ', including ' + prem.map(x => x[1]).join(' and ') : ''}.`]); }
-      else L.push([`금일 탑승 승객은 비즈니스 ${B}명 포함해서 총 ${B}명입니다.`, `Today we have ${B} passengers, including ${B} in business.`]);
+        L.push('pax', [`금일 탑승 승객은 ${prem.length ? prem.map(x => x[0]).join(', ') + ' 포함해서 ' : ''}총 ${tot}명입니다.`, `Today we have ${tot} passengers${prem.length ? ', including ' + prem.map(x => x[1]).join(' and ') : ''}.`]); }
+      else L.push('pax', [`금일 탑승 승객은 비즈니스 ${B}명 포함해서 총 ${B}명입니다.`, `Today we have ${B} passengers, including ${B} in business.`]);
       // 시간
       const dl = lt(info.dep, w && w.etd), al2 = lt(info.dest, w && w.eta);
-      L.push([`${dep.ko}공항 출발 ${koT(dl)}, 도착은 현지 시각 ${koT(al2)}입니다.`, `Departure from ${dep.en} at ${enT(dl)}, arrival at ${enT(al2)} local time.`]);
+      L.push('time', [`${dep.ko}공항 출발 ${koT(dl)}, 도착은 현지 시각 ${koT(al2)}입니다.`, `Departure from ${dep.en} at ${enT(dl)}, arrival at ${enT(al2)} local time.`]);
       // 교체
-      if (altn) L.push([`교체 공항은 ${p.altnMin != null ? koDur(p.altnMin) + ' 거리에 있는 ' : ''}${al.ko} 공항입니다.`, `Our alternate is ${al.en}${p.altnMin != null ? ', ' + enDur(p.altnMin) + ' away' : ''}.`]);
+      if (altn) L.push('altn', [`교체 공항은 ${p.altnMin != null ? koDur(p.altnMin) + ' 거리에 있는 ' : ''}${al.ko} 공항입니다.`, `Our alternate is ${al.en}${p.altnMin != null ? ', ' + enDur(p.altnMin) + ' away' : ''}.`]);
       // 날씨 (현재 METAR → 없으면 OFP TAF)
       const now = c => { const lv = (typeof wxLive !== 'undefined' && wxLive[c]) || {}; let el = null, t = null, raw = '';
         if (lv.metar) { el = tafElems(lv.metar.split(/\s+/).slice(2)); t = metarTemp(lv.metar); raw = lv.metar; }
@@ -5107,7 +5107,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const fcst = (c, T) => { const lv = (typeof wxLive !== 'undefined' && wxLive[c]) || {}; if (!pdfTaf[c] || T == null) return null; const r = tafAt(pdfTaf[c], T); const t = omTempAt(lv.om, T); return { x: crewWx(r.st, pdfTaf[c].raw || ''), t: t != null ? Math.round(t) : null }; };
       const d = now(info.dep), a = now(info.dest), f = fcst(info.dest, w && w.eta);
       const kw = o => o && o.x ? `${o.x.ko}${o.t != null ? `, 기온 ${o.t}도` : ''}` : B, ew = o => o && o.x ? `${o.x.en}${o.t != null ? `, ${o.t} degrees` : ''}` : B;
-      L.push([`${dep.ko}공항 날씨는 ${kw(d)}, ${dest.ko}공항은 ${kw(a)}입니다.${f && f.x ? ` 도착 시간 예보는 ${kw(f)}입니다.` : ''}`,
+      L.push('wx', [`${dep.ko}공항 날씨는 ${kw(d)}, ${dest.ko}공항은 ${kw(a)}입니다.${f && f.x ? ` 도착 시간 예보는 ${kw(f)}입니다.` : ''}`,
         `Weather in ${dep.en}: ${ew(d)}. ${dest.en}: ${ew(a)}.${f && f.x ? ` At arrival, ${ew(f)} expected.` : ''}`]);
       // 난기류 (OFP SR 6 이상 구간)
       const segs = [];
@@ -5118,33 +5118,30 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const late = m => trip != null && m > trip / 2;
       const koP = (a, b) => late(a) ? `도착 ${koDur(r5(trip - a))} 전부터 ${r5(trip - b) ? koDur(r5(trip - b)) + ' 전' : '도착'}까지` : late(b) ? `이륙 후 ${koDur(r5(a))}부터 도착 ${koDur(r5(trip - b))} 전까지` : `이륙 후 ${koDur(r5(a))}부터 ${koDur(r5(b))}까지`;
       const enP = (a, b) => late(a) ? `from ${enDur(r5(trip - a))} to ${r5(trip - b) ? enDur(r5(trip - b)) : '0 minutes'} before landing` : late(b) ? `from ${enDur(r5(a))} after takeoff until ${enDur(r5(trip - b))} before landing` : `from ${enDur(r5(a))} to ${enDur(r5(b))} after takeoff`;
-      if (segs.length) segs.forEach(g => L.push([`항로 비행 중 ${koP(g.a, g.b)} 많이 흔들릴 것으로 예상됩니다. <span class="jb-note">(SR ${g.sr})</span>`, `We expect turbulence ${enP(g.a, g.b)}.`]));
-      else L.push(['항로상 큰 흔들림은 예상되지 않습니다.', 'No significant turbulence is expected en route.']);
-      L.push(['Seat belt 사인은 기내 표준 신호에 맞춰 실시하겠습니다.', 'The seat belt sign will follow the standard cabin signals.']);
-      L.push(['Moderate 이상은 차임 2회 실시하고 기장 PA를 하겠습니다. 사정상 PA를 못 하는 경우에는 사무장님께서 실시해 주시기 바랍니다.', 'Moderate or greater: two chimes and a captain\'s PA. If I cannot make the PA, the purser, please make it.']);
+      if (segs.length) segs.forEach(g => L.push('turb', [`항로 비행 중 ${koP(g.a, g.b)} 많이 흔들릴 것으로 예상됩니다. <span class="jb-note">(SR ${g.sr})</span>`, `We expect turbulence ${enP(g.a, g.b)}.`]));
+      else L.push('turb', ['항로상 큰 흔들림은 예상되지 않습니다.', 'No significant turbulence is expected en route.']);
+      L.push('belt', ['Seat belt 사인은 기내 표준 신호에 맞춰 실시하겠습니다.', 'The seat belt sign will follow the standard cabin signals.']);
+      L.push('mod', ['Moderate 이상은 차임 2회 실시하고 기장 PA를 하겠습니다. 사정상 PA를 못 하는 경우에는 사무장님께서 실시해 주시기 바랍니다.', 'Moderate or greater: two chimes and a captain\'s PA. If I cannot make the PA, the purser, please make it.']);
       // 보안
       const am = String(window.__ofpText || '').match(/ALERT\s*([1-5])\s*-\s*ALL STATIONS/i), lv = am ? am[1] : B;
-      L.push([`금일 보안 등급은 Alert ${lv}입니다.${am ? ' <span class="jb-note">(회사 공지 기준 · 지점 예외 확인)</span>' : ''}`, `Today's security level is Alert ${lv}.`]);
-      L.push(['비행 중 의심스러운 승객 또는 물품 발견 시 기장에게 보고해 주시기 바랍니다.', 'Report any suspicious passenger or item to the captain.']);
+      L.push('alert', [`금일 보안 등급은 Alert ${lv}입니다.${am ? ' <span class="jb-note">(회사 공지 기준 · 지점 예외 확인)</span>' : ''}`, `Today's security level is Alert ${lv}.`]);
+      L.push('susp', ['비행 중 의심스러운 승객 또는 물품 발견 시 기장에게 보고해 주시기 바랍니다.', 'Report any suspicious passenger or item to the captain.']);
       // 비상 연락
-      L.push(['객실 내 비상 상황 발생 시에는 인터폰 Emergency Alert Signal을 통해 조종실로 연락 주시기 바랍니다.', 'For any cabin emergency, call the cockpit with the interphone emergency alert signal.']);
-      L.push(['만 피트 이하 비행 중요 단계에서는 안전과 관련된 상황 또는 위급 상황 발생 시 비상 긴급 신호로 조종실로 연락 주시고, 비상 절차 조치 등으로 즉각 응답이 어려운 경우 조치 후 다시 연락드리겠습니다.', 'Below 10,000 feet, call us only for safety or emergency matters. If we cannot answer right away, we will call you back.']);
+      L.push('emer', ['객실 내 비상 상황 발생 시에는 인터폰 Emergency Alert Signal을 통해 조종실로 연락 주시기 바랍니다.', 'For any cabin emergency, call the cockpit with the interphone emergency alert signal.']);
+      L.push('below', ['만 피트 이하 비행 중요 단계에서는 안전과 관련된 상황 또는 위급 상황 발생 시 비상 긴급 신호로 조종실로 연락 주시고, 비상 절차 조치 등으로 즉각 응답이 어려운 경우 조치 후 다시 연락드리겠습니다.', 'Below 10,000 feet, call us only for safety or emergency matters. If we cannot answer right away, we will call you back.']);
       // 비상 절차
-      L.push(['비상 절차 리뷰하겠습니다.', 'Let\'s review the emergency procedures.']);
-      L.push(['지상에서 비상탈출이 필요할 수 있는 경우:', 'If an evacuation may be needed on the ground:', '“Attention, crew at station.”']);
-      L.push(['비상탈출 지시:', 'Evacuation command:', '“This is the Captain. Evacuate, evacuate!”']);
-      L.push(['비상탈출이 필요하지 않은 경우:', 'If no evacuation is needed:', '“This is the Captain. Remain seated, remain seated.”']);
-      L.push(['라고 PA 하겠습니다.', 'I will make these PAs.']);
+      L.push('review', ['비상 절차 리뷰하겠습니다.', 'Let\'s review the emergency procedures.']);
+      L.push('rto1', ['지상에서 비상탈출이 필요할 수 있는 경우:', 'On the ground, if an evacuation may be needed:', '“Attention, crew at station.”']);
+      L.push('rto2', ['비상탈출 지시:', 'Evacuation command:', '“This is the Captain. Evacuate, evacuate!”']);
+      L.push('rto3', ['비상탈출이 필요하지 않은 경우:', 'If no evacuation is needed:', '“This is the Captain. Remain seated, remain seated.”']);
+      L.push('paend', ['라고 PA 하겠습니다.', 'I will make these PAs.']);
       // 택시·마무리
-      L.push([`현재 주기장에서 이륙까지는 약 ${B}분이 소요되겠습니다.`, `Taxi time to takeoff is about ${B} minutes.`]);
-      L.push(['추가 질문이나 요청 사항 있으신가요?', 'Any questions or requests?']);
-      return L;
+      L.push('taxi', [`현재 주기장에서 이륙까지는 약 ${B}분이 소요되겠습니다.`, `Taxi time to takeoff is about ${B} minutes.`]);
+      L.push('q', ['추가 질문이나 요청 사항 있으신가요?', 'Any questions or requests?']);
+      return E;
     }
-    function jbScriptHtml(o) {
-      const L = jbScriptLines(o);
-      return `<div class="jb-script"><div class="jb-en-h">🎙️ 브리핑 스크립트 — 한국어로 말하고, 필요한 줄은 아래 영어로 (🔊 듣기)</div>${L.map(([ko, en, pa]) =>
-        `<div class="jb-l"><div class="jb-ko">${ko}</div><div class="jb-el">${jbSay('en-US')}<span class="jb-t">${en}</span></div>${pa ? `<div class="jb-pa">${jbSay('en-US')}<span class="jb-t">${pa}</span></div>` : ''}</div>`).join('')}</div>`;
-    }
+    // 영어 한 줄 (해당 브리핑 항목 바로 아래)
+    const jbEnLine = (E, k) => (E[k] || []).map(a => `<div class="jb-el">${a[2] ? a[1] + ' ' + a[2] : a[1]}</div>`).join('');
     // 음성: 브라우저 내장 음성(오프라인 가능, 기기 음성에 따라 다름)
     let jbRate = (() => { try { return +localStorage.getItem('notamPro.jbRate') || 0.9; } catch (e) { return 0.9; } })();
     function jbSpeak(text, lang) {
@@ -5177,54 +5174,55 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const li = t => `<li>${t}</li>`;
       const blank = '<span class="jb-blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>';
       const h = [];
-      h.push(`<h1>JOINT BRIEFING</h1><p class="jb-sub">${esc(jbFlightNo(cs))} · ${esc(info.dep || '')} → ${esc(info.dest || '')} · ${esc(info.flightDate || '')} · 작성 ${new Date().toISOString().slice(0, 16).replace('T', ' ')}Z</p>` + jbGreetHtml() + jbScriptHtml({ p, w, pax, trip, altn }));
+      const E = jbEnMap({ p, w, pax, trip, altn }), en = k => jbEnLine(E, k);
+      h.push(`<h1>JOINT BRIEFING</h1><p class="jb-sub">${esc(jbFlightNo(cs))} · ${esc(info.dep || '')} → ${esc(info.dest || '')} · ${esc(info.flightDate || '')} · 작성 ${new Date().toISOString().slice(0, 16).replace('T', ' ')}Z</p>` + jbGreetHtml());
       h.push(`<h2>1. Flight Information: CREW</h2><ul>
         ${li(`<b>가. Flight Number / Flight Leg :</b> ${esc(cs || '--')} / ${esc(aptKoEn(info.dep))} → ${esc(aptKoEn(info.dest))}`)}
         ${li(`<b>나. Type of Aircraft / Reg. Number :</b> ${esc(type ? (AC_NAMES[type] || type) : '--')} / ${esc(p.reg || '--')}`)}
-        ${li(`<b>다. Gate (Spot) Number :</b> ${jbStandTxt(blank)}<ul>${li(`PAX Inform: ${pax ? `${pax.f ? `First ${pax.f}명, ` : ''}Business ${pax.c}명, Economy ${pax.y}명 (총 ${pax.f + pax.c + pax.y}명)` : `Business ${blank}명, Economy ${blank}명 (총 ${blank}명)`} / Cargo: ${cargoLbs != null ? `${Math.round(cargoLbs).toLocaleString()} LBS (약 ${Math.round(cargoLbs * 0.45359).toLocaleString()} kg)` : `${blank} LBS`}`)}</ul>`)}
+        ${li(`<b>다. Gate (Spot) Number :</b> ${jbStandTxt(blank)}<ul>${li(`PAX Inform: ${pax ? `${pax.f ? `First ${pax.f}명, ` : ''}Business ${pax.c}명, Economy ${pax.y}명 (총 ${pax.f + pax.c + pax.y}명)` : `Business ${blank}명, Economy ${blank}명 (총 ${blank}명)`} / Cargo: ${cargoLbs != null ? `${Math.round(cargoLbs).toLocaleString()} LBS (약 ${Math.round(cargoLbs * 0.45359).toLocaleString()} kg)` : `${blank} LBS`}${en('pax')}`)}</ul>`)}
         ${li(`<b>라. Flight Schedule :</b><ul>
-          ${li(`ETD : ${zTxt(w && w.etd)}Z (${ltTxt(info.dep, w && w.etd)}) / ETA : ${zTxt(w && w.eta)}Z (${ltTxt(info.dest, w && w.eta)})`)}
+          ${li(`ETD : ${zTxt(w && w.etd)}Z (${ltTxt(info.dep, w && w.etd)}) / ETA : ${zTxt(w && w.eta)}Z (${ltTxt(info.dest, w && w.eta)})${en('time')}`)}
           ${li(`Flight Time: ${hmTxt(trip)}`)}
           ${li(`Planned Altitude: ${steps.length ? 'FL' + String(steps[0]).padStart(3, '0') + (steps.length > 1 ? ' (STEP ' + steps.map(v => 'FL' + String(v).padStart(3, '0')).join(' → ') + ')' : '') : 'FL' + blank}`)}
           ${li(`Route: ${(() => { const rp = routePlaces(); return rp.length >= 2 ? `<b>${esc(rp.join(' > '))}</b>` : `<span class="jb-mono">${esc(route || '--')}</span>`; })()}`)}
-          ${li(`Alternate Airport: ${esc(nm(altn))} / ${hmTxt(p.altnMin)}`)}</ul>`)}
+          ${li(`Alternate Airport: ${esc(nm(altn))} / ${hmTxt(p.altnMin)}${en('altn')}`)}</ul>`)}
       </ul>`);
       h.push(`<h2>2. Weather</h2><ul>
         ${li(`<b>가. Departure &amp; Destination, Enroute :</b><ul>
           ${li(`Departure (${esc(info.dep || '')}): ${esc(jbWx(info.dep, w && w.etd, 'ETD'))}`)}
           ${li(`Destination (${esc(info.dest || '')}): ${esc(jbWx(info.dest, w && w.eta, 'ETA'))}`)}
           ${li(`Alternate (${esc(altn)}): ${esc(jbWx(altn, altnT, 'ETA'))}`)}
-          ${li(`Enroute: ${blank}`)}</ul>`)}
-        ${li(`<b>나. Expected Turbulence Time &amp; Severity (SR 6 이상) :</b><ul>${jbTurb(w && w.etd, trip).map(t => li(esc(t))).join('')}</ul>`)}
+          ${li(`Enroute: ${blank}`)}</ul>${en('wx')}`)}
+        ${li(`<b>나. Expected Turbulence Time &amp; Severity (SR 6 이상) :</b><ul>${jbTurb(w && w.etd, trip).map(t => li(esc(t))).join('')}</ul>${en('turb')}`)}
         ${li(`<b>Seat Belt Sign &amp; PA :</b> 기내표준신호에 맞게 차임 실시<ul>
           ${li('Moderate 이상 시 차임 2회 / 기장 PA 실시 (없는 경우는 우선 Cabin PA)')}
           ${li('10,000ft 통과 : Light 이하의 Turbulence 등의 이유로 "OFF (AUTO)" 지연 시 인터폰 통보')}
           ${li(`도착 방송 (비행시간 5시간 기준 실시)${trip != null ? ` : 이번 비행 ${hmTxt(trip)} → ${trip >= 300 ? '실시' : '해당 없음'}` : ''}`)}
-          ${li('App PA : TOD 부근 or (비행시간 2시간 전후) 30분 전 (상호확인)')}</ul>`)}
+          ${li('App PA : TOD 부근 or (비행시간 2시간 전후) 30분 전 (상호확인)')}</ul>${en('belt')}${en('mod')}`)}
       </ul>`);
       h.push(`<h2>3. Security</h2><ul>
-        ${li(`<b>가. Alert Level :</b> ( ${blank} ) — 5(평시), 4(관심), 3(주의), 2(경계), 1(심각)`)}
-        ${li('<b>나. Emphasize that all crew are security staff :</b><ul>' + li('전 승무원은 보안 요원임을 주지하고 의심스러운 승객이나 물품 발견 시 기장에게 보고 (필요한 경우 해당 공항 관계기관에 신고)') + '</ul>')}
+        ${li(`<b>가. Alert Level :</b> ( ${((String(window.__ofpText || '').match(/ALERT\s*([1-5])\s*-\s*ALL STATIONS/i) || [])[1]) || blank} ) — 5(평시), 4(관심), 3(주의), 2(경계), 1(심각)${en('alert')}`)}
+        ${li('<b>나. Emphasize that all crew are security staff :</b><ul>' + li('전 승무원은 보안 요원임을 주지하고 의심스러운 승객이나 물품 발견 시 기장에게 보고 (필요한 경우 해당 공항 관계기관에 신고)') + '</ul>' + en('susp'))}
         ${li('<b>다. Cockpit Entry Procedure (Two-Crew Rule) :</b><ul>' + li('조종실 출입 전 조종실과 인터폰 통화, 청정구역 승객 여부 확인 후 커튼 사용하여 노크 및 키패드 Normal Access Code를 입력한다. 이때 출입상황을 Monitor할 수 있는 객실승무원 1명이 Cockpit Door 입구에 있어야 한다.') + li('조종실을 나갈 때는 인터폰 사용해서, 청정구역 내 승객 여부 확인 후 커튼 닫은 상태에서 출입문을 개방한다.') + '</ul>')}
       </ul>`);
       h.push(`<h2>4. Sterile Cockpit Procedure</h2><ul>
-        ${li('<b>가. Emergency Alert Signal :</b><ul>' + li('객실 내 비상 상황 발생 시 긴급하게 통화 필요 시에는 인터폰 "EMER" 사용해서 연락 바랍니다.') + '</ul>')}
-        ${li('<b>나. Below 10,000 feet :</b><ul>' + li('만 피트 이하 비행 중요 단계에서는 안전과 관련된 상황 또는 위급 상황 발생 시 비상 긴급 신호로 조종실로 연락, 만약 비상절차 조치 등으로 인하여 즉각 응답이 어려운 경우도 있으므로 조치한 후에 다시 연락드리겠습니다.') + '</ul>')}
+        ${li('<b>가. Emergency Alert Signal :</b><ul>' + li('객실 내 비상 상황 발생 시 긴급하게 통화 필요 시에는 인터폰 "EMER" 사용해서 연락 바랍니다.') + '</ul>' + en('emer'))}
+        ${li('<b>나. Below 10,000 feet :</b><ul>' + li('만 피트 이하 비행 중요 단계에서는 안전과 관련된 상황 또는 위급 상황 발생 시 비상 긴급 신호로 조종실로 연락, 만약 비상절차 조치 등으로 인하여 즉각 응답이 어려운 경우도 있으므로 조치한 후에 다시 연락드리겠습니다.') + '</ul>' + en('below'))}
       </ul>`);
       h.push(`<h2>5. Emergency Procedure</h2><ul>
-        ${li('<b>가. Reject Takeoff :</b><ul>' + li('지상에서 비상탈출이 필요한 경우: “Attention, crew at station.”') + li('비상탈출 지시: “This is the Captain. Evacuate, evacuate!”') + li('비상탈출이 필요하지 않은 경우: “This is the Captain. Remain seated, remain seated.”') + '</ul>')}
+        ${li('<b>가. Reject Takeoff :</b><ul>' + li('지상에서 비상탈출이 필요한 경우: “Attention, crew at station.”' + en('rto1')) + li('비상탈출 지시: “This is the Captain. Evacuate, evacuate!”' + en('rto2')) + li('비상탈출이 필요하지 않은 경우: “This is the Captain. Remain seated, remain seated.”' + en('rto3')) + '</ul>')}
         ${li('<b>나. PA &amp; Evacuation Signal :</b><ul>' + li('기장 지시에 따른 비상 탈출 신호 발령 및 객실 승무원의 비상 탈출 유도 절차 수행.') + '</ul>')}
       </ul>`);
       h.push(`<h2>6. Crew Coordination</h2><ul>
         ${li(`<b>가. Temperature Control :</b> ${blank}`)}
-        ${li(`<b>나. Taxi Time &amp; Ready Signal :</b> ${blank}`)}
+        ${li(`<b>나. Taxi Time &amp; Ready Signal :</b> ${blank}${en('taxi')}`)}
         ${li('<b>다. PA Monitoring</b>')}
         ${li('<b>라. Unruly Passenger :</b> 기내 난동 승객 발생 시 조종실로 연락 / 청정 구역 발동 선포 고려')}
         ${li(`<b>마. CABIN LOG :</b> 특이사항 여부 ${blank}`)}
         ${li(`<b>바. Timing of In-flight services (in consultation with the Purser) :</b> ${blank}`)}
         ${li(`<b>사. Special CIQ Procedure (if required) :</b> ${blank}`)}
         ${li('<b>아. 저시정 절차 (550미터) / PED</b>')}
-      </ul>`);
+      </ul>${en('q')}`);
       return h.join('\n');
     }
     const JB_DOC_CSS = `body{font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif;font-size:11pt;line-height:1.55;color:#111}
