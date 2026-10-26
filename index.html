@@ -2975,6 +2975,27 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
     // 노탐 본문에서 좌표 기하(원/다각형/선/점)를 추출. 패키지 1·2·3 공통.
     // "BTN <좌표> AND <좌표>" 는 두 점 사이 구간(선)으로 분리하고, 나머지 좌표만 도형으로 해석
+
+    // ===== 좌표가 본문에 없는 노탐의 알려진 구역 (AIP SUP 등에서 직접 입력) =====
+    const dms = (d, m, s2) => d + m / 60 + s2 / 3600;
+    const KNOWN_AREAS = [
+      { src: 'AIP SUP 72/26', test: b => /AIP SUP 72\/26/.test(b) && /NUCLEAR POWER PLANT/.test(b), cat: 'prohibited',
+        note: '원전 임시 비행금지구역 · H24 · A(안쪽): 공군 작전기만 예외 · B(바깥 10NM, SFC~FL180): 관제 허가 받은 민항기 예외',
+        areas: [
+          { name: 'P61 고리', lat: dms(35, 19, 29), lon: dms(129, 18, 7), aR: 2, aTop: '10,000FT AMSL' },
+          { name: 'P62 월성', lat: dms(35, 43, 4), lon: dms(129, 28, 34), aR: 2, aTop: '10,000FT AMSL' },
+          { name: 'P63 한빛', lat: dms(35, 24, 41), lon: dms(126, 25, 10), aR: 2, aTop: '10,000FT AMSL' },
+          { name: 'P64 한울', lat: dms(37, 6, 0), lon: dms(129, 23, 0), aR: 2, aTop: '8,000FT AMSL' },
+          { name: 'P65 대전', lat: dms(36, 25, 36), lon: dms(127, 22, 11), aR: 1, aTop: '8,000FT AMSL' },
+        ] },
+    ];
+    const kaFms = (la, lo) => `N${String(Math.floor(la)).padStart(2, '0')}${((la % 1) * 60).toFixed(1).padStart(4, '0')} E${String(Math.floor(lo)).padStart(3, '0')}${((lo % 1) * 60).toFixed(1).padStart(4, '0')}`;
+    function knownAreaGeo(body) {
+      const k = KNOWN_AREAS.find(x => x.test(String(body || '').toUpperCase())); if (!k) return null;
+      const parts = k.areas.map(a => ({ name: a.name, shape: 'circle', radiusNm: 10, latlngs: circlePoly(a.lat, a.lon, 10), extraLines: [circlePoly(a.lat, a.lon, a.aR)],
+        fmsCoords: `${a.name} 중심 ${kaFms(a.lat, a.lon)}\nA(안쪽) 반경 ${a.aR}NM SFC~${a.aTop}\nB(바깥) 반경 10NM SFC~FL180 (A 제외)\n${k.note}\n출처: ${k.src}` }));
+      return { shape: 'multi', parts, latlngs: parts[0].latlngs, src: k.src, cat: k.cat, note: k.note };
+    }
     function notamGeometry(body) {
       const nb0 = body.replace(/([NS])(\d{4,6})([EW])(\d{5,7})/g, (m0, ns, la, ew, lo) => la + ns + lo + ew);
       // "OVER OR S/N OF <좌표>" 만으로 이루어진 기준점 나열 → 선/면으로 잇지 않고 점으로 표시
@@ -3134,9 +3155,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
           summary: etext.slice(0, 80) + (etext.length > 80 ? '...' : '')
         };
         // 좌표가 있는 노탐은 패키지 1·2·3 어디서든 지도 대상
-        const geo = notamGeometry(body);
+        const geo0 = notamGeometry(body), kgeo = geo0 ? null : knownAreaGeo(body), geo = geo0;
         const sm = secMarks.filter(x => x[0] < h.index).pop();
-        ordered.push({ ...base, sec: sm ? sm[1] : (pkg === 3 ? 'FIR' : 'DEP'), secCode: sm ? sm[2] : (h[3] || ''), seq: h.index, geo: geo || null, category: classifyAirportNotamCategory(etext, h[4]) });
+        ordered.push({ ...base, sec: sm ? sm[1] : (pkg === 3 ? 'FIR' : 'DEP'), secCode: sm ? sm[2] : (h[3] || ''), seq: h.index, geo: geo || kgeo || null, category: classifyAirportNotamCategory(etext, h[4]) });
         if (h[3] && pkg !== 3) {   // Package 1(출발·목적·교체) / Package 2(ERA) 공항 노탐
           const category = classifyAirportNotamCategory(etext, h[4]);
           airport.push({ ...base, category, pdfSeq: h.index, hasArea: !!geo, ...(geo ? { fmsCoords: geo.fmsCoords } : {}) });
@@ -3152,6 +3173,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
           } else if (h[3]) {
             const it = geoSeen.get(gkey);
             if (!it.airports.includes(h[3])) it.airports.push(h[3]);
+          }
+        } else if (kgeo) {   // 본문에 좌표는 없지만 알려진 구역(AIP SUP)이면 구역마다 지도에 표시
+          const gk = 'known|' + kgeo.src;
+          if (!geoSeen.has(gk)) {
+            geoSeen.set(gk, true);
+            kgeo.parts.forEach(pt => { const item = { ...base, ...pt, notamId: `${base.notamId} · ${pt.name}`, cat: kgeo.cat || base.cat, airports: h[3] ? [h[3]] : [] }; airspace.push(item); fir.push(item); });
           }
         } else {
           others.push({ ...base, airports: h[3] ? [h[3]] : [] });   // 좌표 없는 일반 노탐 (FIR 구간에 연결)
@@ -3823,6 +3850,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
         return { tier: 'W', why: `${BRF_SEC[sec]} 공항: 회항 가능성과 무관` };
       }
       // FIR
+      if (n.geo && n.geo.shape === 'multi') {   // 알려진 구역 여러 개 (예: 원전 비행금지구역)
+        const hits = routeCoordinates.length >= 2 ? n.geo.parts.filter(pt => routeHitInfo(pt.latlngs, false)) : [];
+        if (!hits.length) return { tier: 'W', why: `${n.geo.src} 구역 — 경로와 교차하지 않음` };
+        return { tier: 'Y', why: `${n.geo.src} ${hits.map(pt => pt.name).join('·')} 경로 교차 (SFC~FL180, 관제 허가 시 B구역 예외)` };
+      }
       if (n.geo) {
         const hit = routeCoordinates.length >= 2 && n.geo.shape !== 'refpoints' ? routeHitInfo(n.geo.latlngs, n.geo.shape === 'line') : null;
         if (!hit) return { tier: 'W', why: '경로와 교차하지 않음 (좌표)' };
@@ -4129,7 +4161,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       }
       if ((b = t.closest('[data-brf-era-all]'))) { brfEraSel = b.dataset.brfEraAll === '1' ? null : new Set(); renderBriefing(); return; }
       if ((b = t.closest('[data-brf-map]'))) {
-        const id = b.dataset.brfMap, a = airNotams.find(x => x.notamId === id);
+        const id = b.dataset.brfMap, a = airNotams.find(x => x.notamId === id) || airNotams.find(x => x.notamId.startsWith(id + ' · ') && routeCoordinates.length >= 2 && routeHitInfo(x.latlngs, false)) || airNotams.find(x => x.notamId.startsWith(id + ' · '));
         if (a) gotoNotam(a); else showToast('지도에 표시된 도형이 없습니다'); return;
       }
       if (t.closest('[data-brf-white]')) { brfShowWhite = true; $('brf-white').checked = true; renderBriefing(); return; }
