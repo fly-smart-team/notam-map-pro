@@ -864,6 +864,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
         <!-- 출발 / 목적 / 교체 공항 이름 (한글 · English) -->
         <div id="flt-info"></div>
+        <div id="wx-ai"></div>
         <div id="pkg1-airport-names" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-2 text-[12px]"></div>
 
         <!-- 공항 탭 (3번 섹션 탭과 동일 기능 · 2번에서는 숨김) -->
@@ -3225,6 +3226,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         if (!window.pdfjsLib) throw new Error('PDF 읽기 엔진 로드 실패');
         const data = new Uint8Array(await file.arrayBuffer());
         const pdf = await openPdf(data);
+        window.__pdfDoc = pdf;
 
         const layoutPages = [], eolPages = [];
         for (let i = 1; i <= pdf.numPages; i++) {
@@ -3264,7 +3266,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         airNotams = parsed.airspace;
         otherNotams = parsed.others;
         ofpOrdered = parsed.ordered; brfEraSel = null; brfStarView = false;
-        pdfFlt = parseFlightInfo(fullText, fplToApply); pdfTaf = parseTafs(fullText); pdfExtras = parseOfpExtras(fullText); setTimeout(() => { refreshLiveWx(true); startAcLive(); }, 0); window.__ofpText = fullText;
+        pdfFlt = parseFlightInfo(fullText, fplToApply); pdfTaf = parseTafs(fullText); pdfExtras = parseOfpExtras(fullText); setTimeout(() => { refreshLiveWx(true); startAcLive(); try { renderWxBrief(); } catch (e) { } }, 0); window.__ofpText = fullText;
         package1AirportNotams = parsed.airport.filter(n => n.pkg !== 2);
         package2AirportNotams = parsed.airport.filter(n => n.pkg === 2);
         package2AreaNotams = [];
@@ -3544,6 +3546,49 @@ svg.leaflet-image-layer.leaflet-interactive path {
       coadKo = { items: d.items, version: d.version || '', ids: new Set(Object.values(d.items).map(x => x.id)) };
       try { renderBriefing(); } catch (e) { }
     }).catch(() => { });
+
+    // ───── 기상 차트 분석 (wx-brief.json, 비행 전날 Claude가 OFP 차트를 읽고 작성) ─────
+    let wxBrief = { items: {} };
+    const wxKey = () => { const f = (document.getElementById('fpl-input') || {}).value || ''; const cs = (f.match(/\(FPL-([A-Z0-9]+)/) || [])[1] || ''; return [cs, info.dep || '', info.dest || '', info.flightDate || ''].join('|'); };
+    const wxOf = () => wxBrief.items[wxKey()] || null;
+    fetch('wx-brief.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).then(d => { if (d && d.items) { wxBrief = d; try { renderWxBrief(); } catch (e) { } } }).catch(() => { });
+    function renderWxBrief() {
+      const box = $('wx-ai'); if (!box) return;
+      if (!info.dep || !info.dest) { box.innerHTML = ''; return; }
+      const W = wxOf();
+      if (!W) { box.innerHTML = `<div class="text-[11px] text-slate-500 border border-dashed border-slate-700 rounded-lg px-2 py-1.5">🌦️ 이 비행의 기상 차트 분석이 없습니다 — 비행 전 OFP를 Claude에게 주면 추가됩니다. <span class="mono">${esc(wxKey())}</span></div>`; return; }
+      const sec = (t, inner) => `<div class="mt-2"><div class="text-[12px] font-bold text-sky-200 mb-1">${t}</div>${inner}</div>`;
+      box.innerHTML = `<details open class="rounded-xl border border-sky-700/60 bg-sky-950/30 p-2.5">
+        <summary class="cursor-pointer select-none font-bold text-[13px] text-sky-100">🌦️ 기상 차트 분석 <span class="ml-1 text-[10px] font-normal text-slate-400">${esc(W.flight || '')} · ETD ${esc(W.etd || '')} / ETA ${esc(W.eta || '')} · Claude 작성 ${esc(W.made || '')}</span></summary>
+        <div class="text-[10.5px] text-slate-400 mt-1">${esc(W.source || '')}</div>
+        ${sec('핵심', `<ul class="list-disc pl-5 text-[12.5px] leading-snug text-slate-100 space-y-0.5">${(W.key || []).map(k => `<li>${esc(k)}</li>`).join('')}</ul>`)}
+        ${sec('종합 — 비행 순서대로', `<div class="flex flex-col gap-1">${(W.overall || []).map(o => `<div class="rounded-md bg-slate-900/70 border border-slate-800 px-2 py-1"><div class="text-[11px] font-bold text-amber-200">${esc(o.t)}</div><div class="text-[12.5px] leading-snug text-slate-200">${esc(o.s)}</div></div>`).join('')}</div>`)}
+        ${sec('차트별 해설', `<div class="flex flex-col gap-1.5">${(W.charts || []).map((c, i) => `<details class="rounded-md bg-slate-900/70 border border-slate-800">
+            <summary class="cursor-pointer select-none px-2 py-1 text-[12px] font-bold text-slate-100">📄 ${esc(c.title)} <span class="font-normal text-[10px] text-slate-400">${esc(c.valid || '')} · OFP ${c.page}쪽</span></summary>
+            <div class="px-2 pb-2 flex flex-col gap-1 text-[12.5px] leading-snug">
+              <div><b class="text-sky-300">어떤 차트</b> <span class="text-slate-200">${esc(c.what)}</span></div>
+              <div><b class="text-amber-300">이번 비행</b> <span class="text-slate-200">${esc(c.see)}</span></div>
+              <div><b class="text-emerald-300">비행 적용</b> <span class="text-slate-200">${esc(c.apply)}</span></div>
+              <div><button type="button" data-wx-page="${c.page}" class="px-2 py-1 rounded border border-slate-600 bg-slate-800 text-[11px] text-slate-200">🖼 원본 차트 보기 (${c.page}쪽)</button><div data-wx-img="${c.page}" class="mt-1"></div></div>
+            </div></details>`).join('')}</div>`)}
+        <div class="mt-2 text-[10.5px] text-amber-300/90">⚠ 차트를 사람이 읽듯 해석한 참고 자료입니다. 경계·위치는 대략적이니 원본 차트와 최신 기상을 함께 확인하세요.</div>
+      </details>`;
+    }
+    document.addEventListener('click', async e => {
+      const b = e.target.closest && e.target.closest('[data-wx-page]'); if (!b) return;
+      const pg = +b.dataset.wxPage, holder = document.querySelector(`[data-wx-img="${pg}"]`); if (!holder) return;
+      if (holder.firstChild) { holder.innerHTML = ''; b.textContent = `🖼 원본 차트 보기 (${pg}쪽)`; return; }
+      const doc = window.__pdfDoc;
+      if (!doc) { holder.innerHTML = '<div class="text-[11px] text-slate-400">OFP를 다시 올리면 원본 차트를 볼 수 있습니다.</div>'; return; }
+      try {
+        b.textContent = '불러오는 중…';
+        const page = await doc.getPage(pg), vp0 = page.getViewport({ scale: 1 }), scale = Math.min(2.5, (holder.clientWidth || 600) * (window.devicePixelRatio || 1) / vp0.width);
+        const vp = page.getViewport({ scale }), cv = document.createElement('canvas');
+        cv.width = vp.width; cv.height = vp.height; cv.style.width = '100%'; cv.style.borderRadius = '6px'; cv.style.background = '#fff';
+        await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+        holder.innerHTML = ''; holder.appendChild(cv); b.textContent = '접기';
+      } catch (er) { holder.innerHTML = '<div class="text-[11px] text-rose-300">차트를 그리지 못했습니다.</div>'; b.textContent = `🖼 원본 차트 보기 (${pg}쪽)`; }
+    });
     // ───── 노탐 사전 요약 (notam-ko.json) ─────
     // 비행 전날 OFP를 Claude에게 주면 미리 요약해 저장 → 같은 원문은 AI 호출 없이 바로 표시, 바뀐 것만 AI
     let preKo = { items: {}, version: '' };
@@ -5188,6 +5233,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const blank = '<span class="jb-blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>';
       const h = [];
       const E = jbEnMap({ p, w, pax, trip, altn }), en = k => jbEnLine(E, k);
+      const WB = (typeof wxOf === 'function' && wxOf()) || null, WC = WB && WB.crew;
+      if (WC) { E.wx = (E.wx || []).concat([[WC.wxKo, WC.wxEn]]); E.turb = [[WC.turbKo, WC.turbEn]]; }
       h.push(`<h1>JOINT BRIEFING</h1><p class="jb-sub">${esc(jbFlightNo(cs))} · ${esc(info.dep || '')} → ${esc(info.dest || '')} · ${esc(info.flightDate || '')} · 작성 ${new Date().toISOString().slice(0, 16).replace('T', ' ')}Z</p>` + jbGreetHtml());
       h.push(`<h2>1. Flight Information: CREW</h2><ul>
         ${li(`<b>가. Flight Number / Flight Leg :</b> ${esc(cs || '--')} / ${esc(aptKoEn(info.dep))} → ${esc(aptKoEn(info.dest))}`)}
@@ -5205,8 +5252,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
           ${li(`Departure (${esc(info.dep || '')}): ${esc(jbWx(info.dep, w && w.etd, 'ETD'))}`)}
           ${li(`Destination (${esc(info.dest || '')}): ${esc(jbWx(info.dest, w && w.eta, 'ETA'))}`)}
           ${li(`Alternate (${esc(altn)}): ${esc(jbWx(altn, altnT, 'ETA'))}`)}
-          ${li(`Enroute: ${blank}`)}</ul>${en('wx')}`)}
-        ${li(`<b>나. Expected Turbulence Time &amp; Severity (SR 6 이상) :</b><ul>${jbTurb(w && w.etd, trip).map(t => li(esc(t))).join('')}</ul>${en('turb')}`)}
+          ${li(`Enroute: ${WC ? `<b>기상 차트</b> ${esc(WC.wxKo)}` : blank}`)}</ul>${en('wx')}`)}
+        ${li(`<b>나. Expected Turbulence Time &amp; Severity (SR 6 이상) :</b><ul>${jbTurb(w && w.etd, trip).map(t => li(esc(t))).join('')}${WC ? li(`<b>기상 차트</b> ${esc(WC.turbKo)}`) : ''}</ul>${en('turb')}`)}
         ${li(`<b>Seat Belt Sign &amp; PA :</b> 기내표준신호에 맞게 차임 실시<ul>
           ${li('Moderate 이상 시 차임 2회 / 기장 PA 실시 (없는 경우는 우선 Cabin PA)')}
           ${li('10,000ft 통과 : Light 이하의 Turbulence 등의 이유로 "OFF (AUTO)" 지연 시 인터폰 통보')}
