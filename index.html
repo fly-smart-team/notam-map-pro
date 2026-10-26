@@ -3441,7 +3441,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     // ───── AI 요약 (개인용 NOTAM Pro) ─────
     // 앱 → notam-ai Worker → DeepSeek/Claude. 키는 Worker에만 있고, 앱에는 개인 접근 토큰만 저장.
     const AI_DEFAULT = 'https://notam-ai.flyacelee.workers.dev';
-    const AI_SUM_KEY = 'notamPro.aiSum.v1', AI_TOKEN_KEY = 'notamPro.aiToken', AI_BASE_KEY = 'notamPro.aiBase';
+    const AI_SUM_KEY = 'notamPro.aiSum.v2', AI_TOKEN_KEY = 'notamPro.aiToken', AI_BASE_KEY = 'notamPro.aiBase';
     const AI_DIFFICULT = '요약 어려움 · 원문 확인';
     const aiBase = () => { try { return (localStorage.getItem(AI_BASE_KEY) || AI_DEFAULT).trim().replace(/\/+$/, ''); } catch (e) { return AI_DEFAULT; } };
     const aiToken = () => { try { return localStorage.getItem(AI_TOKEN_KEY) || ''; } catch (e) { return ''; } };
@@ -3463,8 +3463,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (!/[A-Z0-9]/.test(ko) || /^\s*[A-G]\)/.test(ko) || String(n.etext || '').replace(/\s+/g, ' ').startsWith(ko.replace(/\.\.\.$|…$/, '').trim().slice(0, 20))) ko = '';
       return ko;
     }
-    // AI가 필요한 노탐: 규칙 번역이 "요약 어려움"이거나 비어 있는 것
-    const aiNeeds = n => !aiOf(n) && (() => { const k = koRuleOf(n); return !k || k === AI_DIFFICULT; })();
+    // 규칙 번역에 영어 일반 단어가 3개 이상 남으면 번역이 덜 된 것으로 봄 (식별부호·단위·약어는 제외)
+    const AI_KEEP = new Set('RWY TWY ILS LOC GP GS DME VOR NDB GPS GNSS RNAV RNP GLS ATC ACC APP TWR FIR UIR SID STAR IAP AIP SUP AIRAC COAD NOTAM FT AGL AMSL MSL UTC NM KT FL ETD ETA PAPI VASIS ALS ATIS VHF HF UHF MHZ KHZ CTR TMA CTA AWY RVR ICAO NIL AD'.split(' '));
+    const koLeftover = k => (String(k).match(/\b[A-Z][A-Z\-]*[A-Z]\b/g) || []).filter(w => w.length >= 3 && !AI_KEEP.has(w)).length;
+    // AI가 필요한 노탐: 규칙 번역이 "요약 어려움"·비어 있음·영어가 많이 남은 것
+    const aiNeeds = n => !aiOf(n) && (() => { const k = koRuleOf(n); return !k || k === AI_DIFFICULT || koLeftover(k) >= 3; })();
     function aiAskToken() {
       const v = prompt('AI 접근 토큰을 입력하세요 (np-로 시작)\n이 기기에만 저장됩니다.', aiToken());
       if (v == null) return false;
@@ -3923,7 +3926,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const item = (r, full) => {
         const T = TIER[r.tier], n = r.n, open = full || isOpen(r);
         let ko = koRuleOf(n);
-        const ai = aiOf(n); if (ai && ko === AI_DIFFICULT) ko = '';
+        const ai = aiOf(n); if (ai) ko = '';   // AI 요약이 있으면 규칙 번역은 숨김 (원문은 그대로 표시)
         const line = String(n.etext || n.summary || '').replace(/\s+/g, ' ').trim();
         let koHtml = ko ? `<div class="text-[11px] text-sky-200/90 leading-snug">${esc(ko)}</div>` : '';
         if (isAkaraToc(n)) { const A = akaraTocApply(n); if (A && A.off) koHtml = `<div class="text-[12px] text-slate-400">🧭 내 경로는 AKARA-FUKUE 회랑을 지나지 않습니다.</div>`; else if (A) koHtml = `<div class="text-[13px] leading-snug rounded-md border border-violet-600/60 bg-violet-950/50 px-2 py-1 text-violet-100">🧭 <b>내 비행 적용</b> · ${A.line}</div>`; }

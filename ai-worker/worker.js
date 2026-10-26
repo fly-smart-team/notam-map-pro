@@ -1,4 +1,4 @@
-// NOTAM Pro — AI 중계 Worker (개인용) v0.2
+// NOTAM Pro — AI 중계 Worker (개인용) v0.3
 // 여러 AI를 순서대로 시도: 앞의 AI가 실패하면 다음 AI로 자동 전환
 //
 // 경로
@@ -16,7 +16,7 @@
 //   DEEPSEEK_MODEL     : 기본 deepseek-flash
 //   ANTHROPIC_MODEL    : 기본 claude-haiku-5-5
 
-const VERSION = '0.2';
+const VERSION = '0.3';
 const ALLOWED_ORIGINS = ['https://fly-smart-team.github.io'];
 const MAX_NOTAMS = 30;           // 한 번에 보낼 수 있는 노탐 수
 const MAX_CHARS = 4000;          // 노탐 하나 최대 글자 수
@@ -60,15 +60,27 @@ async function fetchWithTimeout(url, opts) {
 }
 
 // ───────── 지시문 ─────────
-const SYSTEM_PROMPT = `너는 민항기 조종사를 위한 NOTAM 요약 도우미다.
-각 NOTAM 원문을 한국어로 짧게(1~2문장) 요약한다.
+const SYSTEM_PROMPT = `너는 민항기 기장을 돕는 NOTAM 해설 도우미다. 각 NOTAM을 자연스러운 한국어로 완전히 옮겨 요약한다.
+
 규칙:
-- 원문에 없는 내용을 추측하거나 덧붙이지 않는다.
-- 숫자·주파수·활주로·고도·좌표·시간·식별부호는 원문 그대로 옮긴다 (단위 변환 금지).
-- 항공 약어(RWY, TWY, ILS, U/S, CLSD 등)는 한국어로 풀되, 식별부호(예: RWY 33L, ILS 15R)는 그대로 둔다.
-- 운항에 영향을 주는 핵심(무엇이, 어디서, 언제, 어떻게)을 먼저 쓴다.
-- 원문이 잘렸거나 뜻이 모호하면 uncertain을 true로 하고, 요약에 "원문 확인 필요"를 붙인다.
-- 입력받은 모든 NOTAM에 대해 id를 그대로 돌려준다.`;
+- 영어 단어를 한국어 문장 속에 섞어 남기지 않는다. 일반 영어(FOR, WORKERS, CAN BE, PRIOR NOTICE 등)는 모두 한국어로 옮긴다.
+- 영어로 남겨도 되는 것: 식별부호(RWY 05/23, TWY A, ILS 15R, VOR 'ABC', 공항코드, 픽스·항로 이름), 주파수, 숫자, 단위(FT, NM, KT, FL), 시간(UTC).
+- 숫자·주파수·활주로·고도·좌표·시간은 원문 그대로 옮긴다 (단위 변환·계산 금지).
+- 원문에 없는 내용은 추측하거나 덧붙이지 않는다. 다만 원문 문장이 뜻하는 바(예: "단일 활주로 폐쇄" = 공항에 이착륙 가능한 활주로 없음)는 원문 범위 안에서 풀어 쓴다.
+- 구성: ① 무엇이 어떻게(폐쇄·사용 불가·변경) ② 이유 ③ 예외·조건(사전 통보, PPR 등) ④ COMMENT의 운항상 의미. 1~3문장.
+- 시간 범위(D 항목 등)는 앱이 따로 보여주므로 반복하지 않는다. 단, E 항목 안의 시간 조건은 옮긴다.
+- 원문이 잘렸거나 뜻이 모호하면 uncertain을 true로 하고 요약 끝에 "원문 확인 필요"를 붙인다.
+- 입력받은 모든 NOTAM에 대해 id를 그대로 돌려준다.
+
+용어 (이 뜻으로 옮긴다):
+WORKERS 작업자 · EQPT 장비 · WIP 공사 · MAINT 정비 · RE-PAINTING 재도색 · RCL 활주로 중심선 · EDGE(S) 가장자리 · MARKING 표지
+AD-HOC (FLT) 비정기편 · DIV FLT 회항편(다른 공항에서 회항해 오는 항공기) · MEDEVAC 응급환자 후송 비행 · SAR 수색구조 · HOSP FLT 병원 이송편
+ACPT 수용(허용) · WI TWO HR PRIOR NOTICE 2시간 전 사전 통보 시 · PPR 사전 허가 필요 · O/R 요청 시 · EXC 제외 · SINGLE RWY 단일 활주로
+U/S 사용 불가(고장) · NOT AVBL 사용 불가 · CLSD 폐쇄 · TEMPO 일시 · OBST 장애물 · LGT 등화 · ALS 진입등 · PAPI 진입각 지시등 · AD 공항 · ATC 관제
+
+예시:
+원문: E) RWY 05/23 CLSD FOR RE-PAINTING RCL AND EDGES MARKING THERE WILL BE EQPT AND WORKERS ON RWY AD-HOC,DIV FLT AND MEDEVAC CAN BE ACPT WI TWO HR PRIOR NOTICE COMMENT) SINGLE RWY CLSD
+요약: RWY 05/23 폐쇄(활주로 중심선·가장자리 표지 재도색), 활주로 위에 장비와 작업자 있음. 비정기편·회항편·응급환자 후송 비행은 2시간 전 사전 통보 시 수용 가능. 단일 활주로 공항이라 해당 시간에는 이착륙 가능한 활주로가 없음.`;
 
 const JSON_RULE = `
 출력은 아래 형식의 JSON 하나만 쓴다. 다른 글은 쓰지 않는다.
@@ -208,7 +220,7 @@ async function notamSummary(request, env, origin) {
   const cache = caches.default;
   const out = {}, missing = [];
   for (const n of notams) {
-    const key = new Request(`https://notam-ai.cache/v2/${await sha256(n.text)}`);
+    const key = new Request(`https://notam-ai.cache/v3/${await sha256(n.text)}`);
     const hit = await cache.match(key);
     if (hit) out[n.id] = { ...(await hit.json()), id: n.id, cached: true };
     else missing.push({ ...n, key });
