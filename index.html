@@ -864,7 +864,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
         <!-- 출발 / 목적 / 교체 공항 이름 (한글 · English) -->
         <div id="flt-info"></div>
-        <div id="wx-ai"></div>
         <div id="pkg1-airport-names" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-2 text-[12px]"></div>
 
         <!-- 공항 탭 (3번 섹션 탭과 동일 기능 · 2번에서는 숨김) -->
@@ -3552,6 +3551,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const wxKey = () => { const f = (document.getElementById('fpl-input') || {}).value || ''; const cs = (f.match(/\(FPL-([A-Z0-9]+)/) || [])[1] || ''; return [cs, info.dep || '', info.dest || '', info.flightDate || ''].join('|'); };
     const wxOf = () => wxBrief.items[wxKey()] || null;
     fetch('wx-brief.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).then(d => { if (d && d.items) { wxBrief = d; try { renderWxBrief(); } catch (e) { } } }).catch(() => { });
+    // 2번 칸(Flight Information)이 다시 그려질 때마다 기상 차트 분석도 다시 넣음 (기상·기온 바로 아래)
+    { const _rfi = renderFlightInfo; renderFlightInfo = function () { const r = _rfi.apply(this, arguments); try { renderWxBrief(); } catch (e) { } return r; }; }
     function renderWxBrief() {
       const box = $('wx-ai'); if (!box) return;
       if (!info.dep || !info.dest) { box.innerHTML = ''; return; }
@@ -3561,7 +3562,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       box.innerHTML = `<details open class="rounded-xl border border-sky-700/60 bg-sky-950/30 p-2.5">
         <summary class="cursor-pointer select-none font-bold text-[13px] text-sky-100">🌦️ 기상 차트 분석 <span class="ml-1 text-[10px] font-normal text-slate-400">${esc(W.flight || '')} · ETD ${esc(W.etd || '')} / ETA ${esc(W.eta || '')} · Claude 작성 ${esc(W.made || '')}</span></summary>
         <div class="text-[10.5px] text-slate-400 mt-1">${esc(W.source || '')}</div>
-        ${sec('핵심', `<ul class="list-disc pl-5 text-[12.5px] leading-snug text-slate-100 space-y-0.5">${(W.key || []).map(k => `<li>${esc(k)}</li>`).join('')}</ul>`)}
+        ${sec('핵심', `<ul class="text-[12.5px] leading-snug text-slate-100" style="list-style:disc;padding-left:22px;margin:0">${(W.key || []).map(k => `<li>${esc(k)}</li>`).join('')}</ul>`)}
         ${sec('종합 — 비행 순서대로', `<div class="flex flex-col gap-1">${(W.overall || []).map(o => `<div class="rounded-md bg-slate-900/70 border border-slate-800 px-2 py-1"><div class="text-[11px] font-bold text-amber-200">${esc(o.t)}</div><div class="text-[12.5px] leading-snug text-slate-200">${esc(o.s)}</div></div>`).join('')}</div>`)}
         ${sec('차트별 해설', `<div class="flex flex-col gap-1.5">${(W.charts || []).map((c, i) => `<details class="rounded-md bg-slate-900/70 border border-slate-800">
             <summary class="cursor-pointer select-none px-2 py-1 text-[12px] font-bold text-slate-100">📄 ${esc(c.title)} <span class="font-normal text-[10px] text-slate-400">${esc(c.valid || '')} · OFP ${c.page}쪽</span></summary>
@@ -5755,6 +5756,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           </div>
           ${renderWxRaw([info.dep, info.dest, altnCode])}
         </div>
+        <div id="wx-ai"></div>
         <div class="grid grid-cols-3 gap-2">
           ${tile('순항고도', tocFl ? flTxt(tocFl) : '--', steps.length > 1 ? 'STEP ' + steps.map(flTxt).join(' → ') : '')}
           ${tile('예약 현황', pax ? `${pax.f + pax.c + pax.y}명` : '--', pax ? `F ${pax.f}/${pax.fc} · C ${pax.c}/${pax.cc} · Y ${pax.y}/${pax.yc}` : (pdfFlt ? 'OFP에 예약 정보 없음' : ''), 'text-emerald-300')}
