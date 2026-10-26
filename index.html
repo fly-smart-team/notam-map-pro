@@ -5110,6 +5110,38 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (!dep && !dest) return `( ${blank} )`;
       return `<b>${dep || `( ${blank} )`}</b>${dep ? ` <span class="jb-mono">${esc(info.dep || '')}</span>` : ''}${dest ? ` · 도착 ${esc(info.dest || '')} ${dest}` : ''}`;
     }
+
+    // ===== Joint Brief 영어 스크립트 · 인사말 =====
+    const PLACE_EN = {"인천": "Incheon", "서울": "Seoul", "강원": "Gangwon", "충청": "Chungcheong", "대구": "Daegu", "부산": "Busan", "포항": "Pohang", "울릉도": "Ulleungdo", "광주": "Gwangju", "제주": "Jeju", "군산": "Gunsan", "여수": "Yeosu", "평양": "Pyongyang", "신의주": "Sinuiju", "원산": "Wonsan", "청진": "Chongjin", "니가타": "Niigata", "센다이": "Sendai", "도쿄": "Tokyo", "나고야": "Nagoya", "오사카": "Osaka", "후쿠오카": "Fukuoka", "히로시마": "Hiroshima", "마쓰에": "Matsue", "가나자와": "Kanazawa", "삿포로": "Sapporo", "아오모리": "Aomori", "구시로": "Kushiro", "가고시마": "Kagoshima", "오키나와": "Okinawa", "베이징": "Beijing", "톈진": "Tianjin", "다롄": "Dalian", "칭다오": "Qingdao", "상하이": "Shanghai", "선양": "Shenyang", "하얼빈": "Harbin", "창춘": "Changchun", "옌지": "Yanji", "지난": "Jinan", "난징": "Nanjing", "항저우": "Hangzhou", "광저우": "Guangzhou", "홍콩": "Hong Kong", "우한": "Wuhan", "시안": "Xi'an", "청두": "Chengdu", "쿤밍": "Kunming", "우루무치": "Urumqi", "란저우": "Lanzhou", "후허하오터": "Hohhot", "타이베이": "Taipei", "샤먼": "Xiamen", "싼야": "Sanya", "울란바토르": "Ulaanbaatar", "블라디보스토크": "Vladivostok", "하바롭스크": "Khabarovsk", "사할린": "Sakhalin", "캄차카": "Kamchatka", "마가단": "Magadan", "추코트카": "Chukotka", "이르쿠츠크": "Irkutsk", "크라스노야르스크": "Krasnoyarsk", "노보시비르스크": "Novosibirsk", "야쿠츠크": "Yakutsk", "예카테린부르크": "Yekaterinburg", "모스크바": "Moscow", "상트페테르부르크": "St. Petersburg", "알마티": "Almaty", "타슈켄트": "Tashkent", "아스타나": "Astana", "마닐라": "Manila", "세부": "Cebu", "방콕": "Bangkok", "하노이": "Hanoi", "다낭": "Da Nang", "호찌민": "Ho Chi Minh City", "싱가포르": "Singapore", "쿠알라룸푸르": "Kuala Lumpur", "자카르타": "Jakarta", "발리": "Bali", "프놈펜": "Phnom Penh", "비엔티안": "Vientiane", "양곤": "Yangon", "괌": "Guam", "사이판": "Saipan", "코타키나발루": "Kota Kinabalu", "팔라우": "Palau", "델리": "Delhi", "뭄바이": "Mumbai", "카트만두": "Kathmandu", "콜롬보": "Colombo", "두바이": "Dubai", "도하": "Doha", "테헤란": "Tehran", "이스탄불": "Istanbul", "프랑크푸르트": "Frankfurt", "파리": "Paris", "런던": "London", "로마": "Rome", "밀라노": "Milan", "바르셀로나": "Barcelona", "마드리드": "Madrid", "암스테르담": "Amsterdam", "빈": "Vienna", "프라하": "Prague", "부다페스트": "Budapest", "바르샤바": "Warsaw", "헬싱키": "Helsinki", "스톡홀름": "Stockholm", "코펜하겐": "Copenhagen", "오슬로": "Oslo", "베를린": "Berlin", "뮌헨": "Munich", "취리히": "Zurich", "아테네": "Athens", "자그레브": "Zagreb", "레이캬비크": "Reykjavik", "리스본": "Lisbon", "그린란드": "Greenland", "앵커리지": "Anchorage", "페어뱅크스": "Fairbanks", "알래스카": "Alaska", "알류샨 열도": "Aleutian Islands", "콜드베이": "Cold Bay", "유콘": "Yukon", "옐로나이프": "Yellowknife", "에드먼턴": "Edmonton", "캘거리": "Calgary", "밴쿠버": "Vancouver", "위니펙": "Winnipeg", "허드슨만": "Hudson Bay", "처칠": "Churchill", "토론토": "Toronto", "오타와": "Ottawa", "몬트리올": "Montreal", "캐나다 북부": "Northern Canada", "시애틀": "Seattle", "포틀랜드": "Portland", "샌프란시스코": "San Francisco", "로스앤젤레스": "Los Angeles", "라스베이거스": "Las Vegas", "솔트레이크시티": "Salt Lake City", "덴버": "Denver", "피닉스": "Phoenix", "댈러스": "Dallas", "휴스턴": "Houston", "시카고": "Chicago", "미니애폴리스": "Minneapolis", "디트로이트": "Detroit", "애틀랜타": "Atlanta", "마이애미": "Miami", "워싱턴": "Washington", "뉴욕": "New York", "보스턴": "Boston", "호놀룰루": "Honolulu", "리노": "Reno", "보이시": "Boise", "스포캔": "Spokane", "빌링스": "Billings", "앨버커키": "Albuquerque", "엘패소": "El Paso", "오클라호마시티": "Oklahoma City", "캔자스시티": "Kansas City", "오마하": "Omaha", "세인트루이스": "St. Louis", "멤피스": "Memphis", "내슈빌": "Nashville", "피츠버그": "Pittsburgh", "클리블랜드": "Cleveland", "필라델피아": "Philadelphia", "샬럿": "Charlotte", "올랜도": "Orlando", "뉴올리언스": "New Orleans", "시드니": "Sydney", "브리즈번": "Brisbane", "케언스": "Cairns", "다윈": "Darwin", "오클랜드": "Auckland", "서해": "Yellow Sea", "동해": "East Sea", "동중국해": "East China Sea", "오호츠크해": "Sea of Okhotsk", "베링해": "Bering Sea", "알래스카만": "Gulf of Alaska", "북태평양": "North Pacific", "북대서양": "North Atlantic", "북극해": "Arctic Ocean", "남중국해": "South China Sea", "필리핀해": "Philippine Sea", "시베리아": "Siberia", "캐나다": "Canada", "미국": "USA", "몽골": "Mongolia"};
+    const placeEn = k => PLACE_EN[k] || k;
+    // 공항: "Hong Kong (VHHH)"
+    function aptEn(c) {
+      if (!c) return '--';
+      const n = getAirportNameInfo(c), en = (n && n.en) || (typeof AIRPORT_EN !== 'undefined' && AIRPORT_EN[c]) || '';
+      return en ? `${en} (${c})` : c;
+    }
+    // 기상·난기류 문구의 한국어 표현을 영어로
+    function jbEnTxt(t) {
+      return String(t || '')
+        .replace(/OFP 디스패치 노트/g, 'OFP dispatch note').replace(/SR 6 이상 구간 없음/g, 'No segment with SR 6 or higher').replace(/SR 최대/g, 'max SR')
+        .replace(/현재 기온/g, 'Current temp').replace(/\(METAR 조회 실패\)/g, '(METAR unavailable)').replace(/실시간 조회 불가/g, 'live data unavailable').replace(/조회 중/g, 'loading')
+        .replace(/현재\(/g, 'Now (').replace(/현재:/g, 'Now:').replace(/ 예보 /g, ' forecast ').replace(/예상 /g, 'expected ').replace(/OFP TAF 없음/g, 'no TAF in OFP')
+        .replace(/(\d+)시간\s?(\d+)분/g, '$1h $2min').replace(/(\d+)시간/g, '$1h').replace(/(\d+)분/g, '$1min');
+    }
+    const jbEn = items => `<div class="jb-en"><div class="jb-en-h">🇬🇧 English script</div><ul>${items.filter(Boolean).map(x => `<li>${x}</li>`).join('')}</ul></div>`;
+    // 외국인 승무원에게 브리핑 언어를 묻는 인사말 (각 나라 말 · 한글 발음)
+    const JB_GREET = [
+      ['🇨🇳', '중국어', '您好。我可以用韩语进行简报吗？', 'Nín hǎo. Wǒ kěyǐ yòng Hányǔ jìnxíng jiǎnbào ma?', '닌 하오. 워 커이 융 한위 진싱 지엔바오 마?'],
+      ['🇯🇵', '일본어', 'こんにちは。韓国語でブリーフィングをしてもよろしいでしょうか。', 'Konnichiwa. Kankokugo de burīfingu o shite mo yoroshii deshō ka?', '곤니치와. 칸코쿠고데 브리-핑구오 시테모 요로시- 데쇼-카?'],
+      ['🇻🇳', '베트남어', 'Xin chào. Tôi có thể brief bằng tiếng Hàn được không ạ?', '', '신 짜오. 또이 꺼 테 브리프 방 띠엥 한 드억 콩 아?'],
+      ['🇹🇭', '태국어', 'สวัสดีครับ ผมขอบรีฟเป็นภาษาเกาหลีได้ไหมครับ', 'Sawatdee khrap. Phom kho brief pen phasa Kaoli dai mai khrap?', '사왓디 크랍. 폼 커 브리프 뻰 파사 까올리 다이 마이 크랍?'],
+      ['🇵🇭', '필리핀어(타갈로그)', 'Magandang araw po. Puwede po ba akong mag-brief sa wikang Korean?', '', '마간당 아라우 포. 푸웨데 포 바 아콩 막브리프 사 위캉 코리안?'],
+      ['🇬🇧', '영어', 'Hello. May I give the briefing in Korean? If not, I will brief in English.', '', '헬로. 메이 아이 기브 더 브리핑 인 코리안? 이프 낫, 아이 윌 브리프 인 잉글리시.'],
+    ];
+    function jbGreetHtml() {
+      return `<div class="jb-greet"><div class="jb-en-h">🌏 브리핑 언어 확인 — "안녕하세요. 한국어로 브리핑해도 될까요?"</div><table>${JB_GREET.map(g =>
+        `<tr><td class="jb-gl">${g[0]} ${g[1]}</td><td><div class="jb-gp">${g[2]}</div>${g[3] ? `<div class="jb-gr">${g[3]}</div>` : ''}<div class="jb-gk">🗣 ${g[4]}</div></td></tr>`).join('')}</table></div>`;
+    }
     function buildJointBrief() {
       const p = pdfFlt || {}, fpl = $('fpl-input').value, w = flightWindow();
       const cs = p.callsign || (fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '';
@@ -5130,7 +5162,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const li = t => `<li>${t}</li>`;
       const blank = '<span class="jb-blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>';
       const h = [];
-      h.push(`<h1>JOINT BRIEFING</h1><p class="jb-sub">${esc(jbFlightNo(cs))} · ${esc(info.dep || '')} → ${esc(info.dest || '')} · ${esc(info.flightDate || '')} · 작성 ${new Date().toISOString().slice(0, 16).replace('T', ' ')}Z</p>`);
+      h.push(`<h1>JOINT BRIEFING</h1><p class="jb-sub">${esc(jbFlightNo(cs))} · ${esc(info.dep || '')} → ${esc(info.dest || '')} · ${esc(info.flightDate || '')} · 작성 ${new Date().toISOString().slice(0, 16).replace('T', ' ')}Z</p>` + jbGreetHtml());
       h.push(`<h2>1. Flight Information: CREW</h2><ul>
         ${li(`<b>가. Flight Number / Flight Leg :</b> ${esc(cs || '--')} / ${esc(aptKoEn(info.dep))} → ${esc(aptKoEn(info.dest))}`)}
         ${li(`<b>나. Type of Aircraft / Reg. Number :</b> ${esc(type ? (AC_NAMES[type] || type) : '--')} / ${esc(p.reg || '--')}`)}
@@ -5142,6 +5174,20 @@ svg.leaflet-image-layer.leaflet-interactive path {
           ${li(`Route: ${(() => { const rp = routePlaces(); return rp.length >= 2 ? `<b>${esc(rp.join(' > '))}</b>` : `<span class="jb-mono">${esc(route || '--')}</span>`; })()}`)}
           ${li(`Alternate Airport: ${esc(nm(altn))} / ${hmTxt(p.altnMin)}`)}</ul>`)}
       </ul>`);
+      {
+        const fn = jbFlightNo(cs), standEn = jbStandTxt(blank).replace(' · 도착 ', ' · Arrival ');
+        const rp = routePlaces();
+        h.push(jbEn([
+          `Flight number <b>${esc(fn || '--')}</b>, from ${esc(aptEn(info.dep))} to ${esc(aptEn(info.dest))}.`,
+          `Aircraft: ${esc(type ? (AC_NAMES[type] || type) : '--')}, registration ${esc(p.reg || '--')}.`,
+          `Departure gate / spot: ${standEn}.`,
+          `Passengers: ${pax ? `${pax.f ? `First ${pax.f}, ` : ''}Business ${pax.c}, Economy ${pax.y}, total ${pax.f + pax.c + pax.y}` : `Business ${blank}, Economy ${blank}, total ${blank}`}. Cargo: ${cargoLbs != null ? `${Math.round(cargoLbs).toLocaleString()} LBS (about ${Math.round(cargoLbs * 0.45359).toLocaleString()} kg)` : `${blank} LBS`}.`,
+          `ETD ${zTxt(w && w.etd)}Z (${ltTxt(info.dep, w && w.etd)}), ETA ${zTxt(w && w.eta)}Z (${ltTxt(info.dest, w && w.eta)}). Flight time ${hmTxt(trip)}.`,
+          `Planned altitude: ${steps.length ? 'FL' + String(steps[0]).padStart(3, '0') + (steps.length > 1 ? ' (step climb ' + steps.map(v => 'FL' + String(v).padStart(3, '0')).join(' → ') + ')' : '') : 'FL' + blank}.`,
+          `Route: ${rp.length >= 2 ? `via <b>${esc(rp.map(placeEn).join(' > '))}</b>` : `<span class="jb-mono">${esc(route || '--')}</span>`}.`,
+          `Alternate airport: ${esc(aptEn(altn))}, flight time from destination ${hmTxt(p.altnMin)}.`,
+        ]));
+      }
       h.push(`<h2>2. Weather</h2><ul>
         ${li(`<b>가. Departure &amp; Destination, Enroute :</b><ul>
           ${li(`Departure (${esc(info.dep || '')}): ${esc(jbWx(info.dep, w && w.etd, 'ETD'))}`)}
@@ -5155,19 +5201,46 @@ svg.leaflet-image-layer.leaflet-interactive path {
           ${li(`도착 방송 (비행시간 5시간 기준 실시)${trip != null ? ` : 이번 비행 ${hmTxt(trip)} → ${trip >= 300 ? '실시' : '해당 없음'}` : ''}`)}
           ${li('App PA : TOD 부근 or (비행시간 2시간 전후) 30분 전 (상호확인)')}</ul>`)}
       </ul>`);
+      h.push(jbEn([
+        `Departure (${esc(info.dep || '')}): ${esc(jbEnTxt(jbWx(info.dep, w && w.etd, 'ETD')))}`,
+        `Destination (${esc(info.dest || '')}): ${esc(jbEnTxt(jbWx(info.dest, w && w.eta, 'ETA')))}`,
+        `Alternate (${esc(altn)}): ${esc(jbEnTxt(jbWx(altn, altnT, 'ETA')))}`,
+        `Enroute: ${blank}`,
+        `Expected turbulence (SR 6 or higher): ${jbTurb(w && w.etd, trip).map(t => esc(jbEnTxt(t))).join('; ')}`,
+        'Seat belt sign and PA will follow the standard cabin signals. Moderate or greater turbulence: two chimes and a captain\'s PA (if not possible, cabin PA first).',
+        'Passing 10,000 ft: if the seat belt sign stays on because of light turbulence, we will let you know by interphone.',
+        `Arrival announcement for flights of 5 hours or more${trip != null ? ` — this flight ${hmTxt(trip)}, ${trip >= 300 ? 'required' : 'not required'}` : ''}.`,
+        'Approach PA: around top of descent, or about 30 minutes before landing on flights of around 2 hours — please cross-check with us.',
+      ]));
       h.push(`<h2>3. Security</h2><ul>
         ${li(`<b>가. Alert Level :</b> ( ${blank} ) — 5(평시), 4(관심), 3(주의), 2(경계), 1(심각)`)}
         ${li('<b>나. Emphasize that all crew are security staff :</b><ul>' + li('전 승무원은 보안 요원임을 주지하고 의심스러운 승객이나 물품 발견 시 기장에게 보고 (필요한 경우 해당 공항 관계기관에 신고)') + '</ul>')}
         ${li('<b>다. Cockpit Entry Procedure (Two-Crew Rule) :</b><ul>' + li('조종실 출입 전 조종실과 인터폰 통화, 청정구역 승객 여부 확인 후 커튼 사용하여 노크 및 키패드 Normal Access Code를 입력한다. 이때 출입상황을 Monitor할 수 있는 객실승무원 1명이 Cockpit Door 입구에 있어야 한다.') + li('조종실을 나갈 때는 인터폰 사용해서, 청정구역 내 승객 여부 확인 후 커튼 닫은 상태에서 출입문을 개방한다.') + '</ul>')}
       </ul>`);
+      h.push(jbEn([
+        `Security alert level: ( ${blank} ) — 5 Low, 4 Moderate, 3 Substantial, 2 Severe, 1 Critical.`,
+        'All crew members are security staff. Report any suspicious passenger or item to the captain; if necessary, it will be reported to the airport authorities.',
+        'Cockpit entry (two-crew rule): call the cockpit by interphone, make sure no passengers are in the sterile area, close the curtain, knock and enter the normal access code. One cabin crew member must stay at the cockpit door to monitor.',
+        'When we leave the cockpit, we will call you by interphone, check the sterile area, and open the door with the curtain closed.',
+      ]));
       h.push(`<h2>4. Sterile Cockpit Procedure</h2><ul>
         ${li('<b>가. Emergency Alert Signal :</b><ul>' + li('객실 내 비상 상황 발생 시 긴급하게 통화 필요 시에는 인터폰 "EMER" 사용해서 연락 바랍니다.') + '</ul>')}
         ${li('<b>나. Below 10,000 feet :</b><ul>' + li('만 피트 이하 비행 중요 단계에서는 안전과 관련된 상황 또는 위급 상황 발생 시 비상 긴급 신호로 조종실로 연락, 만약 비상절차 조치 등으로 인하여 즉각 응답이 어려운 경우도 있으므로 조치한 후에 다시 연락드리겠습니다.') + '</ul>')}
       </ul>`);
+      h.push(jbEn([
+        'If an emergency in the cabin needs urgent contact, use the <b>EMER</b> call on the interphone.',
+        'Below 10,000 feet (critical phase of flight): call the cockpit with the emergency signal only for safety-related or emergency situations. We may not answer right away while handling the situation — we will call you back afterwards.',
+      ]));
       h.push(`<h2>5. Emergency Procedure</h2><ul>
         ${li('<b>가. Reject Takeoff :</b><ul>' + li('지상에서 비상탈출이 필요한 경우: “Attention, crew at station.”') + li('비상탈출 지시: “This is the Captain. Evacuate, evacuate!”') + li('비상탈출이 필요하지 않은 경우: “This is the Captain. Remain seated, remain seated.”') + '</ul>')}
         ${li('<b>나. PA &amp; Evacuation Signal :</b><ul>' + li('기장 지시에 따른 비상 탈출 신호 발령 및 객실 승무원의 비상 탈출 유도 절차 수행.') + '</ul>')}
       </ul>`);
+      h.push(jbEn([
+        'Rejected takeoff — if an evacuation may be needed on the ground: <b>“Attention, crew at station.”</b>',
+        'Evacuation command: <b>“This is the Captain. Evacuate, evacuate!”</b>',
+        'If no evacuation is needed: <b>“This is the Captain. Remain seated, remain seated.”</b>',
+        'The captain gives the evacuation signal by PA; cabin crew then carry out the evacuation procedure.',
+      ]));
       h.push(`<h2>6. Crew Coordination</h2><ul>
         ${li(`<b>가. Temperature Control :</b> ${blank}`)}
         ${li(`<b>나. Taxi Time &amp; Ready Signal :</b> ${blank}`)}
@@ -5178,12 +5251,25 @@ svg.leaflet-image-layer.leaflet-interactive path {
         ${li(`<b>사. Special CIQ Procedure (if required) :</b> ${blank}`)}
         ${li('<b>아. 저시정 절차 (550미터) / PED</b>')}
       </ul>`);
+      h.push(jbEn([
+        `Cabin temperature: ${blank}`,
+        `Taxi time and cabin ready signal: ${blank}`,
+        'Please monitor the PAs.',
+        'Unruly passenger: contact the cockpit; we will consider declaring the sterile area.',
+        `Cabin log — any defects: ${blank}`,
+        `In-flight service timing (with the purser): ${blank}`,
+        `Special CIQ procedure (if required): ${blank}`,
+        'Low visibility procedure (550 m) / PED.',
+      ]));
       return h.join('\n');
     }
     const JB_DOC_CSS = `body{font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif;font-size:11pt;line-height:1.55;color:#111}
       h1{font-size:18pt;margin:0 0 2pt}h2{font-size:13pt;margin:14pt 0 4pt;border-bottom:1px solid #999;padding-bottom:2pt}
       ul{margin:2pt 0 2pt 0;padding-left:20pt}li{margin:1pt 0}.jb-sub{color:#555;font-size:9pt;margin:0 0 8pt}
-      .jb-mono{font-family:Menlo,Consolas,monospace;font-size:9.5pt}.jb-blank{display:inline-block;min-width:60pt;border-bottom:1px solid #888}`;
+      .jb-mono{font-family:Menlo,Consolas,monospace;font-size:9.5pt}.jb-blank{display:inline-block;min-width:60pt;border-bottom:1px solid #888}
+      .jb-en{margin:4pt 0 3pt 14pt;padding:3pt 8pt;border-left:3px solid #0ea5e9;background:#f0f9ff;color:#0c4a6e}.jb-en ul{list-style:none;padding-left:2pt}.jb-en-h{font-size:8.5pt;font-weight:bold;color:#0369a1}
+      .jb-greet{margin:4pt 0 8pt;padding:4pt 8pt;border:1px solid #c7d2fe;background:#eef2ff}.jb-greet table{border-collapse:collapse;width:100%}.jb-greet td{vertical-align:top;padding:3pt 5pt;border-top:1px solid #e0e7ff}
+      .jb-gl{white-space:nowrap;font-weight:bold;font-size:9.5pt}.jb-gp{font-size:12pt;font-weight:bold}.jb-gr{font-size:9pt;color:#555;font-style:italic}.jb-gk{font-size:9pt;color:#6d28d9}`;
     function openJointBrief() {
       let ov = $('jb-overlay');
       if (!ov) {
@@ -5200,6 +5286,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
           #jb-doc .jb-sub{color:#6b7280;font-size:12px;margin:0 0 10px}
           #jb-doc .jb-mono{font-family:Menlo,Consolas,monospace;font-size:12.5px;color:#374151}
           #jb-doc .jb-blank{display:inline-block;min-width:70px;border-bottom:1px solid #9ca3af}
+          #jb-doc .jb-en{margin:6px 0 4px 18px;padding:4px 10px 4px 8px;border-left:3px solid #0ea5e9;background:#f0f9ff;color:#0c4a6e;border-radius:0 6px 6px 0}
+          #jb-doc .jb-en ul{list-style:none;padding-left:4px}#jb-doc .jb-en li{margin:3px 0}#jb-doc .jb-en b{color:#0c4a6e}
+          #jb-doc .jb-en-h{font-size:11px;font-weight:800;color:#0369a1;letter-spacing:.02em}
+          #jb-doc .jb-greet{margin:6px 0 10px;padding:6px 10px;border:1px solid #c7d2fe;background:#eef2ff;border-radius:8px}
+          #jb-doc .jb-greet table{border-collapse:collapse;width:100%;margin-top:4px}#jb-doc .jb-greet td{vertical-align:top;padding:4px 6px;border-top:1px solid #e0e7ff}
+          #jb-doc .jb-gl{white-space:nowrap;font-weight:700;font-size:13px;color:#312e81;width:1%}#jb-doc .jb-gp{font-size:16px;font-weight:700;color:#111827}
+          #jb-doc .jb-gr{font-size:12px;color:#4b5563;font-style:italic}#jb-doc .jb-gk{font-size:12px;color:#6d28d9}
         </style>
           <div class="flex items-center gap-2 flex-wrap px-3 py-2 border-b border-slate-700 bg-slate-900">
             <span class="font-bold text-white">📝 Joint Brief</span><span class="text-[11px] text-slate-400">문서를 바로 눌러 수정할 수 있습니다</span>
