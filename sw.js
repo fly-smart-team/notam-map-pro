@@ -1,7 +1,7 @@
 // NOTAM Pro (개인용 AI 버전) — 오프라인 캐시 서비스 워커
 // 전략: 온라인이면 최신 페이지를 먼저 받아 바로 보여주고(4초 안에 응답 없으면 저장본), 오프라인이면 저장본
 // 배포 버전(notammap)과 같은 도메인을 쓰므로 캐시 이름을 따로 씀
-const CACHE = 'notam-pro-v5';
+const CACHE = 'notam-pro-v6';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './coad-ko.json', './notam-ko.json', './wx-brief.json'];
 const EXTRA = [];
 
@@ -22,7 +22,7 @@ async function notify(msg) {
 // 페이지 새 버전을 받아 저장본과 다르면 교체 (index.html이면 화면에 알림)
 async function refresh(path) {
   try {
-    const res = await fetch(path, { cache: 'no-cache' });
+    const res = await fetch(path + '?v=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return;
     const c = await caches.open(CACHE);
     const old = await c.match(path);
@@ -51,7 +51,7 @@ self.addEventListener('fetch', e => {
       // 1순위: 네트워크 (최신 버전 즉시 반영) — 4초 넘으면 저장본
       try {
         const res = await Promise.race([
-          fetch(req, { cache: 'no-cache' }),
+          fetch(url.pathname + '?v=' + Date.now(), { cache: 'no-store' }),
           new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
         ]);
         if (res && res.ok) {

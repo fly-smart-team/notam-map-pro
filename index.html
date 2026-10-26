@@ -815,7 +815,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><span id="app-ver" class="text-[10px] text-slate-500 font-mono-code" title="앱 버전">v104</span>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 10/27 05:20 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
@@ -6266,6 +6266,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
       $('btn-hidden').addEventListener('click', () => { const m = $('hidden-menu'); m.classList.toggle('hidden'); if (!m.classList.contains('hidden')) load(); });
       $('hm-close').addEventListener('click', () => $('hidden-menu').classList.add('hidden'));
     })();
+
+    // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
+    $('app-ver').addEventListener('click', async () => {
+      if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
+      $('app-ver').textContent = '업데이트 중…';
+      try { const ks = await caches.keys(); await Promise.all(ks.filter(k => k.startsWith('notam-pro-')).map(k => caches.delete(k))); } catch (e) { }
+      try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) { }
+      location.replace(location.pathname + '?v=' + Date.now());
+    });
     // ===== Claude 연결: 비행 전 OFP를 붙여 노탐·COAD 사전 요약과 기상 차트 분석을 요청하는 대화로 이동 =====
     (function () {
       const KEY = 'notamPro.claudeUrl', DEF = 'https://claude.ai/code/session_01DAoW3rschdahNvSqYTHrvQ';
