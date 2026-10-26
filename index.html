@@ -3467,7 +3467,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     const AI_KEEP = new Set('RWY TWY ILS LOC GP GS DME VOR NDB GPS GNSS RNAV RNP GLS ATC ACC APP TWR FIR UIR SID STAR IAP AIP SUP AIRAC COAD NOTAM FT AGL AMSL MSL UTC NM KT FL ETD ETA PAPI VASIS ALS ATIS VHF HF UHF MHZ KHZ CTR TMA CTA AWY RVR ICAO NIL AD'.split(' '));
     const koLeftover = k => (String(k).match(/\b[A-Z][A-Z\-]*[A-Z]\b/g) || []).filter(w => w.length >= 3 && !AI_KEEP.has(w)).length;
     // AI가 필요한 노탐: 규칙 번역이 "요약 어려움"·비어 있음·영어가 많이 남은 것
-    const aiNeeds = n => !aiOf(n) && (() => { const k = koRuleOf(n); return !k || k === AI_DIFFICULT || koLeftover(k) >= 3; })();
+    const aiNeeds = n => !aiOf(n) && !coadOf(n) && (coadChanged(n) || (() => { const k = koRuleOf(n); return !k || k === AI_DIFFICULT || koLeftover(k) >= 3; })());
     function aiAskToken() {
       const v = prompt('AI 접근 토큰을 입력하세요 (np-로 시작)\n이 기기에만 저장됩니다.', aiToken());
       if (v == null) return false;
@@ -3499,6 +3499,22 @@ svg.leaflet-image-layer.leaflet-interactive path {
       aiSave(); aiBusy = false;
       aiMsg = fail ? `⚠ ${fail}` : `AI 요약 완료 ${done}건${prov ? ` · ${prov === 'deepseek' ? 'DeepSeek' : prov === 'anthropic' ? 'Claude' : prov}` : ''}`;
       renderBriefing();
+    }
+    // ───── COAD 저장 요약 (coad-ko.json, Claude가 미리 작성) ─────
+    // 키 = 원문 정규화 해시. 회사가 COAD를 고치면 해시가 달라져 "변경됨"으로 표시되고 AI 요약 대상이 됨
+    let coadKo = { items: {}, ids: new Set(), version: '' };
+    const isCoad = n => /\bCOAD\d/.test(String(n.notamId || ''));
+    const coadNorm = t => String(t || '').split(/\n\s*--\s*BY\b|\n\s*END OF .*NOTAM PACKAGE|\n\s*\*{3,}\s*NO CURRENT NOTAMS/)[0];
+    const coadHash = n => textHash(coadNorm(aiText(n)));
+    const coadOf = n => isCoad(n) ? coadKo.items[coadHash(n)] || null : null;
+    const coadChanged = n => isCoad(n) && !coadOf(n) && coadKo.ids.has(String(n.notamId).replace(/\s+/g, ' '));
+    fetch('coad-ko.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).then(d => {
+      if (!d || !d.items) return;
+      coadKo = { items: d.items, version: d.version || '', ids: new Set(Object.values(d.items).map(x => x.id)) };
+      try { renderBriefing(); } catch (e) { }
+    }).catch(() => { });
+    function coadBlock(c) {
+      return `<div class="text-[12px] leading-snug rounded-md border border-teal-600/60 bg-teal-950/40 px-2 py-1 text-teal-50"><span class="mr-1 px-1 py-0.5 rounded bg-teal-700 text-white text-[9px] font-bold align-middle">COAD 요약</span>${esc(c.s)}</div>`;
     }
     function aiBlock(a) {
       return `<div class="text-[12px] leading-snug rounded-md border border-violet-600/60 bg-violet-950/40 px-2 py-1 text-violet-100"><span class="mr-1 px-1 py-0.5 rounded bg-violet-700 text-white text-[9px] font-bold align-middle">AI 요약</span>${esc(a.s)}${a.u ? ' <span class="text-amber-300 font-bold">⚠ 원문 확인</span>' : ''}<span class="ml-1 text-[9px] text-violet-300/70">${esc(a.p === 'deepseek' ? 'DeepSeek' : a.p === 'anthropic' ? 'Claude' : a.p || '')}</span></div>`;
@@ -3926,7 +3942,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const item = (r, full) => {
         const T = TIER[r.tier], n = r.n, open = full || isOpen(r);
         let ko = koRuleOf(n);
-        const ai = aiOf(n); if (ai) ko = '';   // AI 요약이 있으면 규칙 번역은 숨김 (원문은 그대로 표시)
+        const cd = coadOf(n), cdChg = !cd && coadChanged(n), ai = cd ? null : aiOf(n); if (ai || cd) ko = '';   // 저장 요약·AI 요약이 있으면 규칙 번역은 숨김 (원문은 그대로 표시)
         const line = String(n.etext || n.summary || '').replace(/\s+/g, ' ').trim();
         let koHtml = ko ? `<div class="text-[11px] text-sky-200/90 leading-snug">${esc(ko)}</div>` : '';
         if (isAkaraToc(n)) { const A = akaraTocApply(n); if (A && A.off) koHtml = `<div class="text-[12px] text-slate-400">🧭 내 경로는 AKARA-FUKUE 회랑을 지나지 않습니다.</div>`; else if (A) koHtml = `<div class="text-[13px] leading-snug rounded-md border border-violet-600/60 bg-violet-950/50 px-2 py-1 text-violet-100">🧭 <b>내 비행 적용</b> · ${A.line}</div>`; }
@@ -3935,10 +3951,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <button type="button" data-brf-star="${esc(n.notamId)}" class="shrink-0 w-7 h-7 mt-0.5 rounded-md border text-base leading-none ${r.star ? 'bg-amber-400 border-amber-300 text-slate-950' : 'border-slate-600 text-slate-500'}" title="중요 노탐 지정">${r.star ? '★' : '☆'}</button>
             <div class="min-w-0 flex-1" data-brf-toggle>
               <div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${T.pill}">${T.label}</span><span class="mono text-[11px] font-bold ${T.txt}">${esc(n.notamId)}</span><span class="text-[10px] text-sky-300 mono whitespace-nowrap">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${r.tb}${r.qt ? `<span class="px-1 rounded text-[10px] font-bold bg-sky-900/70 border border-sky-500/60 text-sky-200">🔄 ${esc(r.qt)}</span>` : ''}<span class="text-[10px] ${T.txt}">${esc(r.why)}</span>${r.same && r.same.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">같은 내용 +${r.same.length}건</span>` : ''}${r.rel && r.rel.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">관련 노탐 ${r.rel.length}건 묶음</span>` : ''}${n.dupIn && n.dupIn.length ? `<span class="text-[9px] text-slate-500">+${esc(n.dupIn.join('·'))} 중복</span>` : ''}${n.geo ? `<button type="button" data-brf-map="${esc(n.notamId)}" class="text-[10px] text-sky-300 border border-sky-800/60 px-1 rounded">📍지도</button>` : ''}<span data-brf-caret class="ml-auto text-[10px] text-slate-500">${open ? '▾ 접기' : '▸ 펼치기'}</span></div>
-              <div data-brf-line class="${open ? 'hidden' : ''}">${ai ? `<div class="text-[11px] text-violet-200 leading-snug line-clamp-1">🤖 ${esc(ai.s)}</div>` : `<div class="mono text-[11px] text-slate-300 leading-snug line-clamp-1">${esc(line)}</div>`}</div>
+              <div data-brf-line class="${open ? 'hidden' : ''}">${cd ? `<div class="text-[11px] text-teal-200 leading-snug line-clamp-1">📘 ${esc(cd.s)}</div>` : ai ? `<div class="text-[11px] text-violet-200 leading-snug line-clamp-1">🤖 ${esc(ai.s)}</div>` : `<div class="mono text-[11px] text-slate-300 leading-snug line-clamp-1">${esc(line)}</div>`}</div>
             </div>
           </div>
-          <div class="${open ? '' : 'hidden'} px-2 pb-2 flex flex-col gap-1" data-brf-raw>${ai ? aiBlock(ai) : `<button type="button" data-ai-one="${esc(n.notamId)}" class="self-start px-2 py-0.5 rounded border border-violet-600/60 bg-violet-950/40 text-violet-200 text-[11px] font-bold" ${aiBusy ? 'disabled' : ''}>🤖 AI로 요약</button>`}${koHtml}<pre class="mono text-[10.5px] whitespace-pre-wrap break-words text-slate-200 bg-slate-900 rounded p-2">${esc(n.validity || '')}\n${brfHl(n)}</pre>${brfLegend(n)}${abbrPanel(n.rawText || n.etext)}</div>
+          <div class="${open ? '' : 'hidden'} px-2 pb-2 flex flex-col gap-1" data-brf-raw>${cdChg ? `<div class="text-[11px] text-amber-300 font-bold">⚠ COAD 내용이 바뀌었습니다 — 저장 요약 없음 (AI 요약 대상)</div>` : ''}${cd ? coadBlock(cd) : ai ? aiBlock(ai) : `<button type="button" data-ai-one="${esc(n.notamId)}" class="self-start px-2 py-0.5 rounded border border-violet-600/60 bg-violet-950/40 text-violet-200 text-[11px] font-bold" ${aiBusy ? 'disabled' : ''}>🤖 AI로 요약</button>`}${koHtml}<pre class="mono text-[10.5px] whitespace-pre-wrap break-words text-slate-200 bg-slate-900 rounded p-2">${esc(n.validity || '')}\n${brfHl(n)}</pre>${brfLegend(n)}${abbrPanel(n.rawText || n.etext)}</div>
         </div>`;
       };
       const groupTitle = (sec, code) => { const nm = getAirportNameInfo(code); return `${BRF_SEC[sec] || sec} · ${code}${sec === 'FIR' ? (FIR_NAMES[code] ? ' ' + FIR_NAMES[code] : '') : nm && nm.ko ? ' ' + nm.ko : ''}`; };

@@ -17,6 +17,11 @@
 - **🔑**: 접근 토큰 입력·변경 (이 기기에만 저장, `notamPro.aiToken`)
 - AI 결과는 보라색 "AI 요약" 표시 + 원문 함께 표시, 이 기기에 저장(최근 800건)
 
+## COAD 저장 요약 (`coad-ko.json`)
+- Claude가 미리 작성한 COAD 한국어 요약 (API 요금 없음, 오프라인 사용 가능)
+- 키 = COAD 원문 정규화 해시(`-- BY` 줄 앞까지). 회사가 원문을 고치면 키가 달라져 앱에 "⚠ COAD 내용이 바뀌었습니다"가 뜨고 AI 요약 대상이 됨
+- 갱신: 새 OFP를 Claude에게 주면 바뀐 COAD만 다시 요약해 이 파일을 교체
+
 ## AI Worker (`ai-worker/worker.js`, v0.2)
 별도 Cloudflare Worker `notam-ai` (GitHub 연결로 자동 배포, Root directory `/ai-worker`).
 - `GET /health` · `POST /ai/notam-summary` (헤더 `X-Access-Token` 필요)

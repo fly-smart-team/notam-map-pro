@@ -1,8 +1,8 @@
 // NOTAM Pro (개인용 AI 버전) — 오프라인 캐시 서비스 워커
 // 전략: 온라인이면 최신 페이지를 먼저 받아 바로 보여주고(4초 안에 응답 없으면 저장본), 오프라인이면 저장본
 // 배포 버전(notammap)과 같은 도메인을 쓰므로 캐시 이름을 따로 씀
-const CACHE = 'notam-pro-v1';
-const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const CACHE = 'notam-pro-v2';
+const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './coad-ko.json'];
 const EXTRA = [];
 
 self.addEventListener('install', e => {
@@ -65,6 +65,14 @@ self.addEventListener('fetch', e => {
       if (hit) { e.waitUntil(refresh(path)); return hit; }
       return new Response('오프라인 저장본이 없습니다. 온라인에서 한 번 열어 주세요.', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
     })());
+    return;
+  }
+  // 데이터 파일(coad-ko.json 등): 온라인이면 최신, 오프라인이면 저장본
+  if (url.pathname.endsWith('.json')) {
+    e.respondWith(fetch(req, { cache: 'no-cache' }).then(res => {
+      if (res.ok) { const cp = res.clone(); caches.open(CACHE).then(c => c.put('./' + url.pathname.split('/').pop(), cp)); }
+      return res;
+    }).catch(() => caches.match('./' + url.pathname.split('/').pop()).then(hit => hit || new Response('{}', { headers: { 'Content-Type': 'application/json' } }))));
     return;
   }
   e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
