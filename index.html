@@ -815,7 +815,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 10/27 06:00 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 10/27 09:45 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
@@ -3296,7 +3296,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         airNotams = parsed.airspace;
         otherNotams = parsed.others;
         ofpOrdered = parsed.ordered; brfEraSel = null; brfStarView = false;
-        pdfFlt = parseFlightInfo(fullText, fplToApply); pdfTaf = parseTafs(fullText); pdfExtras = parseOfpExtras(fullText); setTimeout(() => { refreshLiveWx(true); startAcLive(); try { renderWxBrief(); } catch (e) { } try { renderEfbPerf(); const k = parseEfbPerf(fullText).items.length; if (k) showToast(`⚠️ 이륙 성능 EFB 입력 ${k}건 — 2번 칸 확인`); } catch (e) { } }, 0); window.__ofpText = fullText;
+        pdfFlt = parseFlightInfo(fullText, fplToApply); pdfTaf = parseTafs(fullText); pdfExtras = parseOfpExtras(fullText); setTimeout(() => { refreshLiveWx(true); startAcLive(); try { renderWxBrief(); } catch (e) { } try { renderMelCard(); } catch (e) { } try { renderEfbPerf(); const k = parseEfbPerf(fullText).items.length; if (k) showToast(`⚠️ 이륙 성능 EFB 입력 ${k}건 — 2번 칸 확인`); } catch (e) { } }, 0); window.__ofpText = fullText;
         package1AirportNotams = parsed.airport.filter(n => n.pkg !== 2);
         package2AirportNotams = parsed.airport.filter(n => n.pkg === 2);
         package2AreaNotams = [];
@@ -3675,8 +3675,90 @@ svg.leaflet-image-layer.leaflet-interactive path {
           </ul></details>
       </div>`;
     }
+
+    // ===== MEL / CDL 운항 참조 =====
+    // OFP의 'MEL / CDL ITEMS'를 읽어 MEL 원문(이 기기에 저장한 MEL 데이터)과 운항 절차를 보여줌.
+    // MEL 데이터는 회사 문서라 GitHub에 올리지 않고, 사용자가 파일로 불러와 이 기기(IndexedDB)에만 저장.
+    let melDB = null;
+    const idb = (mode, fn) => new Promise((res, rej) => {
+      const rq = indexedDB.open('notamPro', 1);
+      rq.onupgradeneeded = () => rq.result.createObjectStore('kv');
+      rq.onsuccess = () => { const tx = rq.result.transaction('kv', mode), st = tx.objectStore('kv'), r = fn(st); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); };
+      rq.onerror = () => rej(rq.error);
+    });
+    idb('readonly', st => st.get('mel')).then(d => { if (d && d.items) { melDB = d; try { renderMelCard(); } catch (e) { } } }).catch(() => { });
+    function melLoadFile() {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
+      inp.onchange = async () => {
+        const f = inp.files && inp.files[0]; if (!f) return;
+        try {
+          const d = JSON.parse(await f.text());
+          if (!d.items || !d.ops) throw new Error('MEL 데이터 형식이 아닙니다');
+          await idb('readwrite', st => st.put(d, 'mel')); melDB = d;
+          showToast(`MEL 저장 완료 — ${(d.meta && d.meta.issue) || ''} · 항목 ${Object.keys(d.items).length}개`); renderMelCard();
+        } catch (e) { alert('MEL 파일을 읽지 못했습니다: ' + (e.message || e)); }
+      };
+      inp.click();
+    }
+    function parseOfpMel(text) {
+      const T = String(text || ''), out = [], seen = new Set();
+      const sec = T.match(/MEL\s*\/\s*CDL ITEMS([\s\S]*?)(?=\n\s*\d+\.\s+[A-Z][A-Z ]+\n|\n\s*◼|$)/);
+      const src = sec ? sec[1] : T;
+      for (const m of src.matchAll(/-\s*(MEL|CDL)\s+([0-9]{2}-[0-9]{2}(?:-[0-9]{2}){0,3}[A-Z]?(?:\([A-Z]\))?)(?:_[0-9A-Z]+)?\s*:\s*([^\n]*)/g)) {
+        const k = m[1] + m[2]; if (seen.has(k)) continue; seen.add(k);
+        out.push({ kind: m[1], no: m[2], desc: m[3].trim() });
+      }
+      const notes = [...new Set([...T.matchAll(/(?:CHECKED ABOVE MEL[^\n]*|\*\s*MEL\s*:[^\n]*)/g)].map(x => x[0].trim()))];
+      return { items: out, notes };
+    }
+    function melLookup(no) {
+      if (!melDB) return null;
+      const it = melDB.items[no] || melDB.items[no.replace(/\([A-Z]\)$/, '')]; if (!it) return null;
+      return { it, op: melDB.ops[no] || null, ko: (melDB.ko || {})[no] || '' };
+    }
+    const melCabin = no => ((melDB && melDB.meta && melDB.meta.cabinAta) || ['25-2', '25-3', '25-4', '25-6', '33-2', '33-5', '35-', '38-', '44-']).some(a => no.startsWith(a));
+    function renderMelCard() {
+      const box = $('mel-card'); if (!box) return;
+      const P = parseOfpMel(window.__ofpText);
+      if (!P.items.length) { box.innerHTML = ''; return; }
+      const reg = ((window.pdfFlt || (typeof pdfFlt !== 'undefined' ? pdfFlt : null)) || {}).reg || '';
+      const RI = (melDB && melDB.meta && melDB.meta.ri) || {};
+      const pre = t => `<pre class="mono text-[11px] whitespace-pre-wrap break-words text-slate-200 bg-slate-950/70 rounded p-2 mt-1">${esc(t)}</pre>`;
+      const card = x => {
+        const L = x.kind === 'MEL' ? melLookup(x.no) : null, it = L && L.it;
+        const appOk = !it || !reg || /\bALL\b/.test(it.app || '') || (it.app || '').includes(reg);
+        const badges = it ? [
+          `<span class="px-1.5 py-0.5 rounded bg-slate-700 text-[11px]">수리 기한 <b>${esc(it.ri || '-')}</b>${RI[it.ri] ? ` · ${esc(RI[it.ri])}` : ''}</span>`,
+          `<span class="px-1.5 py-0.5 rounded bg-slate-700 text-[11px]">설치 ${esc(it.inst || '-')} / 필요 ${esc(it.req || '-')}</span>`,
+          it.o ? '<span class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[11px] font-bold">(o) 운항 절차 있음</span>' : '<span class="px-1.5 py-0.5 rounded bg-emerald-800 text-emerald-100 text-[11px]">운항 절차 없음</span>',
+          it.m ? '<span class="px-1.5 py-0.5 rounded bg-amber-700 text-white text-[11px]">(m) 정비 절차</span>' : '',
+          melCabin(x.no) ? '<span class="px-1.5 py-0.5 rounded bg-violet-700 text-white text-[11px]">객실 관련</span>' : '',
+          !appOk ? `<span class="px-1.5 py-0.5 rounded bg-rose-700 text-white text-[11px]">⚠ ${esc(reg)} 적용 대상 확인</span>` : ''].join(' ') : '';
+        const op = L && L.op ? `<div class="mt-1.5 rounded-md border border-rose-600/60 bg-rose-950/30 p-1.5"><div class="text-[12px] font-bold text-rose-200">🧑‍✈️ 운항 절차 (OpsProc ${esc(x.no)})</div>${pre(L.op.text)}</div>` : '';
+        return `<div class="rounded-lg border ${it && it.o ? 'border-rose-500/70' : 'border-slate-700'} bg-slate-900/70 p-2">
+          <div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded ${x.kind === 'MEL' ? 'bg-sky-700' : 'bg-slate-600'} text-white text-[12px] font-bold">${x.kind}</span><span class="mono text-[14px] font-bold text-white">${esc(x.no)}</span>${it ? `<span class="text-[13px] font-bold text-sky-200">${esc(it.t)}${it.cond ? ` · ${esc(it.cond)}` : ''}</span>` : ''}</div>
+          <div class="mono text-[11px] text-amber-200 mt-0.5">OFP: ${esc(x.desc)}</div>
+          ${badges ? `<div class="flex flex-wrap gap-1 mt-1 text-slate-100">${badges}</div>` : ''}
+          ${L && L.ko ? `<div class="mt-1.5 text-[12.5px] leading-snug text-slate-100 rounded-md bg-sky-950/40 border border-sky-800/60 px-2 py-1"><span class="mr-1 px-1 py-0.5 rounded bg-sky-700 text-white text-[9px] font-bold align-middle">요약</span>${esc(L.ko)}</div>` : ''}
+          ${op}
+          ${it ? `<details class="mt-1"><summary class="cursor-pointer select-none text-[11.5px] text-slate-300">MEL 원문 (조건·비고)</summary>${pre(it.text)}<div class="text-[10px] text-slate-500 mt-0.5">적용 기체: ${esc(it.app || '')}</div></details>` : ''}
+          ${x.kind === 'MEL' && !melDB ? '<div class="text-[11.5px] text-slate-400 mt-1">MEL 데이터를 불러오면 원문과 운항 절차가 나옵니다.</div>' : ''}
+          ${x.kind === 'MEL' && melDB && !it ? '<div class="text-[11.5px] text-amber-300 mt-1">이 번호를 MEL 데이터에서 찾지 못했습니다 — 번호·개정판 확인</div>' : ''}
+          ${x.kind === 'CDL' ? '<div class="text-[11.5px] text-slate-400 mt-1">CDL(외형 결함 목록) 항목입니다 — 성능 감소(무게·연료) 여부는 OFP·CDL 원문으로 확인하세요.</div>' : ''}
+        </div>`;
+      };
+      const nO = P.items.filter(x => { const L = x.kind === 'MEL' && melLookup(x.no); return L && L.it.o; }).length;
+      box.innerHTML = `<div class="rounded-xl border-2 ${nO ? 'border-rose-500' : 'border-sky-700'} bg-slate-950/40 p-2.5 flex flex-col gap-2">
+        <div class="flex items-center gap-2 flex-wrap"><span class="text-[14px] font-bold ${nO ? 'text-rose-200' : 'text-sky-200'}">🔧 MEL / CDL 운항 참조</span><span class="text-[11px] text-slate-400">${esc(reg)} · ${P.items.length}건${nO ? ` · 운항 절차 ${nO}건` : ''}</span>
+          <span class="ml-auto text-[10.5px] text-slate-500">${melDB ? `MEL ${esc((melDB.meta && melDB.meta.issue) || '')} 이 기기에 저장됨` : 'MEL 데이터 없음'}</span><button type="button" data-mel-load class="px-2 py-0.5 rounded border border-slate-600 text-[11px] text-slate-200">${melDB ? 'MEL 바꾸기' : '📂 MEL 불러오기'}</button></div>
+        ${P.items.map(card).join('')}
+        ${P.notes.length ? `<div class="text-[11.5px] text-emerald-300">${P.notes.map(esc).join(' · ')}</div>` : ''}
+        <div class="text-[10.5px] text-slate-500">MEL 원문과 회사 최신 개정판·Tech Log가 기준입니다. MEL 데이터는 이 기기에만 저장되고 서버에 올라가지 않습니다.</div>
+      </div>`;
+    }
+    document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-mel-load]')) melLoadFile(); });
     // 2번 칸(Flight Information)이 다시 그려질 때마다 기상 차트 분석도 다시 넣음 (기상·기온 바로 아래)
-    { const _rfi = renderFlightInfo; renderFlightInfo = function () { const r = _rfi.apply(this, arguments); try { renderWxBrief(); } catch (e) { } try { renderEfbPerf(); } catch (e) { } return r; }; }
+    { const _rfi = renderFlightInfo; renderFlightInfo = function () { const r = _rfi.apply(this, arguments); try { renderWxBrief(); } catch (e) { } try { renderEfbPerf(); } catch (e) { } try { renderMelCard(); } catch (e) { } return r; }; }
     function renderWxBrief() {
       const box = $('wx-ai'); if (!box) return;
       if (!info.dep || !info.dest) { box.innerHTML = ''; return; }
@@ -5428,7 +5510,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         ${li(`<b>나. Taxi Time &amp; Ready Signal :</b> ${blank}${en('taxi')}`)}
         ${li('<b>다. PA Monitoring</b>')}
         ${li('<b>라. Unruly Passenger :</b> 기내 난동 승객 발생 시 조종실로 연락 / 청정 구역 발동 선포 고려')}
-        ${li(`<b>마. CABIN LOG :</b> 특이사항 여부 ${blank}`)}
+        ${li(`<b>마. CABIN LOG :</b> 특이사항 여부 ${(() => { try { const ci = parseOfpMel(window.__ofpText).items.filter(x => x.kind === 'MEL' && melCabin(x.no)); return ci.length ? '<ul>' + ci.map(x => { const L = melLookup(x.no); return li(`MEL ${esc(x.no)} ${esc(x.desc)}${L && L.ko ? ' — ' + esc(L.ko) : ''}`); }).join('') + '</ul>' : blank; } catch (e) { return blank; } })()}`)}
         ${li(`<b>바. Timing of In-flight services (in consultation with the Purser) :</b> ${blank}`)}
         ${li(`<b>사. Special CIQ Procedure (if required) :</b> ${blank}`)}
         ${li('<b>아. 저시정 절차 (550미터) / PED</b>')}
@@ -5896,6 +5978,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           ${endpoint('ALTN', altnCode, null, null, true, 'text-purple-300', true)}` : ''}
         </div>
         <div id="efb-perf"></div>
+        <div id="mel-card"></div>
         <div id="ac-live" class="rounded-lg border border-slate-800 bg-slate-900/70 px-2.5 py-2 flex flex-col gap-1"></div>
         <div class="flex flex-col gap-1.5">
           <div class="flex items-center justify-between gap-2 flex-wrap"><span class="text-[11px] font-bold text-slate-300">🌤️ 기상 · 기온</span><span class="flex items-center gap-2 text-[10px] text-slate-500">${wxLiveAt ? '실시간 ' + new Date(wxLiveAt).toISOString().slice(11, 16) + 'Z 조회' : ''}<button type="button" data-wx-refresh class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-sky-300 font-bold">🔄 실시간 조회</button></span></div>

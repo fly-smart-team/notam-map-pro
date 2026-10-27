@@ -28,6 +28,11 @@
 - 장애물 추가: `ADD 1 OBST (HT: h FT, DIST: d FT / FROM LIFTOFF END)` → ADD ONE OBSTACLE · FROM RWY END = d, HEIGHT = h
 - 노탐 번호·유효 일자·시간, Flysmart(A321) 단계별 입력 방법, OTHER INFORMATION(RWY ID 선택 등) 함께 표시. OFP를 올리면 알림
 
+## MEL / CDL 운항 참조
+- OFP 'MEL / CDL ITEMS'를 읽어 2번 칸(EFB 카드 아래)에 항목별 카드 표시: 수리 기한(정의 포함), 설치/필요 수량, (o) 운항 절차·(m) 정비 절차, 객실 관련, 적용 기체 확인, 한국어 요약, OpsProc 원문, MEL 원문
+- MEL 데이터(JSON)는 회사 문서라 **이 저장소에 올리지 않음** — 카드의 '📂 MEL 불러오기'로 파일을 골라 기기(IndexedDB)에만 저장
+- 객실 관련 MEL은 Joint Brief '마. CABIN LOG'에 자동 기재
+
 ## 기상 차트 분석 (`wx-brief.json`)
 - 비행 전날 OFP를 Claude에게 주면 기상 차트(바람·기온, SIGWX, 난기류, 단면도)를 읽고 분석해 저장 (API 요금 없음)
 - 키 = 콜사인|출발|도착|운항일(UTC) — 예: `KAL476|VVTS|RKSI|2026-10-26`
