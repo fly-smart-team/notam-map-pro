@@ -815,7 +815,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 10/27 09:55 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 10/27 10:05 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
@@ -3686,7 +3686,23 @@ svg.leaflet-image-layer.leaflet-interactive path {
       rq.onsuccess = () => { const tx = rq.result.transaction('kv', mode), st = tx.objectStore('kv'), r = fn(st); tx.oncomplete = () => res(r && r.result); tx.onerror = () => rej(tx.error); };
       rq.onerror = () => rej(rq.error);
     });
-    idb('readonly', st => st.get('mel')).then(d => { if (d && d.items) { melDB = d; try { renderMelCard(); } catch (e) { } } }).catch(() => { });
+    // 저장소의 mel.enc = MEL JSON(gzip)을 AI 토큰으로 AES-GCM 암호화한 것 → 토큰 없이는 못 읽음
+    async function melFromCloud(quiet) {
+      try {
+        const tok = (localStorage.getItem('notamPro.aiToken') || '').trim(); if (!tok) throw new Error('AI 토큰이 없습니다 (AI 요약에서 토큰을 먼저 넣어 주세요)');
+        const r = await fetch('mel.enc', { cache: 'no-cache' }); if (!r.ok) throw new Error('mel.enc 받기 실패 ' + r.status);
+        const b = new Uint8Array(await r.arrayBuffer()), salt = b.slice(0, 16), iv = b.slice(16, 28), ct = b.slice(28);
+        const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(tok), 'PBKDF2', false, ['deriveKey']);
+        const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 200000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+        let z; try { z = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct); } catch (_) { throw new Error('토큰이 맞지 않아 MEL을 열 수 없습니다'); }
+        const txt = await new Response(new Blob([z]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+        const d = JSON.parse(txt);
+        await idb('readwrite', st => st.put(d, 'mel')); melDB = d;
+        showToast(`MEL 자동 불러오기 완료 — ${(d.meta && d.meta.issue) || ''} · 항목 ${Object.keys(d.items).length}개`); try { renderMelCard(); } catch (e) { }
+        return true;
+      } catch (e) { if (!quiet) alert('MEL 자동 불러오기 실패: ' + (e.message || e) + '\n→ 파일로 불러오기를 시도합니다.'); return false; }
+    }
+    idb('readonly', st => st.get('mel')).then(d => { if (d && d.items) { melDB = d; try { renderMelCard(); } catch (e) { } } else melFromCloud(true); }).catch(() => melFromCloud(true));
     function melLoadFile() {
       const inp = document.createElement('input'); inp.type = 'file'; // iPad는 .json 필터를 걸면 파일이 회색으로 막혀 선택이 안 됨 → 필터 없이 열기
       inp.onchange = async () => {
@@ -3750,13 +3766,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const nO = P.items.filter(x => { const L = x.kind === 'MEL' && melLookup(x.no); return L && L.it.o; }).length;
       box.innerHTML = `<div class="rounded-xl border-2 ${nO ? 'border-rose-500' : 'border-sky-700'} bg-slate-950/40 p-2.5 flex flex-col gap-2">
         <div class="flex items-center gap-2 flex-wrap"><span class="text-[14px] font-bold ${nO ? 'text-rose-200' : 'text-sky-200'}">🔧 MEL / CDL 운항 참조</span><span class="text-[11px] text-slate-400">${esc(reg)} · ${P.items.length}건${nO ? ` · 운항 절차 ${nO}건` : ''}</span>
-          <span class="ml-auto text-[10.5px] text-slate-500">${melDB ? `MEL ${esc((melDB.meta && melDB.meta.issue) || '')} 이 기기에 저장됨` : 'MEL 데이터 없음'}</span><button type="button" data-mel-load class="px-2 py-0.5 rounded border border-slate-600 text-[11px] text-slate-200">${melDB ? 'MEL 바꾸기' : '📂 MEL 불러오기'}</button></div>
+          <span class="ml-auto text-[10.5px] text-slate-500">${melDB ? `MEL ${esc((melDB.meta && melDB.meta.issue) || '')} 이 기기에 저장됨` : 'MEL 데이터 없음'}</span><button type="button" data-mel-load class="px-2 py-0.5 rounded border border-slate-600 text-[11px] text-slate-200">${melDB ? 'MEL 바꾸기(파일)' : '📥 MEL 불러오기'}</button></div>
         ${P.items.map(card).join('')}
         ${P.notes.length ? `<div class="text-[11.5px] text-emerald-300">${P.notes.map(esc).join(' · ')}</div>` : ''}
         <div class="text-[10.5px] text-slate-500">MEL 원문과 회사 최신 개정판·Tech Log가 기준입니다. MEL 데이터는 이 기기에만 저장되고 서버에 올라가지 않습니다.</div>
       </div>`;
     }
-    document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-mel-load]')) melLoadFile(); });
+    document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-mel-load]')) { if (melDB) melLoadFile(); else melFromCloud(false).then(ok => { if (!ok) melLoadFile(); }); } });
     // 2번 칸(Flight Information)이 다시 그려질 때마다 기상 차트 분석도 다시 넣음 (기상·기온 바로 아래)
     { const _rfi = renderFlightInfo; renderFlightInfo = function () { const r = _rfi.apply(this, arguments); try { renderWxBrief(); } catch (e) { } try { renderEfbPerf(); } catch (e) { } try { renderMelCard(); } catch (e) { } return r; }; }
     function renderWxBrief() {

@@ -30,7 +30,7 @@
 
 ## MEL / CDL 운항 참조
 - OFP 'MEL / CDL ITEMS'를 읽어 2번 칸(EFB 카드 아래)에 항목별 카드 표시: 수리 기한(정의 포함), 설치/필요 수량, (o) 운항 절차·(m) 정비 절차, 객실 관련, 적용 기체 확인, 한국어 요약, OpsProc 원문, MEL 원문
-- MEL 데이터(JSON)는 회사 문서라 **이 저장소에 올리지 않음** — 카드의 '📂 MEL 불러오기'로 파일을 골라 기기(IndexedDB)에만 저장
+- MEL 데이터는 원문 그대로 올리지 않고 `mel.enc`(AI 토큰으로 AES-GCM 암호화)로만 둠 — 토큰이 있는 기기에서 처음 열 때 자동으로 풀어 기기(IndexedDB)에 저장. 파일로 바꾸기도 가능
 - 객실 관련 MEL은 Joint Brief '마. CABIN LOG'에 자동 기재
 
 ## 기상 차트 분석 (`wx-brief.json`)
