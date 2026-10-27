@@ -815,7 +815,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 10/27 09:45 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 10/27 09:55 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
@@ -3688,11 +3688,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
     });
     idb('readonly', st => st.get('mel')).then(d => { if (d && d.items) { melDB = d; try { renderMelCard(); } catch (e) { } } }).catch(() => { });
     function melLoadFile() {
-      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
+      const inp = document.createElement('input'); inp.type = 'file'; // iPad는 .json 필터를 걸면 파일이 회색으로 막혀 선택이 안 됨 → 필터 없이 열기
       inp.onchange = async () => {
         const f = inp.files && inp.files[0]; if (!f) return;
         try {
-          const d = JSON.parse(await f.text());
+          let d; try { d = JSON.parse((await f.text()).replace(/^\uFEFF/, '')); } catch (_) { throw new Error(`'${f.name}'은(는) MEL JSON 파일이 아닙니다`); }
           if (!d.items || !d.ops) throw new Error('MEL 데이터 형식이 아닙니다');
           await idb('readwrite', st => st.put(d, 'mel')); melDB = d;
           showToast(`MEL 저장 완료 — ${(d.meta && d.meta.issue) || ''} · 항목 ${Object.keys(d.items).length}개`); renderMelCard();
