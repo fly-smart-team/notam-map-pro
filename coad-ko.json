@@ -1,5 +1,5 @@
 {
- "version": "2026-10-26c",
+ "version": "2026-10-28a",
  "note": "COAD 한국어 요약 (Claude 작성). 키 = 원문 정규화 해시. 원문이 바뀌면 키가 달라져 앱에서 \"변경됨\"으로 표시",
  "items": {
   "kk8nd1": {
@@ -437,6 +437,46 @@
   "62b0c0": {
    "id": "VVDN COAD01/21",
    "s": "다낭 연락처: 지상조업 베트남항공, 다낭 타워 121.6MHz, 전화 +84-939-54558."
+  },
+  "1pruz60": {
+   "id": "RJBB COAD01/20",
+   "s": "간사이 지점 연락처: 전화 81-72-456-7537."
+  },
+  "1t7x8d9": {
+   "id": "RJBB COAD02/20",
+   "s": "ILS Y RWY 24L(JPSN 21-6)은 RNAV 불가 항공기 전용. RNAV 가능 항공기는 RWY 24L ILS 접근 시 ILS Z RWY 24L을 사용한다."
+  },
+  "31gzza": {
+   "id": "RJAA COAD01/26",
+   "s": "유사 콜사인 주의(나리타 접근 중): OZ102(인천→나리타)와 GK102(삿포로→나리타). 관제 교신에 더 집중할 것."
+  },
+  "1d28on0": {
+   "id": "RJAA COAD01/25",
+   "s": "나리타 공항 운영 제한(커퓨) 1500~2100Z. A330(MMTOW 적용)은 1400~2100Z."
+  },
+  "1h196er": {
+   "id": "RJAA COAD02/25",
+   "s": "나리타 크레인으로 임시 접근 절차 사용(AIP SUP 224/25): 26.8.5~27.6.15 일부 선회접근 MDA, VOR RWY 34L·16R MDA·RVR, RNP RWY 34R·16L LNAV/VNAV DA·LNAV MDA·RVR 변경. 27.6.15~27.12.31에는 ILS·LOC RWY 34L DA·MDA·RVR도 변경. JPSN 차트와 최신 NOTAM 확인."
+  },
+  "19k4juk": {
+   "id": "RJAA COAD02/24",
+   "s": "나리타 연료 주문: 추가 연료가 필요하면 AVIATOR로 OCC에 알린다."
+  },
+  "1t7aprg": {
+   "id": "RJAA COAD01/21",
+   "s": "제방빙액: TYPE 1(KILFROST DF PLUS), TYPE 4(KILFROST ABC-S PLUS), 2단계 작업."
+  },
+  "1rw1toc": {
+   "id": "RJAA COAD01/20",
+   "s": "나리타 활주로 사용: 2100~1400Z는 관제 지시 활주로, 1400~1500Z는 RWY 34L/16R만 사용 가능."
+  },
+  "128r8rw": {
+   "id": "RJTT COAD01/26",
+   "s": "A321 인가 RNP AR 접근(하네다): RNP RWY 23 (AR). 인가 기체는 HL8510·HL8534·HL8511·HL8533·HL8582만 해당."
+  },
+  "1srf6du": {
+   "id": "RJCC COAD01/21",
+   "s": "제방빙액: TYPE 1(SAFEWING MP I ECO PLUS(80)), TYPE 4(KILFROST ABC-S PLUS), 2단계 작업."
   }
  }
 }

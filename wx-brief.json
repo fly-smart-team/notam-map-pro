@@ -1,6 +1,6 @@
 {
  "note": "OFP 기상 차트 분석 (Claude 작성). 키 = 콜사인|출발|도착|운항일(UTC). 비행 전날 OFP를 주면 추가",
- "version": "2026-10-27c",
+ "version": "2026-10-28 20:50Z",
  "items": {
   "KAL476|VVTS|RKSI|2026-10-26": {
    "flight": "KE476 호찌민(VVTS) → 인천(RKSI)",
@@ -391,6 +391,101 @@
      "what": "경로를 따라 고도별 바람, 기온선(갈색), 대류권계면, 수직 윈드시어(VWS, 초록 윤곽)를 보여줍니다. 왼쪽이 호찌민(출발), 오른쪽이 인천(도착)이고, 분홍 선이 계획 고도(FL330)입니다.",
      "see": "순항 FL330 구간에는 VWS가 없습니다. 제주(CJU)~KAMIT~인천 부근 FL170~FL250에 큰 VWS 구역, 인천 직전 FL250~FL290에도 VWS가 있습니다. 북쪽으로 갈수록 서풍이 매우 강해집니다(깃 여러 개).",
      "apply": "인천 강하 중 FL290~FL170을 지날 때 흔들림과 속도 변동이 클 수 있습니다. 강하 전에 객실 준비를 마치고, 강하율·속도 여유를 두고 계획합니다."
+    }
+   ]
+  },
+  "AAR122|RKSI|RJGG|2026-10-28": {
+   "flight": "OZ122 인천(RKSI) → 나고야(RJGG) · HL8399",
+   "etd": "23:00Z",
+   "eta": "00:24Z",
+   "trip": "1시간 24분",
+   "made": "2026-10-28 20:50Z",
+   "source": "OFP 10~15쪽 — UKMET 고도별 바람·기온(FL300·FL340·FL390), WAFC Washington SIGWX, WNI 난기류(ASC), 경로 단면도",
+   "key": [
+    "동해 상공 PILIT~AGSUS(이륙 약 22~31분 후, 약 23:22Z~23:31Z) OFP SR 6 — 이번 비행에서 가장 흔들리는 구간. ASC도 MOD~SEV",
+    "출발 상승 중 인천 북쪽 가까이에 SEV 난기류 구역, 상승 경로는 MOD — 이륙 후 TOC(약 13분)까지 좌석벨트 유지",
+    "강하 구간 CHILY~TOD(착륙 약 28~18분 전) MOD~SEV, SR 4~5. 단면도상 강하 중 FL300·FL230 부근 수직 윈드시어",
+    "순항 FL310 뒷바람 약 100KT(제트기류 FL350 부근 110KT). CB·중요 기상 없음, 출발·도착·교체 공항 날씨 양호",
+    "객실 서비스 가능 시간은 이륙 약 32분 후 ~ 착륙 약 30분 전(약 22분)으로 짧음"
+   ],
+   "overall": [
+    {
+     "t": "이륙·상승 (23:00Z~23:13Z, TOC까지)",
+     "s": "인천 TAF는 출발 시각 CAVOK, 바람 남동 10KT 정도입니다. 단면도에서 출발 직후 FL70~FL130 부근에 약한 수직 윈드시어가 있고, ASC상 인천 북쪽(경로 바로 북쪽)에 SEV 구역이 있습니다. 상승 경로 자체는 MOD 표시입니다."
+    },
+    {
+     "t": "강원 내륙 순항 (TORUS~PILIT, 이륙 15~22분 후)",
+     "s": "OFP SR 3~4. 서풍 90~100KT 뒷바람이 시작됩니다. 단면도상 순항 고도 바로 위 FL330 부근에 수직 윈드시어 구역이 있어 상승은 피하는 편이 낫습니다."
+    },
+    {
+     "t": "동해 (PILIT~AGSUS, 이륙 22~31분 후)",
+     "s": "OFP SR 6, ASC 노랑(MOD~SEV) — 이번 비행에서 가장 흔들리는 구간입니다. 좌석벨트를 켠 상태를 유지하고, 객실 서비스는 이 구간이 끝난 뒤 시작하는 것이 좋습니다."
+    },
+    {
+     "t": "동해~일본 혼슈 북부 (AGSUS~SAMON, 이륙 31~52분 후)",
+     "s": "SR 2~3으로 안정적입니다. 객실 서비스에 쓸 수 있는 유일한 구간입니다. FL310 뒷바람 약 100KT."
+    },
+    {
+     "t": "강하·접근 (CHILY~나고야, 착륙 약 28분 전~착륙)",
+     "s": "CHILY~MARIA 부근 ASC 노랑(MOD~SEV), SR 4~5. 단면도상 강하 중 FL300·FL230 부근에 수직 윈드시어가 있어 속도 변동이 있을 수 있습니다. SIGWX의 청천난류(CAT) 구역 경계가 나고야 바로 남쪽을 지납니다. 나고야 TAF는 북풍 10KT, 9999, FEW030으로 양호하고 교체 공항 간사이도 양호합니다."
+    }
+   ],
+   "crew": {
+    "wxKo": "출발·도착 공항 날씨는 맑고, 비행 중 소나기구름은 없습니다.",
+    "wxEn": "Good weather at departure and arrival, no thunderstorms en route.",
+    "enrouteKo": "이륙 후 상승하는 약 15분 동안 약간 흔들릴 수 있고, 이륙 후 약 20분부터 30분까지 보통 정도의 흔들림(일부 심할 수 있음)이 예상됩니다. 그 뒤 착륙 약 30분 전까지는 안정적입니다. 착륙 약 30분 전부터 착륙까지 다시 흔들릴 수 있습니다.",
+    "enrouteEn": "Light turbulence possible during the climb for about 15 minutes after takeoff, and moderate turbulence — at times strong — from about 20 to 30 minutes after takeoff. Then smooth until about 30 minutes before landing, and turbulence again from about 30 minutes before landing until landing.",
+    "turbKo": "이륙 후 약 20분부터 30분까지 보통 정도의 흔들림(일부 심할 수 있음), 착륙 약 30분 전부터 착륙까지 흔들림이 예상됩니다. 객실 서비스는 이륙 약 30분 후 시작해 착륙 약 30분 전까지 마치고, 서비스 전후로 객실·갤리 고정을 철저히 해 주시기 바랍니다.",
+    "turbEn": "Moderate turbulence, at times strong, from about 20 to 30 minutes after takeoff, and turbulence again from about 30 minutes before landing. Please start the service about 30 minutes after takeoff, finish by about 30 minutes before landing, and keep the cabin and galley secured."
+   },
+   "charts": [
+    {
+     "page": 10,
+     "title": "고도별 바람·기온 FL300 (300hPa)",
+     "valid": "10/29 00:00Z",
+     "what": "UKMET 예보 모델의 FL300 바람(바브)과 기온(°C) 차트입니다. 깃 하나 10KT, 삼각형 50KT입니다.",
+     "see": "경로 전체에 서풍 85~95KT가 붑니다. 기온은 표준(-45°C) 부근으로 큰 차이가 없습니다.",
+     "apply": "상승 후반·강하 초반 FL300 부근에서 강한 뒷바람을 받습니다. 강하 시 지상속도가 커서 강하 시작이 늦어지지 않도록 미리 계획합니다."
+    },
+    {
+     "page": 11,
+     "title": "고도별 바람·기온 FL340 (250hPa)",
+     "valid": "10/29 00:00Z",
+     "what": "FL340 바람·기온 차트입니다. 순항 고도(FL310) 바로 위층입니다.",
+     "see": "서풍 100~110KT, 기온 -48~-51°C(한반도·동해), 일본 쪽 -43~-46°C로 표준(-52°C)보다 1~9도 높습니다.",
+     "apply": "FL310 순항 중 뒷바람 약 100KT로 계획보다 일찍 도착할 수 있습니다. 위로 올라갈수록 바람이 더 강하고 단면도상 FL330에 윈드시어가 있어 흔들림 회피를 위한 상승은 효과가 작습니다."
+    },
+    {
+     "page": 12,
+     "title": "고도별 바람·기온 FL390 (200hPa)",
+     "valid": "10/29 00:00Z",
+     "what": "FL390 바람·기온 차트입니다. 순항 고도 위층 참고용입니다.",
+     "see": "제트기류 중심(FL350~FL410)에 가까운 층으로 서풍이 가장 강합니다.",
+     "apply": "이번 비행 고도(FL270~FL310)보다 위라 직접 영향은 없지만, 고도 변경 시 바람 증가를 고려합니다."
+    },
+    {
+     "page": 13,
+     "title": "SIGWX 중요 기상 (FL250~FL630)",
+     "valid": "10/29 00:00Z",
+     "what": "세계공역예보센터(Washington)의 고층 중요 기상 차트입니다. 파란 선 = 제트기류, 분홍 점선 = 청천난류(CAT) 구역(네모 숫자 위 꼭대기, 아래 밑부분, XXX는 FL250 아래), 초록 물결선 = CB 구역.",
+     "see": "경로상 CB 구역은 없습니다. 제트기류가 한반도 남부~일본 중부를 동서로 지나 나고야 북쪽(SABAE~MARIA)에서 경로와 만나고, 북한 쪽에 또 하나가 있습니다. 나고야 바로 남쪽에 CAT 구역(FL250 아래~FL400) 경계가 있습니다.",
+     "apply": "강하 시작 지점(CHILY~TOD)이 제트기류 축 근처라 흔들림과 속도 변동에 대비합니다. CB 회피는 필요 없을 것으로 보입니다."
+    },
+    {
+     "page": 14,
+     "title": "난기류 예상 ASC (FL180~FL450)",
+     "valid": "10/29 00:00Z",
+     "what": "웨더뉴스(WNI) 난기류 예상 차트입니다. 하늘색 = MOD, 노랑 = MOD~SEV, 빨강 = SEV. FL180~FL450 사이의 가장 강한 값을 겹쳐 보여줍니다.",
+     "see": "인천 북쪽(EGOBA~TOC 바로 북쪽)에 SEV 구역, 경로는 그 남쪽 경계를 따라 MOD. 동해안 PILIT~ESNEG 노랑(MOD~SEV). 동해 중부~DISSH는 MOD 또는 표시 없음. CHILY~MARIA 노랑(MOD~SEV). 경남·부산 부근 SEV는 경로와 멂.",
+     "apply": "이륙 후 약 31분까지와 착륙 약 30분 전부터는 좌석벨트 사인을 유지·조기 점등합니다. 객실 서비스는 이륙 약 30분 후 ~ 착륙 약 30분 전 사이로 사무장과 협의합니다."
+    },
+    {
+     "page": 15,
+     "title": "경로 단면도 (바람·기온·수직 윈드시어)",
+     "valid": "10/29 00:00Z",
+     "what": "경로를 따라 고도별 바람, 기온선(갈색), 대류권계면(빨간 별), 수직 윈드시어(VWS, 초록 윤곽)를 보여줍니다. 왼쪽이 인천, 오른쪽이 나고야이고 분홍 선이 계획 고도(FL290→FL310→FL270)입니다.",
+     "see": "출발 직후 FL70~FL130, 순항 고도 위 FL330(BIKSI~LANAT), 순항 고도 아래 FL210~FL250(PILIT~SAMON), 나고야 강하 구간 FL300·FL230 부근에 VWS가 있습니다. 대류권계면은 FL410~FL450.",
+     "apply": "순항 FL310은 윈드시어 층 사이에 있어 고도 변경 시 흔들림이 커질 수 있습니다. 나고야 강하 중 FL300과 FL230을 지날 때 속도 변동에 대비합니다."
     }
    ]
   }
