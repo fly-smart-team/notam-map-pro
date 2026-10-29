@@ -1,6 +1,6 @@
 {
  "note": "OFP 기상 차트 분석 (Claude 작성). 키 = 콜사인|출발|도착|운항일(UTC). 비행 전날 OFP를 주면 추가",
- "version": "2026-10-28 20:50Z",
+ "version": "2026-10-29 00:55Z",
  "items": {
   "KAL476|VVTS|RKSI|2026-10-26": {
    "flight": "KE476 호찌민(VVTS) → 인천(RKSI)",
@@ -486,6 +486,101 @@
      "what": "경로를 따라 고도별 바람, 기온선(갈색), 대류권계면(빨간 별), 수직 윈드시어(VWS, 초록 윤곽)를 보여줍니다. 왼쪽이 인천, 오른쪽이 나고야이고 분홍 선이 계획 고도(FL290→FL310→FL270)입니다.",
      "see": "출발 직후 FL70~FL130, 순항 고도 위 FL330(BIKSI~LANAT), 순항 고도 아래 FL210~FL250(PILIT~SAMON), 나고야 강하 구간 FL300·FL230 부근에 VWS가 있습니다. 대류권계면은 FL410~FL450.",
      "apply": "순항 FL310은 윈드시어 층 사이에 있어 고도 변경 시 흔들림이 커질 수 있습니다. 나고야 강하 중 FL300과 FL230을 지날 때 속도 변동에 대비합니다."
+    }
+   ]
+  },
+  "AAR121|RJGG|RKSI|2026-10-29": {
+   "flight": "OZ121 나고야(RJGG) → 인천(RKSI) · HL8399",
+   "etd": "01:55Z",
+   "eta": "03:49Z",
+   "trip": "1시간 54분",
+   "made": "2026-10-29 00:55Z",
+   "source": "OFP 10~15쪽 — UKMET 고도별 바람·기온(FL300·FL340·FL390), WAFC Washington SIGWX, WNI 난기류(ASC), 경로 단면도",
+   "key": [
+    "일본 서해안 LEPGU~MIHOU(이륙 약 28~36분 후, 약 02:23Z~02:31Z) 경로가 ASC SEV(빨강) 구역을 지남 — OFP SR은 4지만 이번 비행에서 가장 주의할 구간",
+    "순항 FL320이 단면도상 수직 윈드시어 층(FL290~FL330, STAGE~나고야)에 걸림 — 흔들림이 계속되면 FL300 이하나 다른 고도를 관제에 요청 검토",
+    "동해~포항 SAPRA~KPO(이륙 약 56~67분 후, 착륙 약 58~47분 전) OFP SR 6",
+    "맞바람 약 100KT(FL320). 도착 인천 TAF 03Z 이후 17015G25KT, 04Z부터 비(-RA) — 착륙 시 돌풍",
+    "교체 공항 김포 주 활주로 14R/32L 04Z까지 폐쇄, RWY 32L ILS 사용 불가 — 교체 시 RWY 14L/32R 확인"
+   ],
+   "overall": [
+    {
+     "t": "이륙·상승 (01:55Z~02:11Z, TOC까지)",
+     "s": "나고야 TAF 북풍 10KT, 9999, FEW030으로 양호합니다. SIGWX의 청천난류(CAT) 구역 경계가 나고야 바로 남쪽에 있고, ASC상 HIKNE~YME 부근 노랑(MOD~SEV)입니다. 상승 중 흔들림에 대비합니다."
+    },
+    {
+     "t": "일본 서해안 (YME~STAGE, 이륙 19~40분 후)",
+     "s": "제트기류가 LEPGU~YME 부근에서 경로와 만나고, ASC상 LEPGU·RAKDA·MIHOU 부근에 SEV(빨강) 구역이 있습니다. 단면도상 순항 FL320이 FL290~FL330 수직 윈드시어 층 안에 있습니다. 좌석벨트를 유지하고 PIREP·관제로 고도별 상황을 확인합니다."
+    },
+    {
+     "t": "동해 중부 (STAGE~SAPRA, 이륙 40~56분 후)",
+     "s": "ASC 표시가 약하고 SR 4입니다. 객실 서비스를 시작하기 가장 좋은 구간입니다. 맞바람 약 100KT."
+    },
+    {
+     "t": "동해 남부~포항 (SAPRA~KPO, 이륙 56~67분 후)",
+     "s": "OFP SR 6, ASC 노랑(MOD~SEV)입니다. 착륙 약 1시간 전에 해당합니다. KPO 이후 FL260으로 내려갑니다."
+    },
+    {
+     "t": "내륙 순항~강하·접근 (ELAPI~인천, 착륙 약 42분 전~착륙)",
+     "s": "ELAPI~CUN은 SR 2로 안정적이고, CUN~ENSAL 부근 ASC 노랑, 단면도상 TOD 부근 FL250~FL270과 저고도(FL90 부근)에 약한 수직 윈드시어가 있습니다. 인천 TAF는 도착 무렵 남풍 15KT 돌풍 25KT, 9999 SCT025 BKN040이고 04Z부터 6000 -RA로 바뀝니다. 활주로 방향(15/16)과 비슷한 바람이라 옆바람은 크지 않지만 돌풍에 대비합니다."
+    }
+   ],
+   "crew": {
+    "wxKo": "도착하는 인천은 바람이 많고(돌풍), 도착 무렵부터 비가 올 수 있습니다. 비행 중 소나기구름은 없습니다.",
+    "wxEn": "Gusty winds at Incheon on arrival, with rain possible around landing. No thunderstorms en route.",
+    "enrouteKo": "이륙 후 상승하는 약 20분 동안 흔들림이 있고, 이륙 약 25분 후부터 40분 후까지 심한 흔들림이 있을 수 있습니다. 이륙 약 40분 후부터 55분 후까지는 비교적 안정적입니다. 착륙 약 1시간 전부터 45분 전까지 다시 보통에서 심한 정도의 흔들림이 있고, 착륙 약 35분 전부터 착륙까지 바람 때문에 흔들릴 수 있습니다.",
+    "enrouteEn": "Turbulence during the climb for about 20 minutes, and possibly severe turbulence from about 25 to 40 minutes after takeoff. Fairly smooth from about 40 to 55 minutes after takeoff. Moderate to severe turbulence again from about 1 hour to 45 minutes before landing, and bumpy from about 35 minutes before landing due to strong winds.",
+    "turbKo": "이륙 약 25분 후부터 40분 후까지 심한 흔들림이 있을 수 있고, 착륙 약 1시간 전부터 45분 전까지도 보통에서 심한 흔들림이 예상됩니다. 객실 서비스는 이륙 약 40분 후 시작해 착륙 약 1시간 전에 일단 멈추고, 착륙 약 45분 전부터 35분 전 사이에 마무리해 주시기 바랍니다. 객실·갤리 고정을 철저히 해 주십시오.",
+    "turbEn": "Possibly severe turbulence from about 25 to 40 minutes after takeoff, and moderate to severe from about 1 hour to 45 minutes before landing. Please start the service about 40 minutes after takeoff, pause it about 1 hour before landing, finish between 45 and 35 minutes before landing, and keep the cabin and galley secured."
+   },
+   "charts": [
+    {
+     "page": 10,
+     "title": "고도별 바람·기온 FL300 (300hPa)",
+     "valid": "10/29 03:00Z",
+     "what": "UKMET 예보 모델의 FL300 바람(바브)과 기온(°C) 차트입니다. 깃 하나 10KT, 삼각형 50KT입니다.",
+     "see": "경로 전체에 서풍 90~100KT. 기온 -39~-42°C로 표준(-44°C)보다 2~5도 높습니다.",
+     "apply": "서쪽으로 가는 비행이라 강한 맞바람입니다. 흔들림 회피로 FL300 부근으로 내려가도 맞바람은 비슷합니다."
+    },
+    {
+     "page": 11,
+     "title": "고도별 바람·기온 FL340 (250hPa)",
+     "valid": "10/29 03:00Z",
+     "what": "FL340 바람·기온 차트입니다. 순항 고도(FL320) 바로 위층입니다.",
+     "see": "서풍 105~115KT, 기온 -44~-47°C(표준 -52°C보다 5~8도 높음).",
+     "apply": "위로 올라갈수록 맞바람이 세지므로 상승은 연료·시간 면에서 불리합니다. 고도를 바꾼다면 아래쪽이 유리합니다."
+    },
+    {
+     "page": 12,
+     "title": "고도별 바람·기온 FL390 (200hPa)",
+     "valid": "10/29 03:00Z",
+     "what": "FL390 바람·기온 차트입니다. 순항 고도 위층 참고용입니다.",
+     "see": "제트기류 중심(FL360 부근 약 115~120KT)에 가까운 층입니다.",
+     "apply": "직접 영향은 없습니다. 상승 회피는 맞바람 증가로 효과가 작습니다."
+    },
+    {
+     "page": 13,
+     "title": "SIGWX 중요 기상 (FL250~FL630)",
+     "valid": "10/29 00:00Z",
+     "what": "세계공역예보센터(Washington)의 고층 중요 기상 차트입니다. 파란 선 = 제트기류, 분홍 점선 = 청천난류(CAT) 구역(400/XXX는 FL250 아래~FL400), 초록 물결선 = CB 구역.",
+     "see": "CB 구역은 없습니다. 제트기류가 한반도 남부에서 일본 서해안(LEPGU~YME)을 지나며 경로와 교차하고, 나고야 바로 남쪽에 CAT 구역(FL250 아래~FL400)이 있습니다.",
+     "apply": "출발 상승 중과 제트기류를 지나는 일본 서해안 구간에서 흔들림에 대비합니다. CB 회피는 필요 없을 것으로 보입니다."
+    },
+    {
+     "page": 14,
+     "title": "난기류 예상 ASC (FL180~FL450)",
+     "valid": "10/29 03:00Z",
+     "what": "웨더뉴스(WNI) 난기류 예상 차트입니다. 하늘색 = MOD, 노랑 = MOD~SEV, 빨강 = SEV. FL180~FL450 사이의 가장 강한 값을 겹쳐 보여줍니다.",
+     "see": "HIKNE~YME 노랑, LEPGU~RAKDA~MIHOU 일대에 SEV(빨강) 구역이 경로 위에 있습니다. STAGE~SAPRA는 약하고, BULGA 부근 노랑, ELAPI~CUN 하늘색, CUN~ENSAL 노랑, 인천 부근은 약합니다.",
+     "apply": "이륙 후 약 40분까지 좌석벨트 사인 유지, 착륙 약 1시간 전에 다시 점등을 검토합니다. 객실 서비스는 이륙 약 40분 후부터로 사무장과 협의합니다."
+    },
+    {
+     "page": 15,
+     "title": "경로 단면도 (바람·기온·수직 윈드시어)",
+     "valid": "10/29 03:00Z",
+     "what": "경로를 따라 고도별 바람, 기온선(갈색), 대류권계면(빨간 별), 수직 윈드시어(VWS, 초록 윤곽)를 보여줍니다. 왼쪽이 인천(도착), 오른쪽이 나고야(출발)이고 분홍 선이 계획 고도(FL320→FL260)입니다.",
+     "see": "STAGE~나고야 FL290~FL330에 VWS가 길게 있어 순항 FL320이 그 안에 들어갑니다. 동해 FL170~FL190, 인천 강하 구간 FL250~FL270과 FL90 부근에도 VWS가 있습니다. 대류권계면은 FL430~FL510.",
+     "apply": "일본 쪽 순항 중 흔들림이 계속되면 FL300 아래(예: FL280)를 요청하는 것이 효과적일 수 있습니다. 인천 강하 시작(FL260) 직후 흔들림에 대비합니다."
     }
    ]
   }
