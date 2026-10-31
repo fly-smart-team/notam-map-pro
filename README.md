@@ -22,6 +22,10 @@
 - 주요 항목 바로 아래 짧은 영어 한 줄 (승객, 출발·도착 현지 시각, 교체 공항, 승무원용 날씨, SR 6 이상 흔들림, Seat belt·Moderate PA, 보안 등급, 의심 승객, EMER, 10,000ft 이하, 비상 PA 3가지, 택시 시간, 마무리 질문)
 - 값은 OFP에서 자동, 없는 값은 빈칸. 복사·저장·인쇄에서 🔊 버튼 제외
 
+## Joint Brief 퀵턴
+- Joint Brief 위쪽 '↩ 퀵턴 OFP 추가'로 돌아오는 편 OFP를 고르면 문서 끝에 QUICK TURN BRIEFING(비행 정보·기상·흔들림·보안 등급·CABIN LOG·서비스 시간)을 덧붙임
+- 노탐 분석·지도·2번 칸 등 앱 상태는 바꾸지 않음(브리핑을 만드는 동안만 잠시 바꿨다가 되돌림). 다시 누르면 퀵턴 부분만 뺌
+
 ## 이륙 성능 EFB 입력 (활주로 단축 · 장애물 추가)
 - OFP 'AIRPORT TECHNICAL INFORMATION'의 `EFB:` 지시를 읽어 2번 칸 맨 위에 빨간 카드로 표시
 - 활주로 단축: `NNNN FT (TAKEOFF SHORTENING FROM RWY START/END)` → RUNWAY LENGTH REDUCTION FROM · RWY START/END
