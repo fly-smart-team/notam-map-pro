@@ -1,5 +1,5 @@
 {
- "version": "2026-10-28a",
+ "version": "2026-11-01a",
  "note": "COAD 한국어 요약 (Claude 작성). 키 = 원문 정규화 해시. 원문이 바뀌면 키가 달라져 앱에서 \"변경됨\"으로 표시",
  "items": {
   "kk8nd1": {
@@ -477,6 +477,22 @@
   "1srf6du": {
    "id": "RJCC COAD01/21",
    "s": "제방빙액: TYPE 1(SAFEWING MP I ECO PLUS(80)), TYPE 4(KILFROST ABC-S PLUS), 2단계 작업."
+  },
+  "xpb3o1": {
+   "id": "RJCC COAD01/26",
+   "s": "제방빙액(KAAS): CLARIANT SAFEWING MP I LFD 80(TYPE 1), CLARIANT SAFEWING MP IV LAUNCH(TYPE 4)."
+  },
+  "16wqpki": {
+   "id": "RJEC COAD02/21",
+   "s": "아사히카와 공항 운영 제한(커퓨) 1200~2300Z."
+  },
+  "c30ifq": {
+   "id": "RJTT COAD02/26",
+   "s": "제방빙액(ANA): KILFROST DF PLUS(TYPE 1), KILFROST ABC-S PLUS(TYPE 4)."
+  },
+  "1ccyao5": {
+   "id": "RJBB COAD01/26",
+   "s": "제방빙액(ANA): CLARIANT SAFEWING MP I LFD 80(TYPE 1), CLARIANT SAFEWING MP IV LAUNCH PLUS(TYPE 4)."
   }
  }
 }
