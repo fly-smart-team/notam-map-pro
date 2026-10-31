@@ -815,7 +815,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 10/27 10:10 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/01 05:40 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
@@ -5513,7 +5513,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       h.push(`<h2>3. Security</h2><ul>
         ${li(`<b>가. Alert Level :</b> ( ${((String(window.__ofpText || '').match(/ALERT\s*([1-5])\s*-\s*ALL STATIONS/i) || [])[1]) || blank} ) — 5(평시), 4(관심), 3(주의), 2(경계), 1(심각)${en('alert')}`)}
         ${li('<b>나. Emphasize that all crew are security staff :</b><ul>' + li('전 승무원은 보안 요원임을 주지하고 의심스러운 승객이나 물품 발견 시 기장에게 보고 (필요한 경우 해당 공항 관계기관에 신고)') + '</ul>' + en('susp'))}
-        ${li('<b>다. Cockpit Entry Procedure (Two-Crew Rule) :</b><ul>' + li('조종실 출입 전 조종실과 인터폰 통화, 청정구역 승객 여부 확인 후 커튼 사용하여 노크 및 키패드 Normal Access Code를 입력한다. 이때 출입상황을 Monitor할 수 있는 객실승무원 1명이 Cockpit Door 입구에 있어야 한다.') + li('조종실을 나갈 때는 인터폰 사용해서, 청정구역 내 승객 여부 확인 후 커튼 닫은 상태에서 출입문을 개방한다.') + '</ul>')}
+        ${li('<b>다. Cockpit Entry Procedure (Two-Crew Rule) :</b><ul>' + li('조종실 출입 전 조종실과 인터폰 통화, 청정구역 승객 여부 확인 후 커튼 사용하여 노크 및 키패드 Normal Access Code를 입력한다. 이때 출입상황을 Monitor할 수 있는 객실승무원 1명이 Cockpit Door 입구에 있어야 한다.') + li('조종실을 나갈 때는 인터폰 사용해서, 청정구역 내 승객 여부 확인 후 커튼 닫은 상태에서 출입문을 개방한다.') + li('조종실을 이석하는 운항승무원은 Jump Seat 사용 객실승무원에게 다음 사항 브리핑 실시 (단, 해당 객실승무원이 아래 사항을 숙지하고 있음을 확인 시 생략 가능, FOM 12.2.16.3)<ol style="list-style:decimal;padding-left:1.4em">' + li('Safety Belt/Harness, 구명동의, 산소마스크, 비상구 등 비상장비 사용법') + li('조종실 인터폰을 이용한 Cabin 연락 방법') + li('조종실 출입문 작동 방법') + li('운항승무원의 주의를 산만하게 하거나 항공기 운항에 지장을 주는 행위 금지') + '</ol>') + '</ul>')}
       </ul>`);
       h.push(`<h2>4. Sterile Cockpit Procedure</h2><ul>
         ${li('<b>가. Emergency Alert Signal :</b><ul>' + li('객실 내 비상 상황 발생 시 긴급하게 통화 필요 시에는 인터폰 "EMER" 사용해서 연락 바랍니다.') + '</ul>' + en('emer'))}
