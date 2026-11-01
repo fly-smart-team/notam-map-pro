@@ -814,13 +814,18 @@ svg.leaflet-image-layer.leaflet-interactive path {
   /* 간단히 보기: 잘 안 쓰는 부분 숨김 (헤더 ▤ 버튼으로 전체 보기 전환) */
   body.pro-slim #fpl-input, body.pro-slim #pkg1-airport-names, body.pro-slim #pkg1-tabs-flt,
   body.pro-slim .pro-slim-hide, body.pro-slim #map-summary { display: none !important; }
+  /* 주기장 삼각형: 넓은 화면은 공항 이름 오른쪽, 좁은 화면(폰)은 시각 아래 */
+  .stand-tri-w { position: absolute; left: 100%; top: -4px; margin-left: 4px; }
+  .stand-tri-n { display: none; margin-top: 4px; }
+  .apt-ko { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  @media (max-width: 639px) { .stand-tri-w { display: none; } .stand-tri-n { display: block; } .apt-ko { white-space: normal; word-break: normal; overflow: visible; text-overflow: clip; min-height: 2.5em; } }
 </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/01 22:00 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/01 22:20 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
@@ -1237,7 +1242,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
     const DEV_AIRPORT_NAMES = {
       "RKSS": { iata: "GMP", ko: "서울 김포 국제공항", en: "Seoul Gimpo Int'l Airport" },
-      "RKSI": { iata: "ICN", ko: "서울 인천 국제공항", en: "Seoul Incheon Int'l Airport" },
+      "RKSI": { iata: "ICN", ko: "서울 인천", en: "Seoul Incheon Int'l Airport" },
       "RKTU": { iata: "CJJ", ko: "청주 국제공항", en: "Cheongju Int'l Airport" },
       "RKPC": { iata: "CJU", ko: "제주 국제공항", en: "Jeju Int'l Airport" },
       "RKPS": { iata: "HIN", ko: "진주 사천공항", en: "Jinju Sacheon Airport" },
@@ -2409,7 +2414,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
     // 회사 취항지 한글/영문 이름 (ICAO → [한글, English]). 출처: 회사 공항 목록
     const AIRPORT_NAMES = {
-      "RKSS": ["서울 김포 국제공항", "Seoul Gimpo Int'l Airport"], "RKSI": ["서울 인천 국제공항", "Seoul Incheon Int'l Airport"], "RKTU": ["청주 국제공항", "Cheongju Int'l Airport"],
+      "RKSS": ["서울 김포 국제공항", "Seoul Gimpo Int'l Airport"], "RKSI": ["서울 인천", "Seoul Incheon Int'l Airport"], "RKTU": ["청주 국제공항", "Cheongju Int'l Airport"],
       "RKPC": ["제주 국제공항", "Jeju Int'l Airport"], "RKPS": ["진주 사천공항", "Jinju Sacheon Airport"], "RKTH": ["포항 공항", "Pohang Airport"],
       "RKJJ": ["광주 공항", "Gwangju Airport"], "RKJB": ["무안 국제공항", "Muan Int'l Airport"], "RKPK": ["부산 김해 국제공항", "Busan Gimhae Int'l Airport"],
       "RKJY": ["여수 공항", "Yeosu Airport"], "RKTN": ["대구 국제공항", "Daegu Int'l Airport"], "RKPU": ["울산 공항", "Ulsan Airport"],
@@ -6108,27 +6113,35 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (info.dep !== 'RKSI' && info.dest !== 'RKSI') { standLive = { key: c.key }; return; }
       refreshStands(false);
     }
+    // 주기장: 조종사들이 쓰는 삼각형 표시 (△ 안에 번호, 없으면 '입력'). 누르면 직접 입력·수정
+    function standTri(role, v, auto) {
+      const t = String(v || ''), fs = t.length >= 4 ? 13 : t.length === 3 ? 16 : 18, col = v ? '#ffffff' : '#94a3b8';
+      return `<button type="button" data-stand-edit="${role}" title="${v ? (auto ? '자동 조회 주기장 · 눌러서 직접 입력' : '직접 입력한 주기장 · 눌러서 수정') : '주기장 입력'}" style="display:block;background:none;border:0;padding:0;cursor:pointer;line-height:0">
+        <svg width="62" height="54" viewBox="0 0 62 54" aria-label="주기장 ${esc(t || '입력')}"><polygon points="31,3 59,51 3,51" fill="${v ? 'rgba(15,118,110,.25)' : 'none'}" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"${v ? '' : ' stroke-dasharray="5 3"'}/>
+        <text x="31" y="${v ? 44 : 43}" text-anchor="middle" font-family="Menlo,Consolas,monospace" font-weight="700" font-size="${v ? fs : 12}" fill="${col}">${esc(t || '입력')}</text></svg></button>`;
+    }
     function renderStands() {
       const p = pdfFlt || {};
+      document.querySelectorAll('[data-stand-tri]').forEach(el => {
+        const role = el.dataset.standTri, icao = role === 'DEP' ? info.dep : info.dest, manual = standManualGet(role);
+        const d = icao === 'RKSI' ? standLive[role] : null, auto = !manual && d && d.stand;
+        el.innerHTML = standTri(role, manual || (auto ? d.stand : ''), !!auto);
+      });
       document.querySelectorAll('[data-stand-role]').forEach(el => {
         const role = el.dataset.standRole, icao = role === 'DEP' ? info.dep : info.dest;
         const manual = standManualGet(role);
         const isIcn = icao === 'RKSI', d = isIcn ? standLive[role] : null;
-        const editBtn = (v, ph) => `<button type="button" data-stand-edit="${role}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border whitespace-nowrap ${v ? 'border-teal-600 bg-teal-950/50 text-teal-100' : 'border-dashed border-slate-600 text-slate-400'} text-[12px]"><span>🅿</span><b class="mono text-[14px]">${esc(v || ph)}</b></button>`;
+        const jc = role === 'DEST' ? 'justify-center' : '';
         let h = '';
         if (isIcn && d && d.stand && !manual) {
           const chg = d.est && d.sch && d.est !== d.sch ? `<span class="text-amber-300">변경 ${esc(fmtKst(d.est).slice(6))}</span>` : '';
           const regDiff = d.reg && p.reg && d.reg.replace(/-/g, '') !== String(p.reg).replace(/-/g, '') ? `<span class="text-rose-300">기체 ${esc(d.reg)} (OFP ${esc(p.reg)})</span>` : '';
-          h = `<div class="flex items-center gap-1.5 flex-wrap ${role === 'DEST' ? 'justify-center' : ''}">
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-teal-500 bg-teal-900/60 text-white text-[12px]"><span>🅿</span><b class="mono text-[15px]">${esc(d.stand)}</b></span>
-              <button type="button" data-stand-refresh class="text-[11px] text-sky-300" title="다시 조회">🔄</button>
-            </div>
-            <div class="text-[10px] text-slate-400 leading-snug flex flex-wrap gap-x-1.5 ${role === 'DEST' ? 'justify-center' : ''}">${[d.gate ? `Gate ${esc(d.gate)}` : '', d.term ? esc(d.term) : '', d.remark ? `<span class="text-amber-300">${esc(d.remark)}</span>` : '', chg, regDiff, standLive.at ? `${new Date(standLive.at).toISOString().slice(11, 16)}Z 조회` : ''].filter(Boolean).join(' · ')}</div>`;
+          h = `<div class="text-[10px] text-slate-400 leading-snug flex flex-wrap items-center gap-x-1.5 ${jc}">${[d.gate ? `Gate ${esc(d.gate)}` : '', d.term ? esc(d.term) : '', d.remark ? `<span class="text-amber-300">${esc(d.remark)}</span>` : '', chg, regDiff, standLive.at ? `${new Date(standLive.at).toISOString().slice(11, 16)}Z 조회` : ''].filter(Boolean).join(' · ')}<button type="button" data-stand-refresh class="text-[11px] text-sky-300" title="다시 조회">🔄</button></div>`;
         } else if (isIcn && !manual) {
           const st = standLive.busy ? '조회 중…' : standLive.err ? `조회 실패: ${esc(standLive.err)}` : d && d.none ? '해당 편 없음 (D-3~D+6만 제공)' : d && !d.stand ? `아직 미배정${d.gate ? ' · Gate ' + esc(d.gate) : ''}` : '';
-          h = `<div class="flex items-center gap-1.5 flex-wrap ${role === 'DEST' ? 'justify-center' : ''}">${editBtn('', '주기장')}<button type="button" data-stand-refresh class="text-[11px] text-sky-300">🔄 조회</button></div>${st ? `<div class="text-[10px] ${standLive.err ? 'text-rose-300' : 'text-slate-400'} leading-snug">${st}</div>` : ''}`;
-        } else {
-          h = `<div class="flex items-center gap-1.5 flex-wrap ${role === 'DEST' ? 'justify-center' : ''}">${editBtn(manual, '주기장 입력')}${manual && isIcn ? '<span class="text-[10px] text-slate-500">직접 입력</span>' : ''}</div>`;
+          h = `<div class="text-[10px] ${standLive.err ? 'text-rose-300' : 'text-slate-400'} leading-snug flex flex-wrap items-center gap-x-1.5 ${jc}">${st ? `<span>${st}</span>` : ''}<button type="button" data-stand-refresh class="text-[11px] text-sky-300">🔄 조회</button></div>`;
+        } else if (manual && isIcn) {
+          h = `<div class="text-[10px] text-slate-500 ${jc}" style="${role === 'DEST' ? 'text-align:center' : ''}">직접 입력</div>`;
         }
         el.innerHTML = h;
       });
@@ -6160,13 +6173,17 @@ svg.leaflet-image-layer.leaflet-interactive path {
       // ETD/ETA (조정 반영) + 현지시각
       const w = flightWindow();
       const endpoint = (role, icao, ms, minutes, alignRight, codeCls = 'text-emerald-300', noTime = false) => {
-        const slot = role === 'DEP' || role === 'DEST' ? `<div class="mt-1" data-stand-role="${role}"></div>` : '';
+        const hasStand = role === 'DEP' || role === 'DEST';
+        const slot = hasStand ? `<div class="stand-tri-n" data-stand-tri="${role}"></div><div class="mt-1" data-stand-role="${role}"></div>` : '';
         const nm = getAirportNameInfo(icao), lt = localTime(icao, ms);
         const al = alignRight === 'center' ? 'items-center text-center' : alignRight ? 'items-end text-right' : 'items-start text-left';
         return `<div class="flex flex-col ${al} gap-0.5 min-w-0">
-          <div class="text-xl font-bold mono ${codeCls} leading-none">${esc(icao || '--')}</div>
-          <div class="text-sm text-slate-100 leading-tight break-keep">${esc(nm && nm.ko ? nm.ko : '-')}</div>
-          <div class="text-xs text-slate-400 leading-tight">${esc((nm && nm.en) || AIRPORT_EN[icao] || '-')}</div>
+          <div style="position:relative;max-width:100%" class="flex flex-col ${al} gap-0.5">
+            <div class="text-xl font-bold mono ${codeCls} leading-none">${esc(icao || '--')}</div>
+            <div class="apt-ko text-sm text-slate-100 leading-tight" title="${esc(nm && nm.ko ? nm.ko : '')}">${esc(nm && nm.ko ? nm.ko : '-')}</div>
+            <div class="text-xs text-slate-400 leading-tight" style="min-height:2.5em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc((nm && nm.en) || AIRPORT_EN[icao] || '-')}</div>
+            ${hasStand ? `<div class="stand-tri-w" data-stand-tri="${role}"></div>` : ''}
+          </div>
           ${noTime ? '<div class="mt-1 h-[3.25rem]"></div>' : `<div class="mono text-sm font-bold text-white mt-1">${minutes != null ? formatMinutes(minutes) + 'Z' : '--'}</div>
           <div class="mono text-[11px] text-amber-200 whitespace-nowrap">${lt ? `${lt.md} ${lt.hm} L` : '<span class="text-slate-500">현지시각 없음</span>'}</div>
           ${lt ? `<div class="mono text-[10px] text-slate-400">${lt.utc}</div>` : ''}`}
@@ -6188,16 +6205,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <span class="text-[11px] text-slate-400 mono">${[type, p.engine].filter(Boolean).map(esc).join(' · ')}</span>
           <span class="ml-auto px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-slate-100 mono text-xs font-bold">${esc(p.reg || '--')}</span>
         </div>
-        <div class="grid ${altnCode ? 'grid-cols-[1fr_auto_1fr_auto_1fr]' : 'grid-cols-[1fr_auto_1fr]'} items-center gap-1.5">
+        <div class="grid ${altnCode ? 'grid-cols-[1fr_auto_1fr_auto_1fr]' : 'grid-cols-[1fr_auto_1fr]'} items-start gap-1.5" style="align-items:start">
           ${endpoint('DEP', info.dep, w ? w.etd : null, info.etdMinutes, false)}
-          <div class="flex flex-col items-center gap-1 px-0.5">
+          <div class="flex flex-col items-center gap-1 px-0.5" style="align-self:end;margin-bottom:1.6rem">
             <div class="text-[10px] text-slate-400">비행시간</div>
             <div class="flex items-center gap-1"><span class="w-4 sm:w-8 border-t border-dashed border-slate-600"></span><span class="text-sky-300">✈︎</span><span class="w-4 sm:w-8 border-t border-dashed border-slate-600"></span></div>
             <div class="mono font-bold text-sky-200">${hm(p.tripMin ?? info.eetMinutes)}</div>
             ${adjusted ? '<div class="text-[9px] text-amber-300">조정 ETD 반영</div>' : ''}
           </div>
           ${endpoint('DEST', info.dest, w ? w.eta : null, info.etaMinutes, altnCode ? 'center' : true)}
-          ${altnCode ? `<div class="flex flex-col items-center gap-1 px-0.5">
+          ${altnCode ? `<div class="flex flex-col items-center gap-1 px-0.5" style="align-self:end;margin-bottom:1.6rem">
             <div class="text-[10px] text-purple-300">교체</div>
             <div class="flex items-center gap-1"><span class="w-4 sm:w-8 border-t border-dashed border-purple-500/50"></span><svg viewBox="0 0 24 24" class="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18h7a6 6 0 0 0 6-6V5"/><path d="M12 9l4-4 4 4"/></svg><span class="w-4 sm:w-8 border-t border-dashed border-purple-500/50"></span></div>
             <div class="mono font-bold text-purple-200">${p.altnMin != null ? hm(p.altnMin) : '--'}</div>
