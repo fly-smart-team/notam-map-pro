@@ -832,9 +832,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/02 01:20 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/02 01:30 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
+        <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 제방액 검색기</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
         <button id="btn-slim" type="button" title="간단히 보기 / 전체 보기" class="h-7 px-1.5 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-[11px] border border-slate-700">▤ 간단히</button>
         <button id="btn-claude-set" type="button" title="Claude 연결 주소 바꾸기" class="w-7 h-7 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-800 text-xs">⚙</button>
@@ -4069,7 +4070,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <span class="font-bold text-cyan-200 text-sm">🧊 제빙액 지속시간(HOT) 표</span><span class="text-[11px] text-slate-400">FAA Winter 2026-2027</span>
             <label class="flex items-center gap-1 text-[11px] text-amber-200 ml-2"><input type="checkbox" data-hot-adj> 플랩·슬랫 미리 내림 (76% 조정표)</label>
             <span class="ml-auto flex gap-1"><button type="button" data-hot-zoom="-1" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-slate-200 text-sm">－</button><button type="button" data-hot-zoom="0" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-slate-200 text-[12px]">맞춤</button><button type="button" data-hot-zoom="1" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-slate-200 text-sm">＋</button>
-            <button type="button" data-hc-open class="px-2.5 py-1 rounded bg-cyan-700 text-white text-[12px] font-bold">🧮 계산기</button><button type="button" data-hot-close class="px-2.5 py-1 rounded bg-rose-700 text-white text-[12px] font-bold">닫기 ✕</button></span></div>
+            <button type="button" data-hc-open class="px-2.5 py-1 rounded bg-cyan-700 text-white text-[12px] font-bold">🧊 제방액 검색기</button><button type="button" data-hot-close class="px-2.5 py-1 rounded bg-rose-700 text-white text-[12px] font-bold">닫기 ✕</button></span></div>
           <div data-hot-tabs class="flex gap-1 flex-wrap px-3 py-2 bg-slate-950 border-b border-slate-800"></div>
           <div data-hot-view style="flex:1;overflow:auto;padding:8px;background:#0b1220"></div>
           <div class="px-3 py-1 text-[10px] text-slate-500 bg-slate-950">출처: FAA Holdover Time Guidelines Winter 2026-2027. 실제 적용은 회사 절차·최신 표 기준. 표 위 각주(제품·희석 비율·LOUT)를 함께 확인하세요.</div>`;
@@ -4270,7 +4271,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const lab = (t, inner, hide) => `<label style="display:${hide ? 'none' : 'block'}"><div class="text-[11px] text-slate-400 mb-0.5">${t}</div>${inner}</label>`;
       const isSnow = ['snow', 'snfg', 'snra'].includes(S.precip);
       if (full) m.innerHTML = `<div style="max-width:1100px;margin:0 auto;padding:12px">
-        <div class="flex items-center gap-2 flex-wrap mb-2"><span class="text-[15px] font-bold text-cyan-200">🧮 HOT 계산기</span><span class="text-[11px] text-slate-400">${esc(hcData.ver)}</span>
+        <div class="flex items-center gap-2 flex-wrap mb-2"><span class="text-[15px] font-bold text-cyan-200">🧊 제방액 검색기 (HOT)</span><span class="text-[11px] text-slate-400">${esc(hcData.ver)}</span>
           <span class="ml-auto flex gap-1.5"><button type="button" data-hc-auto class="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-600 text-[12px] text-slate-200">↺ METAR·COAD로 다시 채우기</button><button type="button" data-hc-close class="px-2.5 py-1 rounded-md bg-rose-700 text-white text-[12px] font-bold">닫기 ✕</button></span></div>
         <div data-hc-src class="text-[11px] text-slate-400 mb-2"></div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px" class="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
@@ -6595,7 +6596,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
           ${tile('예약 현황', pax ? `${pax.f + pax.c + pax.y}명` : '--', pax ? `F ${pax.f}/${pax.fc} · C ${pax.c}/${pax.cc} · Y ${pax.y}/${pax.yc}` : (pdfFlt ? 'OFP에 예약 정보 없음' : ''), 'text-emerald-300')}
           ${tile('RAMP OUT', fuelTxt(p.ramp), '')}
         </div>
-        <button type="button" data-hc-open class="w-full py-2 rounded-xl bg-cyan-800 hover:bg-cyan-700 text-white font-bold text-[13px] border border-cyan-500">🧮 제빙액 HOT 계산기</button>
         <button type="button" data-jb-open class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg">📝 JOINT BRIEF 생성</button>
       </div>`;
       try { renderAcLive(); } catch (e) { }
