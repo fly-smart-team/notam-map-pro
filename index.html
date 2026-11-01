@@ -832,7 +832,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/02 01:00 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/02 01:20 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
@@ -4122,6 +4122,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
       ['rcsw', '차가운 날개 위의 비 (Cold-Soaked Wing, 0°C 초과)'],
       ['other', '기타: 강한 눈 · 얼음 싸라기(PL) · 보통 이상 어는 비 · 우박']
     ];
+    // 회사 기종 → Type I 표 날개 표면 (날개가 주로 복합재: A220·A350·787·777-9 / 나머지 알루미늄)
+    const HC_AC = [
+      ['A220', 'A220', 'comp', /^BCS[13]$/], ['A321', 'A321', 'alu', /^A32[01N]|^A21N$/], ['A330', 'A330', 'alu', /^A33/], ['A350', 'A350', 'comp', /^A35/],
+      ['A380', 'A380', 'alu', /^A38/], ['B737', 'B737', 'alu', /^B73|^B3[89]M$/], ['B747', 'B747', 'alu', /^B74/], ['B777', 'B777 (-200/-300)', 'alu', /^B77[23LW]$/],
+      ['B779', 'B777-9 (777X)', 'comp', /^B77[89]$|^B779$/], ['B787', 'B787', 'comp', /^B78/]
+    ];
+    const hcAcOf = id => HC_AC.find(a => a[0] === id) || HC_AC[1];
     const HC_INT = { VL: '매우 약함', L: '약함', M: '보통', H: '강함' };
     const HC_COLNM = { fzfg: '어는 안개·어는 안개비·얼음 결정', snfg: '눈+어는 안개', sn: '눈(공통)', vlsn: '매우 약한 눈', lsn: '약한 눈', msn: '보통 눈', fzdz: '어는 이슬비', lfzr: '약한 어는 비', snra: '보통 눈 섞인 비', rcsw: '차가운 날개 위의 비', other: '기타' };
     const hm2 = m => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
@@ -4142,7 +4149,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
     // 출발 공항 METAR(없으면 ETD TAF)·COAD로 기본값 채우기
     function hcAuto() {
-      const S = { fluid: 'g20', conc: '100/0', surf: 'alu', oat: null, precip: 'frost', intMode: 'vis', int: 'L', vis: 9999, night: false, adj: false, src: [] };
+      const ty = (pdfFlt && pdfFlt.type) || '', acm = HC_AC.find(a => a[3].test(ty));
+      const S = { ac: acm ? acm[0] : 'A321', fluid: 'g20', conc: '100/0', surf: 'alu', oat: null, precip: 'frost', intMode: 'vis', int: 'L', vis: 9999, night: false, adj: false, src: [] };
+      S.surf = hcAcOf(S.ac)[2]; S.src.push(`기종: ${acm ? 'OFP ' + ty + ' → ' : '기본 '}${hcAcOf(S.ac)[1]}`);
       const dep = info.dep, w = flightWindow();
       try {
         const cd = (ofpOrdered || []).filter(n => isCoad(n) && n.secCode === dep).map(n => hotKeysFor(n)).filter(Boolean).join(',').split(',').filter(Boolean);
@@ -4249,7 +4258,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
     function hcFromForm(e) {
       const m = document.getElementById('hc-modal'), q = n => m.querySelector(`[name="${n}"]`);
-      const S = hcS; S.fluid = q('fluid').value; S.conc = q('conc').value; S.surf = q('surf').value; S.oat = q('oat').value === '' ? 0 : +q('oat').value;
+      const S = hcS;
+      if (e && e.target && e.target.name === 'ac') { S.ac = q('ac').value; S.surf = hcAcOf(S.ac)[2]; q('surf').value = S.surf; }
+      S.fluid = q('fluid').value; S.conc = q('conc').value; S.surf = q('surf').value; S.oat = q('oat').value === '' ? 0 : +q('oat').value;
       S.precip = q('precip').value; S.intMode = m.querySelector('[name="intMode"]:checked').value; S.int = q('int').value; S.vis = +q('vis').value || 0; S.night = q('night').value === '1'; S.adj = q('adj').checked;
       hcDraw(e && e.target && e.target.name === 'fluid');
     }
@@ -4263,9 +4274,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <span class="ml-auto flex gap-1.5"><button type="button" data-hc-auto class="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-600 text-[12px] text-slate-200">↺ METAR·COAD로 다시 채우기</button><button type="button" data-hc-close class="px-2.5 py-1 rounded-md bg-rose-700 text-white text-[12px] font-bold">닫기 ✕</button></span></div>
         <div data-hc-src class="text-[11px] text-slate-400 mb-2"></div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px" class="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
+          ${lab('기종', hcSel('ac', HC_AC.map(a => [a[0], `${a[1]} — 날개 ${a[2] === 'comp' ? '복합재' : '알루미늄'}`]), S.ac))}
           ${lab('제빙액', `<select name="fluid" class="w-full bg-slate-900 border border-slate-600 rounded-md px-2 py-1.5 text-[13px] text-slate-100">${hcFluidOpts(S.fluid)}</select>`)}
           ${lab('희석 비율 (제빙액/물 %)', hcSel('conc', [['100/0', '100/0'], ['75/25', '75/25'], ['50/50', '50/50']], S.conc))}
-          ${lab('날개 표면 (Type I 표)', hcSel('surf', [['alu', '알루미늄 — A321 (A320 계열 날개는 금속)'], ['comp', '복합재 (B787·A350 등)']], S.surf))}
+          ${lab('날개 표면 (Type I 표, 기종에 따라 자동)', hcSel('surf', [['alu', '알루미늄 (Table 2)'], ['comp', '복합재 (Table 3)']], S.surf))}
           ${lab('외기온도 (°C)', `<input name="oat" type="number" step="1" value="${S.oat}" class="w-full bg-slate-900 border border-slate-600 rounded-md px-2 py-1.5 text-[14px] mono text-slate-100">`)}
           ${lab('강수·기상 종류', hcSel('precip', HC_PRECIP, S.precip))}
           <div data-hc-int style="display:${isSnow ? 'block' : 'none'}"><div class="text-[11px] text-slate-400 mb-0.5">강설 강도</div>
@@ -4288,10 +4300,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
         : `<div class="text-[18px] font-bold text-rose-300">${R.noHot ? '⛔ 지속시간 없음' : '⚠ 계산할 수 없음'}</div><div class="text-[13px] text-rose-100 mt-1">${esc(R.noHot || R.err || '')}</div>`;
       out.innerHTML = `<div class="rounded-xl border ${R.ok ? 'border-emerald-600' : 'border-rose-600'} bg-slate-950 p-3">
           ${head}
-          <div class="text-[12px] text-slate-300 mt-2">${[R.table && `${esc(R.table)} (${R.page}쪽)`, R.band && `기온 구간: ${esc(R.band)}`, R.conc && `희석: ${esc(R.conc)}`, R.col && `열: ${esc(R.col)}`, R.int && `강설 강도: ${HC_INT[R.int]}`].filter(Boolean).join(' · ')}</div>
+          <div class="text-[12px] text-slate-300 mt-2">${[R.table && `${esc(R.table)} (${R.page}쪽)`, R.band && `기온 구간: ${esc(R.band)}`, R.conc && `희석: ${esc(R.conc)}`, R.col && `열: ${esc(R.col)}`, R.int && `강설 강도: ${HC_INT[R.int]}`, `기종: ${hcAcOf(S.ac)[1]}${(hcData.fluids.find(x => x.id === S.fluid) || {}).type === 'I' ? ` → Type I ${S.surf === 'comp' ? '복합재' : '알루미늄'} 표${S.surf !== hcAcOf(S.ac)[2] ? ' (기종 기본과 다르게 선택함)' : ''}` : ''}`].filter(Boolean).join(' · ')}</div>
           ${R.msgs.map(t => `<div class="text-[12.5px] text-amber-200 mt-1">• ${esc(t)}</div>`).join('')}
           ${noteHtml}
-          <div class="text-[11px] text-slate-500 mt-2">참고용 계산입니다. 아래 원본 표의 빨간 테두리 칸으로 값을 다시 확인하고, 회사 절차·LOUT·제품 목록(Table 58~61)을 따르세요.</div>
+          <div class="text-[11px] text-slate-500 mt-2">회사 기종은 모두 고속 항공기(회전 속도 약 100KT 이상) 기준입니다 — LOUT는 수용 목록(Table 58~61)의 고속 항공기 값을 봅니다. 참고용 계산입니다. 아래 원본 표의 빨간 테두리 칸으로 값을 다시 확인하고, 회사 절차·LOUT·제품 목록(Table 58~61)을 따르세요.</div>
         </div>
         <div class="mt-3 rounded-xl bg-white p-1" data-hc-page style="min-height:120px"><div class="text-[12px] text-slate-500 p-2">원본 표 불러오는 중… (${R.page || ''}쪽)</div></div>`;
       hcRenderPage(R);
