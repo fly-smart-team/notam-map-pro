@@ -832,7 +832,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/01 23:40 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/02 01:00 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
@@ -4069,7 +4069,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <span class="font-bold text-cyan-200 text-sm">🧊 제빙액 지속시간(HOT) 표</span><span class="text-[11px] text-slate-400">FAA Winter 2026-2027</span>
             <label class="flex items-center gap-1 text-[11px] text-amber-200 ml-2"><input type="checkbox" data-hot-adj> 플랩·슬랫 미리 내림 (76% 조정표)</label>
             <span class="ml-auto flex gap-1"><button type="button" data-hot-zoom="-1" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-slate-200 text-sm">－</button><button type="button" data-hot-zoom="0" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-slate-200 text-[12px]">맞춤</button><button type="button" data-hot-zoom="1" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-slate-200 text-sm">＋</button>
-            <button type="button" data-hot-close class="px-2.5 py-1 rounded bg-rose-700 text-white text-[12px] font-bold">닫기 ✕</button></span></div>
+            <button type="button" data-hc-open class="px-2.5 py-1 rounded bg-cyan-700 text-white text-[12px] font-bold">🧮 계산기</button><button type="button" data-hot-close class="px-2.5 py-1 rounded bg-rose-700 text-white text-[12px] font-bold">닫기 ✕</button></span></div>
           <div data-hot-tabs class="flex gap-1 flex-wrap px-3 py-2 bg-slate-950 border-b border-slate-800"></div>
           <div data-hot-view style="flex:1;overflow:auto;padding:8px;background:#0b1220"></div>
           <div class="px-3 py-1 text-[10px] text-slate-500 bg-slate-950">출처: FAA Holdover Time Guidelines Winter 2026-2027. 실제 적용은 회사 절차·최신 표 기준. 표 위 각주(제품·희석 비율·LOUT)를 함께 확인하세요.</div>`;
@@ -4107,6 +4107,210 @@ svg.leaflet-image-layer.leaflet-interactive path {
       } catch (e) { view.innerHTML = `<div class="text-[12px] text-rose-300 p-2">표를 열지 못했습니다: ${esc(e.message || e)}</div>`; }
     }
     document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-hot]'); if (b) { e.stopPropagation(); hotOpen(b.dataset.hot); } }, true);
+
+    // ===== 🧮 HOT 계산기 (FAA HOT 표 데이터: hot/hot-data.json — 원본 표와 칸별 대조 검증 후 생성) =====
+    // 결과는 항상 원본 표 페이지의 해당 칸에 테두리를 그려 함께 보여준다 (눈으로 재확인용)
+    let hcData = null, hcS = null;
+    const HC_PRECIP = [
+      ['frost', '서리 (Active Frost)'],
+      ['fzfg', '어는 안개 · 어는 안개비 · 얼음 결정 (FZFG · 영하 BR · IC)'],
+      ['snfg', '눈 + 어는 안개 (SN + FZFG)'],
+      ['snow', '눈 · 싸락눈 · 눈 알갱이 (SN · SG · SP)'],
+      ['fzdz', '어는 이슬비 (FZDZ, 강도 무관)'],
+      ['lfzr', '약한 어는 비 (-FZRA)'],
+      ['snra', '눈 섞인 비 (보통 눈 + 비)'],
+      ['rcsw', '차가운 날개 위의 비 (Cold-Soaked Wing, 0°C 초과)'],
+      ['other', '기타: 강한 눈 · 얼음 싸라기(PL) · 보통 이상 어는 비 · 우박']
+    ];
+    const HC_INT = { VL: '매우 약함', L: '약함', M: '보통', H: '강함' };
+    const HC_COLNM = { fzfg: '어는 안개·어는 안개비·얼음 결정', snfg: '눈+어는 안개', sn: '눈(공통)', vlsn: '매우 약한 눈', lsn: '약한 눈', msn: '보통 눈', fzdz: '어는 이슬비', lfzr: '약한 어는 비', snra: '보통 눈 섞인 비', rcsw: '차가운 날개 위의 비', other: '기타' };
+    const hm2 = m => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
+    async function hcLoad() { if (!hcData) { const r = await fetch('hot/hot-data.json', { cache: 'no-cache' }); if (!r.ok) throw new Error('HOT 데이터를 받지 못했습니다'); hcData = await r.json(); } return hcData; }
+    // 태양 고도(°) — 주간/야간 판단용 (NOAA 근사식)
+    function sunElev(lat, lon, ms) {
+      const d = new Date(ms), rad = Math.PI / 180, jd = ms / 864e5 + 2440587.5, n = jd - 2451545;
+      const L = (280.46 + 0.9856474 * n) % 360, g = (357.528 + 0.9856003 * n) % 360;
+      const lam = L + 1.915 * Math.sin(g * rad) + 0.02 * Math.sin(2 * g * rad), eps = 23.439 - 0.0000004 * n;
+      const dec = Math.asin(Math.sin(eps * rad) * Math.sin(lam * rad));
+      const ra = Math.atan2(Math.cos(eps * rad) * Math.sin(lam * rad), Math.cos(lam * rad)) / rad;
+      const gmst = (280.46061837 + 360.98564736629 * n) % 360, ha = ((gmst + lon - ra) % 360 + 540) % 360 - 180;
+      return Math.asin(Math.sin(lat * rad) * Math.sin(dec) + Math.cos(lat * rad) * Math.cos(dec) * Math.cos(ha * rad)) / rad;
+    }
+    function hcT57(vis, night, oat) {
+      const T = hcData.t57, i = T.bins.findIndex(b => b == null || vis <= b);
+      return T.rows[i < 0 ? T.bins.length - 1 : i][(night ? 2 : 0) + (oat > -1 ? 1 : 0)];
+    }
+    // 출발 공항 METAR(없으면 ETD TAF)·COAD로 기본값 채우기
+    function hcAuto() {
+      const S = { fluid: 'g20', conc: '100/0', surf: 'alu', oat: null, precip: 'frost', intMode: 'vis', int: 'L', vis: 9999, night: false, adj: false, src: [] };
+      const dep = info.dep, w = flightWindow();
+      try {
+        const cd = (ofpOrdered || []).filter(n => isCoad(n) && n.secCode === dep).map(n => hotKeysFor(n)).filter(Boolean).join(',').split(',').filter(Boolean);
+        const sp = cd.find(k => /^s\d/.test(k) && (hcData.fluids.find(f => f.id === k) || {}).type === 'IV') || cd.find(k => /^s\d/.test(k));
+        if (sp) { S.fluid = sp; S.src.push(`제빙액: ${dep} COAD 제품`); } else S.src.push(`제빙액: ${dep} COAD에 제품 없음 → Type IV 공통 표`);
+      } catch (e) { }
+      const lv = (typeof wxLive !== 'undefined' && wxLive[dep]) || {};
+      let el = null, raw = '', when = Date.now(), srcTxt = '';
+      if (lv.metar) { el = tafElems(lv.metar.split(/\s+/).slice(2)); raw = lv.metar; srcTxt = 'METAR'; S.oat = metarTemp(lv.metar); }
+      else if (pdfTaf && pdfTaf[dep] && w) { const r = tafAt(pdfTaf[dep], w.etd); el = { ...r.st, wx: [...(r.st.wx || []), ...r.notes.flatMap(g => (g.el && g.el.wx) || [])] }; raw = pdfTaf[dep].raw || ''; when = w.etd; srcTxt = 'ETD TAF'; }
+      if (S.oat == null && lv.om && w) { const t = omTempAt(lv.om, w.etd); if (t != null) { S.oat = Math.round(t); S.src.push('기온: ETD 예보 기온'); } } else if (S.oat != null) S.src.push('기온: 현재 METAR');
+      if (el) {
+        const wx = (el.wx || []).join(' ');
+        S.vis = el.vis ?? 9999;
+        const ll = airportLL(dep); if (ll) S.night = sunElev(ll[0], ll[1], when) < 0;
+        const t = S.oat;
+        if (/\+(SH)?SN|PL|GR|GS/.test(wx)) S.precip = 'other';
+        else if (/(^|\s)(\+)?FZRA/.test(wx) && !/-FZRA/.test(wx)) S.precip = 'other';
+        else if (/-FZRA/.test(wx)) S.precip = 'lfzr';
+        else if (/FZDZ/.test(wx)) S.precip = 'fzdz';
+        else if (/SN|SG/.test(wx) && /FZFG/.test(wx)) S.precip = 'snfg';
+        else if (/SN|SG/.test(wx) && /RA|DZ/.test(wx)) S.precip = 'snra';
+        else if (/SN|SG/.test(wx)) S.precip = 'snow';
+        else if (/FZFG|IC/.test(wx) || (/BR|FG/.test(wx) && t != null && t <= 0)) S.precip = 'fzfg';
+        else if (/RA|DZ/.test(wx) && t != null && t > 0) S.precip = 'rcsw';
+        else S.precip = 'frost';
+        S.src.push(`강수: ${srcTxt} ${wx || '현상 없음'}${S.precip === 'frost' ? ' → 서리 기준 (강수 없음)' : ''}`);
+        S.src.push(`시정 ${S.vis >= 9999 ? '10km 이상' : S.vis + 'm'} · ${S.night ? '야간' : '주간'} (태양 고도 기준)`);
+      } else S.src.push('METAR/TAF 없음 — 직접 입력하세요');
+      if (S.oat == null) S.oat = 0;
+      return S;
+    }
+    function hcCalc(S) {
+      const D = hcData, f = D.fluids.find(x => x.id === S.fluid), R = { msgs: [], notes: [] };
+      if (!f) return { err: '제빙액을 고르세요' };
+      const ty = f.type, oat = +S.oat;
+      const inBand = b => (b.lo == null || oat >= b.lo) && (b.hi == null || oat < b.hi);
+      if (S.precip === 'frost') {
+        const Fr = S.adj ? D.frost.adj : D.frost.main; R.page = Fr.p; R.pw = Fr.w; R.table = S.adj ? 'Table Adj-1' : 'Table 1'; R.col = '서리';
+        if (ty === 'I') { const v = Fr.t1[S.surf]; R.ok = true; R.min = R.max = v[0]; R.box = v[1]; R.band = '모든 기온 (LOUT 이상)'; R.msgs.push('Type I 서리 지속시간은 기온과 관계없이 한 값입니다. 혼합액 어는점이 외기온도보다 10°C 이상 낮아야 합니다.'); return R; }
+        const b = Fr.bands.find(inBand); if (!b) return { ...R, err: '이 기온에 해당하는 구간이 없습니다' };
+        R.band = b.lbl; const row = b.rows.find(r => r.c === S.conc);
+        if (!row) return { ...R, err: `이 기온(${b.lbl})에서는 ${S.conc} 희석액을 쓸 수 없습니다 (가능: ${b.rows.map(r => r.c).join(', ')})` };
+        const v = row.v[ty === 'II' ? 'ii' : 'iv']; if (!v) return { ...R, noHot: '이 기온에서는 서리 지속시간이 없습니다 (No Holdover Time Guidelines Exist)' };
+        R.ok = true; R.min = R.max = v[0]; R.box = v[1]; R.conc = S.conc;
+        R.msgs.push('서리 표의 Type II·IV 값은 제품과 관계없는 공통 값입니다. 서리가 오래 이어지면 이륙 전까지 가장 추웠던 기온 기준으로 다시 확인하세요.');
+        return R;
+      }
+      const src = ty === 'I' ? f[S.surf] : f, pg = S.adj ? src.pa : src.p, T = D.tables[pg];
+      R.page = pg; R.pw = T.w; R.table = `${S.adj ? 'Table Adj-' : 'Table '}${src.t}`;
+      // 강수 → 표의 열
+      let col = S.precip, int = null;
+      if (['snow', 'snfg', 'snra'].includes(S.precip)) {
+        int = S.intMode === 'vis' ? hcT57(+S.vis, S.night, oat) : S.int; R.int = int;
+        if (S.intMode === 'vis') R.msgs.push(`Table 57: 시정 ${+S.vis >= 9999 ? '10km 이상' : S.vis + 'm'} · ${S.night ? '야간' : '주간'} · ${oat > -1 ? '-1°C 초과' : '-1°C 이하'} → 강설 강도 '${HC_INT[int]}'`);
+        if (int === 'H') return { ...R, noHot: "강설 강도가 '강함(heavy)'이라 지속시간이 없습니다 (Table 57 · 각주)." };
+      }
+      if (S.precip === 'snow') col = T.cols.includes('sn') ? 'sn' : { VL: 'vlsn', L: 'lsn', M: 'msn' }[int];
+      if (S.precip === 'snra') { if (int === 'VL' || int === 'L') { col = 'lfzr'; R.msgs.push("약한 눈 + 비는 '눈 섞인 비' 열이 아니라 '약한 어는 비' 열을 씁니다 (각주)."); } else col = 'snra'; }
+      if (S.precip === 'other') return { ...R, col: HC_COLNM.other, noHot: "강한 눈·얼음 싸라기·보통 이상 어는 비·우박은 지속시간이 없습니다. (Type IV는 얼음 싸라기·작은 우박에 한해 회사 승인 시 Allowance Times 표 사용)" };
+      R.col = HC_COLNM[col] || col;
+      const b = T.bands.find(inBand);
+      const minLo = Math.min(...T.bands.filter(x => x.lo != null).map(x => x.lo));
+      if (!b) return { ...R, err: oat < minLo ? `외기온도 ${oat}°C는 이 제빙액 표의 최저 온도(${minLo}°C)보다 낮아 쓸 수 없습니다 (LOUT). Type I 사용을 고려하세요.` : '이 기온에 해당하는 구간이 없습니다' };
+      R.band = b.lbl;
+      const row = ty === 'I' ? b.rows[0] : b.rows.find(r => r.c === S.conc);
+      if (!row) return { ...R, err: `이 기온(${b.lbl})에서는 ${S.conc} 희석액을 쓸 수 없습니다 (가능: ${b.rows.map(r => r.c).join(', ')}). LOUT 확인.` };
+      R.conc = ty === 'I' ? 'Type I 혼합액' : S.conc;
+      const cf = (T.colfn[col] || []), allFn = Object.values(T.colfn).flat(), base = allFn.length ? Math.min(...allFn) : 1;
+      for (let i = 1; i < base; i++) R.notes.push(i);
+      cf.forEach(n => R.notes.push(n));
+      const v = row.v[col];
+      if (!v) return { ...R, noHot: '이 조건은 표에서 빨간 칸(No holdover time guidelines exist)입니다 — 지속시간이 없습니다.' };
+      if (v[3]) R.notes.push(+v[3]);
+      // 각주 조건 적용: '0°C 이하 지속시간 없음' · '-10°C 미만 지속시간 없음' (같은 기온 구간 안에서도 걸림)
+      const K = HOT_KO.p[pg], txt = n => { const it = K && K.n.find(x => x[0] === n); return it ? HOT_KO.d[it[1]][0] : ''; };
+      const fnSet = [...new Set([...cf, ...(v[3] ? [+v[3]] : [])])];
+      if (fnSet.some(n => /0°C 이하에서 지속시간이 없습니다/.test(txt(n))) && oat <= 0) return { ...R, noHot: `각주: 이 조건(${R.col})은 0°C 이하에서 지속시간이 없습니다.` };
+      if (fnSet.some(n => /-10°C 미만에서 지속시간이 없습니다/.test(txt(n))) && oat < -10) return { ...R, noHot: `각주: 이 조건(${R.col})은 -10°C 미만에서 지속시간이 없습니다.` };
+      R.ok = true; R.min = v[0]; R.max = v[1]; R.box = v[2];
+      if (S.precip === 'fzdz') R.msgs.push('어는 이슬비인지 확실하지 않으면 약한 어는 비 값을 쓰세요.');
+      return R;
+    }
+    function hcFluidOpts(sel) {
+      const g = t => hcData.fluids.filter(f => f.type === t).map(f => `<option value="${f.id}" ${f.id === sel ? 'selected' : ''}>${esc(f.id.startsWith('s') ? `Table ${f.t} · ${hotTitle(f.name)}` : f.name)}</option>`).join('');
+      return `<optgroup label="Type I">${g('I')}</optgroup><optgroup label="Type II">${g('II')}</optgroup><optgroup label="Type IV">${g('IV')}</optgroup>`;
+    }
+    async function hcOpen() {
+      try { await hcLoad(); } catch (e) { alert(e.message); return; }
+      hcS = hcAuto();
+      let m = document.getElementById('hc-modal');
+      if (!m) {
+        m = document.createElement('div'); m.id = 'hc-modal';
+        m.style.cssText = 'position:fixed;inset:0;z-index:9600;background:rgba(2,6,23,.85);overflow:auto';
+        document.body.appendChild(m);
+        m.addEventListener('input', hcFromForm); m.addEventListener('change', hcFromForm);
+        m.addEventListener('click', e => {
+          if (e.target.closest('[data-hc-close]')) { m.style.display = 'none'; document.body.style.overflow = ''; }
+          if (e.target.closest('[data-hc-auto]')) { hcS = hcAuto(); hcDraw(true); }
+        });
+      }
+      m.style.display = 'block'; document.body.style.overflow = 'hidden';
+      hcDraw(true);
+    }
+    function hcFromForm(e) {
+      const m = document.getElementById('hc-modal'), q = n => m.querySelector(`[name="${n}"]`);
+      const S = hcS; S.fluid = q('fluid').value; S.conc = q('conc').value; S.surf = q('surf').value; S.oat = q('oat').value === '' ? 0 : +q('oat').value;
+      S.precip = q('precip').value; S.intMode = m.querySelector('[name="intMode"]:checked').value; S.int = q('int').value; S.vis = +q('vis').value || 0; S.night = q('night').value === '1'; S.adj = q('adj').checked;
+      hcDraw(e && e.target && e.target.name === 'fluid');
+    }
+    const hcSel = (name, opts, v) => `<select name="${name}" class="w-full bg-slate-900 border border-slate-600 rounded-md px-2 py-1.5 text-[13px] text-slate-100">${opts.map(([k, l]) => `<option value="${k}" ${String(k) === String(v) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+    function hcDraw(full) {
+      const m = document.getElementById('hc-modal'), S = hcS, f = hcData.fluids.find(x => x.id === S.fluid) || {};
+      const lab = (t, inner, hide) => `<label style="display:${hide ? 'none' : 'block'}"><div class="text-[11px] text-slate-400 mb-0.5">${t}</div>${inner}</label>`;
+      const isSnow = ['snow', 'snfg', 'snra'].includes(S.precip);
+      if (full) m.innerHTML = `<div style="max-width:1100px;margin:0 auto;padding:12px">
+        <div class="flex items-center gap-2 flex-wrap mb-2"><span class="text-[15px] font-bold text-cyan-200">🧮 HOT 계산기</span><span class="text-[11px] text-slate-400">${esc(hcData.ver)}</span>
+          <span class="ml-auto flex gap-1.5"><button type="button" data-hc-auto class="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-600 text-[12px] text-slate-200">↺ METAR·COAD로 다시 채우기</button><button type="button" data-hc-close class="px-2.5 py-1 rounded-md bg-rose-700 text-white text-[12px] font-bold">닫기 ✕</button></span></div>
+        <div data-hc-src class="text-[11px] text-slate-400 mb-2"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px" class="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
+          ${lab('제빙액', `<select name="fluid" class="w-full bg-slate-900 border border-slate-600 rounded-md px-2 py-1.5 text-[13px] text-slate-100">${hcFluidOpts(S.fluid)}</select>`)}
+          ${lab('희석 비율 (제빙액/물 %)', hcSel('conc', [['100/0', '100/0'], ['75/25', '75/25'], ['50/50', '50/50']], S.conc))}
+          ${lab('날개 표면 (Type I 표)', hcSel('surf', [['alu', '알루미늄 — A321 (A320 계열 날개는 금속)'], ['comp', '복합재 (B787·A350 등)']], S.surf))}
+          ${lab('외기온도 (°C)', `<input name="oat" type="number" step="1" value="${S.oat}" class="w-full bg-slate-900 border border-slate-600 rounded-md px-2 py-1.5 text-[14px] mono text-slate-100">`)}
+          ${lab('강수·기상 종류', hcSel('precip', HC_PRECIP, S.precip))}
+          <div data-hc-int style="display:${isSnow ? 'block' : 'none'}"><div class="text-[11px] text-slate-400 mb-0.5">강설 강도</div>
+            <div class="flex gap-3 text-[12px] text-slate-200 mb-1"><label><input type="radio" name="intMode" value="vis" ${S.intMode === 'vis' ? 'checked' : ''}> 시정으로 계산 (Table 57)</label><label><input type="radio" name="intMode" value="sel" ${S.intMode === 'sel' ? 'checked' : ''}> 직접 선택</label></div>
+            <div class="flex gap-1.5"><input name="vis" type="number" step="100" value="${S.vis}" class="w-24 bg-slate-900 border border-slate-600 rounded-md px-2 py-1 text-[13px] mono text-slate-100" title="시정 (m)"><span class="text-[11px] text-slate-400 self-center">m</span>${hcSel('night', [['0', '주간'], ['1', '야간']], S.night ? '1' : '0')}${hcSel('int', [['VL', '매우 약함'], ['L', '약함'], ['M', '보통'], ['H', '강함']], S.int)}</div></div>
+          <label class="flex items-center gap-2 text-[12px] text-amber-200 self-end"><input type="checkbox" name="adj" ${S.adj ? 'checked' : ''}> 플랩·슬랫을 미리 내리고 제방빙 (76% 조정표)</label>
+        </div>
+        <div data-hc-out class="mt-3"></div></div>`;
+      // 필드 표시 조건
+      const q = n => m.querySelector(`[name="${n}"]`);
+      q('conc').closest('label').style.display = f.type === 'I' ? 'none' : 'block';
+      q('surf').closest('label').style.display = f.type === 'I' ? 'block' : 'none';
+      m.querySelector('[data-hc-int]').style.display = isSnow ? 'block' : 'none';
+      q('vis').style.display = q('night').style.display = S.intMode === 'vis' ? '' : 'none'; q('int').style.display = S.intMode === 'sel' ? '' : 'none';
+      m.querySelector('[data-hc-src]').textContent = '자동 채움: ' + (S.src.join(' · ') || '—');
+      const R = hcCalc(S), out = m.querySelector('[data-hc-out]');
+      const K = HOT_KO.p[R.page], noteHtml = K && R.notes && R.notes.length ? `<div class="mt-2 text-[13px] leading-snug"><div class="font-bold text-cyan-200 mb-1">📘 이 칸에 붙은 각주</div>${[...new Set(R.notes)].sort((a, b) => a - b).map(n => { const it = K.n.find(x => x[0] === n); if (!it) return ''; const d = HOT_KO.d[it[1]]; return `<div class="flex gap-2 my-1"><b class="text-cyan-300 w-5 shrink-0">${n}</b><div class="text-slate-200">${esc(d[0])}${d[1] ? `<div class="text-amber-300 text-[12px]">⚠ ${esc(d[1])}</div>` : ''}</div></div>`; }).join('')}</div>` : '';
+      const head = R.ok ? `<div class="text-[12px] text-slate-400">지속시간 (HOT)</div><div class="mono font-bold text-emerald-300" style="font-size:40px;line-height:1.1">${R.min === R.max ? hm2(R.min) : `${hm2(R.min)} ~ ${hm2(R.max)}`}</div>
+            <div class="text-[12px] text-slate-300">${R.min === R.max ? '' : `짧은 값 ${hm2(R.min)} = 이 구간에서 강수가 강한 쪽 · 긴 값 ${hm2(R.max)} = 약한 쪽`}</div>`
+        : `<div class="text-[18px] font-bold text-rose-300">${R.noHot ? '⛔ 지속시간 없음' : '⚠ 계산할 수 없음'}</div><div class="text-[13px] text-rose-100 mt-1">${esc(R.noHot || R.err || '')}</div>`;
+      out.innerHTML = `<div class="rounded-xl border ${R.ok ? 'border-emerald-600' : 'border-rose-600'} bg-slate-950 p-3">
+          ${head}
+          <div class="text-[12px] text-slate-300 mt-2">${[R.table && `${esc(R.table)} (${R.page}쪽)`, R.band && `기온 구간: ${esc(R.band)}`, R.conc && `희석: ${esc(R.conc)}`, R.col && `열: ${esc(R.col)}`, R.int && `강설 강도: ${HC_INT[R.int]}`].filter(Boolean).join(' · ')}</div>
+          ${R.msgs.map(t => `<div class="text-[12.5px] text-amber-200 mt-1">• ${esc(t)}</div>`).join('')}
+          ${noteHtml}
+          <div class="text-[11px] text-slate-500 mt-2">참고용 계산입니다. 아래 원본 표의 빨간 테두리 칸으로 값을 다시 확인하고, 회사 절차·LOUT·제품 목록(Table 58~61)을 따르세요.</div>
+        </div>
+        <div class="mt-3 rounded-xl bg-white p-1" data-hc-page style="min-height:120px"><div class="text-[12px] text-slate-500 p-2">원본 표 불러오는 중… (${R.page || ''}쪽)</div></div>`;
+      hcRenderPage(R);
+    }
+    async function hcRenderPage(R) {
+      const box = document.querySelector('#hc-modal [data-hc-page]'); if (!box || !R.page) { if (box) box.innerHTML = ''; return; }
+      try {
+        if (!hotDoc) { const r = await fetch(HOT_PDF); hotDoc = await openPdf(new Uint8Array(await r.arrayBuffer())); }
+        const page = await hotDoc.getPage(R.page), v0 = page.getViewport({ scale: 1 });
+        const cssW = Math.max(320, box.clientWidth - 8), dpr = window.devicePixelRatio || 1, scale = cssW * dpr / v0.width;
+        const vp = page.getViewport({ scale }), cv = document.createElement('canvas');
+        cv.width = vp.width; cv.height = vp.height; cv.style.width = cssW + 'px';
+        const ctx = cv.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport: vp }).promise;
+        if (R.box) { const k = vp.width / (R.pw || v0.width), [x0, y0, x1, y1] = R.box, pad = 3 * dpr; ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 3.5 * dpr; ctx.strokeRect(x0 * k - pad, y0 * k - pad, (x1 - x0) * k + 2 * pad, (y1 - y0) * k + 2 * pad); }
+        box.innerHTML = ''; box.appendChild(cv);
+      } catch (e) { box.innerHTML = `<div class="text-[12px] text-rose-600 p-2">원본 표를 열지 못했습니다: ${esc(e.message || e)}</div>`; }
+    }
+    document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-hc-open]')) hcOpen(); });
     const PKG2_SECS = ['ERA', 'EDTO', 'REFILE'];
     const STAR_GROUPS = [['DEP', '🛫 출발'], ['DEST', '🛬 도착'], ['ALTN', '🔀 교체'], ['ERA', '🛟 ERA (EDTO·REFILE 포함)'], ['FIR', '🗺️ PACKAGE 3 (FIR)']];
     const starGroupOf = n => PKG2_SECS.includes(n.sec) ? 'ERA' : n.sec;
@@ -6379,6 +6583,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           ${tile('예약 현황', pax ? `${pax.f + pax.c + pax.y}명` : '--', pax ? `F ${pax.f}/${pax.fc} · C ${pax.c}/${pax.cc} · Y ${pax.y}/${pax.yc}` : (pdfFlt ? 'OFP에 예약 정보 없음' : ''), 'text-emerald-300')}
           ${tile('RAMP OUT', fuelTxt(p.ramp), '')}
         </div>
+        <button type="button" data-hc-open class="w-full py-2 rounded-xl bg-cyan-800 hover:bg-cyan-700 text-white font-bold text-[13px] border border-cyan-500">🧮 제빙액 HOT 계산기</button>
         <button type="button" data-jb-open class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg">📝 JOINT BRIEF 생성</button>
       </div>`;
       try { renderAcLive(); } catch (e) { }
