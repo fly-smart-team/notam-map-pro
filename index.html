@@ -832,7 +832,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/01 22:50 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/01 23:10 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
@@ -3990,6 +3990,84 @@ svg.leaflet-image-layer.leaflet-interactive path {
     function aiBlock(a) {
       return `<div class="text-[12px] leading-snug rounded-md border border-violet-600/60 bg-violet-950/40 px-2 py-1 text-violet-100"><span class="mr-1 px-1 py-0.5 rounded bg-violet-700 text-white text-[9px] font-bold align-middle">AI 요약</span>${esc(a.s)}${a.u ? ' <span class="text-amber-300 font-bold">⚠ 원문 확인</span>' : ''}<span class="ml-1 text-[9px] text-violet-300/70">${esc(a.p === 'deepseek' ? 'DeepSeek' : a.p === 'anthropic' ? 'Claude' : a.p || '')}</span></div>`;
     }
+
+    // ===== 제빙액 지속시간(HOT) 표 팝업 — FAA Holdover Time Tables Winter 2026-2027 (공개 문서, hot/ 폴더) =====
+    // 노탐·COAD에 제빙액(제품명 또는 DE/ANTI-ICING + TYPE)이 나오면 해당 표 페이지를 팝업으로 보여줌
+    const HOT_PDF = 'hot/FAA-HOT-2026-27.pdf';
+    const HOT_SPEC = [[5, 16, 102, "II", "ABAX ECOWING AD-2"], [6, 17, 103, "II", "AVIATION XI'AN HIGH-TECH CLEANWING II"], [7, 18, 104, "II", "CLARIANT SAFEWING MP II FLIGHT"], [8, 19, 105, "II", "CRYOTECH POLAR GUARD II"], [9, 20, 106, "II", "ESSPO CHEMICALS D.O.O NORDWING PG2"], [10, 21, 107, "II", "KILFROST ABC-K PLUS"], [11, 22, 108, "II", "KILFROST ICE CLEAR II"], [12, 23, 109, "II", "LNT SOLUTIONS P250"], [13, 24, 110, "II", "MKS DEVO CHEMICALS COREICEPHOB TYPE II"], [14, 25, 111, "II", "NEWAVE AEROCHEMICAL FCY-2"], [15, 26, 112, "II", "ROMCHIM ADD-PROTECT NG TYPE II"], [16, 27, 113, "II", "ROMCHIM ADD-PROTECT TYPE II"], [21, 34, 120, "IV", "ABAX ECOWING AD-49"], [22, 35, 121, "IV", "AFLRUS LLC GREEN FLO TYPE 4"], [23, 36, 122, "IV", "ALAB INTERNATIONAL PROFLIGHT EG4"], [24, 37, 123, "IV", "ALAB INTERNATIONAL PROFLIGHT PG4"], [25, 38, 124, "IV", "ALLCLEAR CLEAR IV FLIGHT"], [26, 39, 125, "IV", "ALLCLEAR CLEARWING EG"], [27, 40, 126, "IV", "ASGLOBAL 4FLITE EG"], [28, 41, 127, "IV", "ASGLOBAL 4FLITE PG"], [29, 42, 128, "IV", "AVIAFLUID AVIAFLIGHT PG"], [30, 43, 129, "IV", "CHEMCO CHEMR EG IV"], [31, 44, 130, "IV", "CHEMCO CHEMR NORDIK IV"], [32, 45, 131, "IV", "CHONGQING JOBA CHEMICAL FW-IV"], [33, 46, 132, "IV", "CLARIANT SAFEWING MP IV LAUNCH"], [34, 47, 133, "IV", "CLARIANT SAFEWING MP IV LAUNCH PLUS"], [35, 48, 134, "IV", "CRYOTECH POLAR GUARD ADVANCE"], [36, 49, 135, "IV", "CRYOTECH POLAR GUARD XTEND"], [37, 50, 136, "IV", "DOW INC. UCAR ENDURANCE EG106 ADF/AAF"], [38, 51, 137, "IV", "DOW INC. UCAR FLIGHTGUARD AD-49"], [39, 52, 138, "IV", "ESSPO CHEMICALS D.O.O NORDWING PG4"], [40, 53, 139, "IV", "INLAND TECHNOLOGIES ECO-SHIELD"], [41, 54, 140, "IV", "JSC RCP NORDIX DEFROST ECO 4"], [42, 55, 141, "IV", "JSC RCP NORDIX DEFROST NORTH 4"], [43, 56, 142, "IV", "KILFROST ABC-S PLUS"], [44, 57, 143, "IV", "LNT SOLUTIONS P450"], [45, 58, 144, "IV", "MAX TECH LLC MTL 4-EG"], [46, 59, 145, "IV", "MAX TECH LLC MTL 4-PG"], [47, 60, 146, "IV", "MKS DEVO CHEMICALS COREICEPHOB TYPE-IV PG"], [48, 61, 147, "IV", "NEWAVE AEROCHEMICAL FCY 9311"], [49, 62, 148, "IV", "NEWAVE AEROCHEMICAL FCY-EGIV"], [50, 63, 149, "IV", "NEWAVE AEROCHEMICAL FCY-EGIV PLUS"], [51, 64, 150, "IV", "SHAANXI CLEANWAY CLEANSURFACE IV"], [52, 65, 151, "IV", "XINJIANG ZHONGTIAN LIYANG AVIATION CLEARICE-IV"]];   // [표 번호, 쪽, 조정표(플랩·슬랫 미리 내림) 쪽, Type, 제품명]
+    const HOT_GEN = { 1: [10, 96, 'Table 1 · 서리(Active Frost) — 모든 Type'], 2: [12, 98, 'Table 2 · Type I (알루미늄 표면)'], 3: [13, 99, 'Table 3 · Type I (복합재 표면)'], 4: [15, 101, 'Table 4 · Type II 공통'], 20: [33, 119, 'Table 20 · Type IV 공통'], 57: [74, null, 'Table 57 · 시정별 강설 강도'] };
+    function hotKeysFor(n) {
+      const T = String(aiText(n) || '').toUpperCase().replace(/[®™]/g, '').replace(/[’`]/g, "'").replace(/\s+/g, ' ');
+      const ctx = /DE\s*\/\s*ANTI|ANTI-?\s?ICING|DE-?\s?ICING|HOLDOVER|\bHOT\b TABLE/.test(T);
+      let ms = HOT_SPEC.filter(x => { const k = x[4], alt = k.split(' ').slice(1).join(' '); return T.includes(k) || (alt.split(' ').length >= 2 && alt.length >= 10 && T.includes(alt)); });
+      ms = ms.filter(x => !ms.some(o => o !== x && o[4].length > x[4].length && o[4].startsWith(x[4])));
+      const ty = new Set();
+      if (ctx || ms.length) for (const m of T.matchAll(/TYPE\s*((?:(?:IV|III|II|I|[1-4])\b\s*(?:[,\/&]|AND)?\s*)+)/g)) m[1].split(/[,\/&\s]+|AND/).forEach(x => { const v = { 1: 1, I: 1, 2: 2, II: 2, 3: 3, III: 3, 4: 4, IV: 4 }[x]; if (v) ty.add(v); });
+      ms.forEach(x => ty.add(x[3] === 'II' ? 2 : 4));
+      if (ctx && /\bDF PLUS\b|SAFEWING MP I\b|MP I LFD|MP I ECO/.test(T)) ty.add(1);
+      if (!ms.length && !(ctx && ty.size)) return '';
+      const k = ms.map(x => 's' + x[0]);
+      if (ty.has(4) && !ms.some(x => x[3] === 'IV')) k.push('g20');
+      if (ty.has(2) && !ms.some(x => x[3] === 'II')) k.push('g4');
+      if (ty.has(1)) k.push('g2', 'g3');
+      k.push('g1', 'g57');
+      return k.join(',');
+    }
+    const hotBtn = keys => keys ? `<button type="button" data-hot="${keys}" class="self-start px-2.5 py-1 rounded-md border border-cyan-500 bg-cyan-950/60 text-cyan-100 text-[12px] font-bold">🧊 제빙액 지속시간(HOT) 표 보기</button>` : '';
+    const hotTitle = s => s.toLowerCase().replace(/\b([a-z])/g, c => c.toUpperCase()).replace(/\b(Mp|Iv|Ii|Abc|Eg|Pg|Llc|Adf|Aaf|Fcy)\b/gi, w => w.toUpperCase());
+    let hotDoc = null, hotState = null;
+    function hotItems(keys) {
+      return keys.split(',').map(k => {
+        if (k[0] === 's') { const x = HOT_SPEC.find(y => y[0] === +k.slice(1)); return x && { p: x[1], a: x[2], l: `Table ${x[0]} · Type ${x[3]} ${hotTitle(x[4])}`, main: true }; }
+        const g = HOT_GEN[+k.slice(1)]; return g && { p: g[0], a: g[1], l: g[2] };
+      }).filter(Boolean);
+    }
+    async function hotOpen(keys) {
+      let m = document.getElementById('hot-modal');
+      if (!m) {
+        m = document.createElement('div'); m.id = 'hot-modal';
+        m.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(2,6,23,.8);display:flex;flex-direction:column';
+        m.innerHTML = `<div class="flex items-center gap-2 flex-wrap px-3 py-2 bg-slate-900 border-b border-slate-700">
+            <span class="font-bold text-cyan-200 text-sm">🧊 제빙액 지속시간(HOT) 표</span><span class="text-[11px] text-slate-400">FAA Winter 2026-2027</span>
+            <label class="flex items-center gap-1 text-[11px] text-amber-200 ml-2"><input type="checkbox" data-hot-adj> 플랩·슬랫 미리 내림 (76% 조정표)</label>
+            <span class="ml-auto flex gap-1"><button type="button" data-hot-zoom="-1" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-slate-200 text-sm">－</button><button type="button" data-hot-zoom="0" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-slate-200 text-[12px]">맞춤</button><button type="button" data-hot-zoom="1" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-slate-200 text-sm">＋</button>
+            <button type="button" data-hot-close class="px-2.5 py-1 rounded bg-rose-700 text-white text-[12px] font-bold">닫기 ✕</button></span></div>
+          <div data-hot-tabs class="flex gap-1 flex-wrap px-3 py-2 bg-slate-950 border-b border-slate-800"></div>
+          <div data-hot-view style="flex:1;overflow:auto;padding:8px;background:#0b1220"></div>
+          <div class="px-3 py-1 text-[10px] text-slate-500 bg-slate-950">출처: FAA Holdover Time Guidelines Winter 2026-2027. 실제 적용은 회사 절차·최신 표 기준. 표 위 각주(제품·희석 비율·LOUT)를 함께 확인하세요.</div>`;
+        document.body.appendChild(m);
+        m.addEventListener('click', e => {
+          const t = e.target.closest('[data-hot-tab]'); if (t) { hotState.i = +t.dataset.hotTab; hotRender(); return; }
+          const z = e.target.closest('[data-hot-zoom]'); if (z) { const d = +z.dataset.hotZoom; hotState.z = d ? Math.min(3, Math.max(0.6, hotState.z + d * 0.25)) : 1; hotRender(); return; }
+          if (e.target.closest('[data-hot-close]')) { m.style.display = 'none'; document.body.style.overflow = ''; }
+        });
+        m.querySelector('[data-hot-adj]').addEventListener('change', e => { hotState.adj = e.target.checked; hotRender(); });
+      }
+      hotState = { items: hotItems(keys), i: 0, z: 1, adj: false };
+      m.querySelector('[data-hot-adj]').checked = false;
+      m.style.display = 'flex'; document.body.style.overflow = 'hidden';
+      hotRender();
+    }
+    async function hotRender() {
+      const m = document.getElementById('hot-modal'), S = hotState, it = S.items[S.i];
+      m.querySelector('[data-hot-tabs]').innerHTML = S.items.map((x, i) => `<button type="button" data-hot-tab="${i}" class="px-2 py-1 rounded-md border text-[11.5px] ${i === S.i ? 'bg-cyan-700 border-cyan-400 text-white font-bold' : x.main ? 'bg-cyan-950/50 border-cyan-700 text-cyan-100' : 'bg-slate-900 border-slate-700 text-slate-300'}">${esc(x.l)}</button>`).join('');
+      const view = m.querySelector('[data-hot-view]');
+      const pg = S.adj && it.a ? it.a : it.p;
+      view.innerHTML = `<div class="text-[12px] text-slate-400 p-2">${S.adj && !it.a ? '이 표는 조정표가 없어 원래 표를 보여줍니다. ' : ''}불러오는 중… (${pg}쪽)</div>`;
+      try {
+        if (!hotDoc) { const r = await fetch(HOT_PDF); if (!r.ok) throw new Error('HOT 표 파일을 받지 못했습니다 (' + r.status + ')'); hotDoc = await openPdf(new Uint8Array(await r.arrayBuffer())); }
+        if (hotState !== S) return;
+        const page = await hotDoc.getPage(pg), v0 = page.getViewport({ scale: 1 });
+        const cssW = Math.max(320, (view.clientWidth - 16)) * S.z, scale = cssW * (window.devicePixelRatio || 1) / v0.width;
+        const vp = page.getViewport({ scale }), cv = document.createElement('canvas');
+        cv.width = vp.width; cv.height = vp.height; cv.style.width = cssW + 'px'; cv.style.background = '#fff'; cv.style.borderRadius = '6px';
+        await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+        if (hotState !== S) return;
+        view.innerHTML = S.adj && !it.a ? '<div class="text-[11px] text-amber-300 pb-1">이 표는 조정표가 없어 원래 표를 보여줍니다.</div>' : '';
+        view.appendChild(cv);
+      } catch (e) { view.innerHTML = `<div class="text-[12px] text-rose-300 p-2">표를 열지 못했습니다: ${esc(e.message || e)}</div>`; }
+    }
+    document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-hot]'); if (b) { e.stopPropagation(); hotOpen(b.dataset.hot); } }, true);
     const PKG2_SECS = ['ERA', 'EDTO', 'REFILE'];
     const STAR_GROUPS = [['DEP', '🛫 출발'], ['DEST', '🛬 도착'], ['ALTN', '🔀 교체'], ['ERA', '🛟 ERA (EDTO·REFILE 포함)'], ['FIR', '🗺️ PACKAGE 3 (FIR)']];
     const starGroupOf = n => PKG2_SECS.includes(n.sec) ? 'ERA' : n.sec;
@@ -4417,7 +4495,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const isOpen = r => (r.tier === 'W' && r.grp !== 1 && !brfShowWhite && !brfTier) ? brfOpenW.has(r.n.notamId) : !brfClosed.has(r.n.notamId);
       const item = (r, full) => {
         const T = TIER[r.tier], n = r.n, open = full || isOpen(r);
-        let ko = koRuleOf(n);
+        let ko = koRuleOf(n); const hk = hotKeysFor(n);
         const cd = coadOf(n), cdChg = !cd && coadChanged(n), pre = cd ? null : preOf(n), ai = cd || pre ? null : aiOf(n); if (ai || cd || pre) ko = '';   // 저장 요약·AI 요약이 있으면 규칙 번역은 숨김 (원문은 그대로 표시)
         const line = String(n.etext || n.summary || '').replace(/\s+/g, ' ').trim();
         let koHtml = ko ? `<div class="text-[11px] text-sky-200/90 leading-snug">${esc(ko)}</div>` : '';
@@ -4426,11 +4504,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <div class="flex items-start gap-2 px-2 py-1">
             <button type="button" data-brf-star="${esc(n.notamId)}" class="shrink-0 w-7 h-7 mt-0.5 rounded-md border text-base leading-none ${r.star ? 'bg-amber-400 border-amber-300 text-slate-950' : 'border-slate-600 text-slate-500'}" title="중요 노탐 지정">${r.star ? '★' : '☆'}</button>
             <div class="min-w-0 flex-1" data-brf-toggle>
-              <div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${T.pill}">${T.label}</span><span class="mono text-[11px] font-bold ${T.txt}">${esc(n.notamId)}</span><span class="text-[10px] text-sky-300 mono whitespace-nowrap">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${r.tb}${r.qt ? `<span class="px-1 rounded text-[10px] font-bold bg-sky-900/70 border border-sky-500/60 text-sky-200">🔄 ${esc(r.qt)}</span>` : ''}<span class="text-[10px] ${T.txt}">${esc(r.why)}</span>${r.same && r.same.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">같은 내용 +${r.same.length}건</span>` : ''}${r.rel && r.rel.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">관련 노탐 ${r.rel.length}건 묶음</span>` : ''}${n.dupIn && n.dupIn.length ? `<span class="text-[9px] text-slate-500">+${esc(n.dupIn.join('·'))} 중복</span>` : ''}${n.geo ? `<button type="button" data-brf-map="${esc(n.notamId)}" class="text-[10px] text-sky-300 border border-sky-800/60 px-1 rounded">📍지도</button>` : ''}<span data-brf-caret class="ml-auto text-[10px] text-slate-500">${open ? '▾ 접기' : '▸ 펼치기'}</span></div>
+              <div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${T.pill}">${T.label}</span><span class="mono text-[11px] font-bold ${T.txt}">${esc(n.notamId)}</span>${hk ? '<span class="px-1 rounded bg-cyan-900/70 text-cyan-200 text-[10px] font-bold">🧊 HOT</span>' : ''}<span class="text-[10px] text-sky-300 mono whitespace-nowrap">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${r.tb}${r.qt ? `<span class="px-1 rounded text-[10px] font-bold bg-sky-900/70 border border-sky-500/60 text-sky-200">🔄 ${esc(r.qt)}</span>` : ''}<span class="text-[10px] ${T.txt}">${esc(r.why)}</span>${r.same && r.same.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">같은 내용 +${r.same.length}건</span>` : ''}${r.rel && r.rel.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">관련 노탐 ${r.rel.length}건 묶음</span>` : ''}${n.dupIn && n.dupIn.length ? `<span class="text-[9px] text-slate-500">+${esc(n.dupIn.join('·'))} 중복</span>` : ''}${n.geo ? `<button type="button" data-brf-map="${esc(n.notamId)}" class="text-[10px] text-sky-300 border border-sky-800/60 px-1 rounded">📍지도</button>` : ''}<span data-brf-caret class="ml-auto text-[10px] text-slate-500">${open ? '▾ 접기' : '▸ 펼치기'}</span></div>
               <div data-brf-line class="${open ? 'hidden' : ''}">${cd ? `<div class="text-[11px] text-teal-200 leading-snug line-clamp-1">📘 ${esc(cd.s)}</div>` : pre ? `<div class="text-[11px] text-emerald-200 leading-snug line-clamp-1">📗 ${esc(pre.s)}</div>` : ai ? `<div class="text-[11px] text-violet-200 leading-snug line-clamp-1">🤖 ${esc(ai.s)}</div>` : `<div class="mono text-[11px] text-slate-300 leading-snug line-clamp-1">${esc(line)}</div>`}</div>
             </div>
           </div>
-          <div class="${open ? '' : 'hidden'} px-2 pb-2 flex flex-col gap-1" data-brf-raw>${cdChg ? `<div class="text-[11px] text-amber-300 font-bold">⚠ COAD 내용이 바뀌었습니다 — 저장 요약 없음 (AI 요약 대상)</div>` : ''}${cd ? coadBlock(cd) : pre ? preBlock(pre) : ai ? aiBlock(ai) : `<button type="button" data-ai-one="${esc(n.notamId)}" class="self-start px-2 py-0.5 rounded border border-violet-600/60 bg-violet-950/40 text-violet-200 text-[11px] font-bold" ${aiBusy ? 'disabled' : ''}>🤖 AI로 요약</button>`}${koHtml}<pre class="mono text-[10.5px] whitespace-pre-wrap break-words text-slate-200 bg-slate-900 rounded p-2">${esc(n.validity || '')}\n${brfHl(n)}</pre>${brfLegend(n)}${abbrPanel(n.rawText || n.etext)}</div>
+          <div class="${open ? '' : 'hidden'} px-2 pb-2 flex flex-col gap-1" data-brf-raw>${hotBtn(hk)}${cdChg ? `<div class="text-[11px] text-amber-300 font-bold">⚠ COAD 내용이 바뀌었습니다 — 저장 요약 없음 (AI 요약 대상)</div>` : ''}${cd ? coadBlock(cd) : pre ? preBlock(pre) : ai ? aiBlock(ai) : `<button type="button" data-ai-one="${esc(n.notamId)}" class="self-start px-2 py-0.5 rounded border border-violet-600/60 bg-violet-950/40 text-violet-200 text-[11px] font-bold" ${aiBusy ? 'disabled' : ''}>🤖 AI로 요약</button>`}${koHtml}<pre class="mono text-[10.5px] whitespace-pre-wrap break-words text-slate-200 bg-slate-900 rounded p-2">${esc(n.validity || '')}\n${brfHl(n)}</pre>${brfLegend(n)}${abbrPanel(n.rawText || n.etext)}</div>
         </div>`;
       };
       const groupTitle = (sec, code) => { const nm = getAirportNameInfo(code); return `${BRF_SEC[sec] || sec} · ${code}${sec === 'FIR' ? (FIR_NAMES[code] ? ' ' + FIR_NAMES[code] : '') : nm && nm.ko ? ' ' + nm.ko : ''}`; };

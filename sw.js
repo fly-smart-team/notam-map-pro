@@ -3,7 +3,7 @@
 // 배포 버전(notammap)과 같은 도메인을 쓰므로 캐시 이름을 따로 씀
 const CACHE = 'notam-pro-v6';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './coad-ko.json', './notam-ko.json', './wx-brief.json'];
-const EXTRA = [];
+const EXTRA = ['./hot/FAA-HOT-2026-27.pdf'];   // 제빙액 HOT 표 (오프라인용, 실패해도 무시)
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(async c => {
