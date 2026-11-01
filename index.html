@@ -822,10 +822,17 @@ svg.leaflet-image-layer.leaflet-interactive path {
 </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
+  <!-- 기체 위치 · 출도착 팝업 (기번 버튼으로 열기) -->
+  <div id="ac-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(2,6,23,.72);padding:16px;overflow:auto">
+    <div style="max-width:680px;margin:8vh auto 0" class="rounded-xl border border-slate-700 bg-slate-950 shadow-2xl p-3 flex flex-col gap-2">
+      <div class="flex items-center gap-2"><span class="text-sm font-bold text-sky-200">📡 기체 위치 · 출도착</span><button type="button" data-ac-close class="ml-auto px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-600 text-[12px] text-slate-200">닫기 ✕</button></div>
+      <div id="ac-live" class="rounded-lg border border-slate-800 bg-slate-900/70 px-2.5 py-2 flex flex-col gap-1"></div>
+    </div>
+  </div>
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/01 22:20 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/01 22:35 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
@@ -1242,7 +1249,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
     const DEV_AIRPORT_NAMES = {
       "RKSS": { iata: "GMP", ko: "서울 김포 국제공항", en: "Seoul Gimpo Int'l Airport" },
-      "RKSI": { iata: "ICN", ko: "서울 인천", en: "Seoul Incheon Int'l Airport" },
+      "RKSI": { iata: "ICN", ko: "서울 인천", en: "Seoul Incheon" },
       "RKTU": { iata: "CJJ", ko: "청주 국제공항", en: "Cheongju Int'l Airport" },
       "RKPC": { iata: "CJU", ko: "제주 국제공항", en: "Jeju Int'l Airport" },
       "RKPS": { iata: "HIN", ko: "진주 사천공항", en: "Jinju Sacheon Airport" },
@@ -2414,7 +2421,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
     // 회사 취항지 한글/영문 이름 (ICAO → [한글, English]). 출처: 회사 공항 목록
     const AIRPORT_NAMES = {
-      "RKSS": ["서울 김포 국제공항", "Seoul Gimpo Int'l Airport"], "RKSI": ["서울 인천", "Seoul Incheon Int'l Airport"], "RKTU": ["청주 국제공항", "Cheongju Int'l Airport"],
+      "RKSS": ["서울 김포 국제공항", "Seoul Gimpo Int'l Airport"], "RKSI": ["서울 인천", "Seoul Incheon"], "RKTU": ["청주 국제공항", "Cheongju Int'l Airport"],
       "RKPC": ["제주 국제공항", "Jeju Int'l Airport"], "RKPS": ["진주 사천공항", "Jinju Sacheon Airport"], "RKTH": ["포항 공항", "Pohang Airport"],
       "RKJJ": ["광주 공항", "Gwangju Airport"], "RKJB": ["무안 국제공항", "Muan Int'l Airport"], "RKPK": ["부산 김해 국제공항", "Busan Gimhae Int'l Airport"],
       "RKJY": ["여수 공항", "Yeosu Airport"], "RKTN": ["대구 국제공항", "Daegu Int'l Airport"], "RKPU": ["울산 공항", "Ulsan Airport"],
@@ -6020,6 +6027,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       } else body = msg('—');
       let ih = ''; try { ih = icnHistHtml(L.status === 'ok' && L.ac && L.ac.alt_baro !== 'ground'); } catch (e) { console.warn(e); }
       box.innerHTML = head + body + ih;
+      document.querySelectorAll('[data-ac-open] .ac-dot').forEach(d => d.style.background = acDotColor());
       try { drawAcOnMap(false); } catch (e) { console.warn(e); }
     }
     document.addEventListener('click', e => {
@@ -6032,6 +6040,19 @@ svg.leaflet-image-layer.leaflet-interactive path {
       }
       if (e.target.closest('[data-proxy-save]')) { try { localStorage.setItem('proxyBase.v1', (document.getElementById('proxy-url').value || '').trim()); } catch (er) { } refreshAcLive(true); }
     });
+    // 기번 버튼의 점: 초록 = 위치 수신, 회색 = 지상·신호 없음, 빨강 = 조회 실패
+    function acDotColor() { let L = {}; try { L = acLive || {}; } catch (e) { } return L.status === 'ok' && L.ac && L.ac.alt_baro !== 'ground' ? '#34d399' : L.status === 'fail' ? '#f87171' : L.status === 'loading' ? '#fbbf24' : '#64748b'; }
+    function acModal(open) {
+      const m = document.getElementById('ac-modal'); if (!m) return;
+      m.style.display = open ? 'block' : 'none'; document.body.style.overflow = open ? 'hidden' : '';
+      if (open) { renderAcLive(); if (!acLive.at || Date.now() - acLive.at > 60000) refreshAcLive(true); }
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest) return;
+      if (e.target.closest('[data-ac-open]')) { acModal(true); return; }
+      if (e.target.closest('[data-ac-close]') || e.target.id === 'ac-modal' || e.target.closest('#ac-modal [data-ac-map]')) acModal(false);
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') acModal(false); });
     function startAcLive() {
       clearInterval(acTimer); acLive = { status: 'idle' };
       refreshAcLive(true);
@@ -6203,7 +6224,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <span class="text-lg font-bold mono text-white">${esc(cs || '--')}</span>
           <span class="text-sm font-bold text-sky-300">${esc(type ? (AC_NAMES[type] || type) : '--')}</span>
           <span class="text-[11px] text-slate-400 mono">${[type, p.engine].filter(Boolean).map(esc).join(' · ')}</span>
-          <span class="ml-auto px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-slate-100 mono text-xs font-bold">${esc(p.reg || '--')}</span>
+          <button type="button" data-ac-open title="기체 실시간 위치 · 출도착 정보" class="ml-auto inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-800 border border-sky-700 hover:border-sky-400 text-slate-100 text-xs font-bold">
+            <span class="ac-dot" style="width:8px;height:8px;border-radius:50%;background:${acDotColor()};display:inline-block"></span><span class="mono">${esc(p.reg || '--')}</span>
+            <span class="text-[10px] font-normal text-sky-300" style="white-space:nowrap">📡 위치·출도착 ›</span></button>
         </div>
         <div class="grid ${altnCode ? 'grid-cols-[1fr_auto_1fr_auto_1fr]' : 'grid-cols-[1fr_auto_1fr]'} items-start gap-1.5" style="align-items:start">
           ${endpoint('DEP', info.dep, w ? w.etd : null, info.etdMinutes, false)}
@@ -6224,7 +6247,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <div id="efb-perf"></div>
         <div id="mel-card"></div>
         <div id="fms-wind"></div>
-        <div id="ac-live" class="rounded-lg border border-slate-800 bg-slate-900/70 px-2.5 py-2 flex flex-col gap-1"></div>
         <div class="flex flex-col gap-1.5">
           <div class="flex items-center justify-between gap-2 flex-wrap"><span class="text-[11px] font-bold text-slate-300">🌤️ 기상 · 기온</span><span class="flex items-center gap-2 text-[10px] text-slate-500">${wxLiveAt ? '실시간 ' + new Date(wxLiveAt).toISOString().slice(11, 16) + 'Z 조회' : ''}<button type="button" data-wx-refresh class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-sky-300 font-bold">🔄 실시간 조회</button></span></div>
           <div class="grid ${altnCode ? 'grid-cols-3' : 'grid-cols-2'} gap-2">
