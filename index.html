@@ -832,7 +832,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/01 22:45 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/01 22:50 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
@@ -951,6 +951,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <span style="color:#34d399">● DEP · DEST</span><span style="color:#c084fc">● ALTN</span><span style="color:#22d3ee">● ERA</span><span style="color:#a3e635">● EDTO</span><span>🟦 수동 입력 도형</span><span>🟥 경로 교차 · 통과시각 유효</span><span>🟧 경로 교차 · 비활성</span><span>🟨 경로 미교차</span>
           
         </div>
+        <div id="cat-chips" class="flex flex-wrap gap-1.5"></div>
         <!-- 좌표 입력 · FMS 변환 (경로 지도 아래) -->
         <div id="mm-panel" class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex flex-col gap-2">
           <div class="flex items-center justify-between"><span class="text-[11px] font-bold text-teal-200">✏️ 좌표 입력 · FMS 변환</span><span id="mm-count" class="text-[11px] text-slate-400"></span></div>
@@ -979,7 +980,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
           </div>
           <div id="mm-list" class="flex flex-wrap gap-1.5"></div>
         </div>
-        <div id="cat-chips" class="flex flex-wrap gap-1.5"></div>
         <div id="fir-seg-list" class="flex flex-col gap-1.5"></div>
         <div id="fix-match-list" class="flex flex-col gap-1.5"></div>
       </section>
