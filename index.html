@@ -832,7 +832,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/02 01:30 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/02 01:55 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 제방액 검색기</button>
@@ -4248,14 +4248,31 @@ svg.leaflet-image-layer.leaflet-interactive path {
         m = document.createElement('div'); m.id = 'hc-modal';
         m.style.cssText = 'position:fixed;inset:0;z-index:9600;background:rgba(2,6,23,.85);overflow:auto';
         document.body.appendChild(m);
-        m.addEventListener('input', hcFromForm); m.addEventListener('change', hcFromForm);
+        m.addEventListener('input', e => { if (e.target.name === 'fq') { hcSuggest(e.target.value); return; } hcFromForm(e); });
+        m.addEventListener('change', e => { if (e.target.name === 'fq') return; hcFromForm(e); });
+        m.addEventListener('keydown', e => { if (e.target.name === 'fq' && e.key === 'Enter') { e.preventDefault(); const b = m.querySelector('[data-hc-pick]'); if (b) b.click(); } });
         m.addEventListener('click', e => {
           if (e.target.closest('[data-hc-close]')) { m.style.display = 'none'; document.body.style.overflow = ''; }
           if (e.target.closest('[data-hc-auto]')) { hcS = hcAuto(); hcDraw(true); }
+          const pk = e.target.closest('[data-hc-pick]');
+          if (pk) { hcS.fluid = pk.dataset.hcPick; const fq = m.querySelector('[name="fq"]'); fq.value = ''; hcSuggest(''); m.querySelector('[name="fluid"]').value = hcS.fluid; hcDraw(false); const o = m.querySelector('[data-hc-out]'); o && o.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
         });
       }
       m.style.display = 'block'; document.body.style.overflow = 'hidden';
       hcDraw(true);
+    }
+    // 제빙액 검색: 단어 앞글자(여러 단어 가능) 또는 표 번호
+    function hcSuggest(q) {
+      const box = document.querySelector('#hc-modal [data-hc-fq]'); if (!box) return;
+      const qs = String(q || '').toUpperCase().replace(/[^A-Z0-9\- ]/g, ' ').trim();
+      if (!qs) { box.innerHTML = ''; return; }
+      const toks = qs.split(/[\s\-]+/).filter(Boolean);
+      const hit = hcData.fluids.filter(f => {
+        if (/^\d+$/.test(qs)) return String(f.t || (f.alu && f.alu.t) || '') === qs;
+        const words = (f.name.toUpperCase().replace(/[^A-Z0-9\- ]/g, ' ') + ' TYPE ' + f.type).split(/[\s\-]+/).filter(Boolean);
+        return toks.every(t => words.some(w => w.startsWith(t)));
+      }).slice(0, 10);
+      box.innerHTML = hit.length ? hit.map(f => `<button type="button" data-hc-pick="${f.id}" class="px-2 py-1 rounded-md border text-[12.5px] ${f.type === 'IV' ? 'border-emerald-600 bg-emerald-950/50 text-emerald-100' : f.type === 'II' ? 'border-sky-600 bg-sky-950/50 text-sky-100' : 'border-amber-600 bg-amber-950/50 text-amber-100'}"><b>Type ${f.type}</b> · ${esc(f.id.startsWith('s') ? `Table ${f.t} ${hotTitle(f.name)}` : f.name)}</button>`).join('') : '<span class="text-[12px] text-slate-500">찾는 제빙액이 없습니다 — HOT 표에 없는 제품이면 같은 Type의 공통 표를 쓰세요</span>';
     }
     function hcFromForm(e) {
       const m = document.getElementById('hc-modal'), q = n => m.querySelector(`[name="${n}"]`);
@@ -4276,12 +4293,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <div data-hc-src class="text-[11px] text-slate-400 mb-2"></div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px" class="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
           ${lab('기종', hcSel('ac', HC_AC.map(a => [a[0], `${a[1]} — 날개 ${a[2] === 'comp' ? '복합재' : '알루미늄'}`]), S.ac))}
+          <div style="grid-column:1/-1"><div class="text-[11px] text-slate-400 mb-0.5">🔎 제빙액 직접 검색 (앞글자만 · 예: kil, safe mp iv, polar, 43)</div>
+            <input name="fq" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="제조사·제품명 앞글자 또는 표 번호" class="w-full bg-slate-950 border border-cyan-700 rounded-md px-2.5 py-2 text-[14px] text-slate-100">
+            <div data-hc-fq class="flex flex-wrap gap-1.5 mt-1.5"></div></div>
           ${lab('제빙액', `<select name="fluid" class="w-full bg-slate-900 border border-slate-600 rounded-md px-2 py-1.5 text-[13px] text-slate-100">${hcFluidOpts(S.fluid)}</select>`)}
           ${lab('희석 비율 (제빙액/물 %)', hcSel('conc', [['100/0', '100/0'], ['75/25', '75/25'], ['50/50', '50/50']], S.conc))}
           ${lab('날개 표면 (Type I 표, 기종에 따라 자동)', hcSel('surf', [['alu', '알루미늄 (Table 2)'], ['comp', '복합재 (Table 3)']], S.surf))}
           ${lab('외기온도 (°C)', `<input name="oat" type="number" step="1" value="${S.oat}" class="w-full bg-slate-900 border border-slate-600 rounded-md px-2 py-1.5 text-[14px] mono text-slate-100">`)}
           ${lab('강수·기상 종류', hcSel('precip', HC_PRECIP, S.precip))}
-          <div data-hc-int style="display:${isSnow ? 'block' : 'none'}"><div class="text-[11px] text-slate-400 mb-0.5">강설 강도</div>
+          <div data-hc-int style="display:${isSnow ? 'block' : 'none'};grid-column:1/-1"><div class="text-[11px] text-slate-400 mb-0.5">강설 강도</div>
             <div class="flex gap-3 text-[12px] text-slate-200 mb-1"><label><input type="radio" name="intMode" value="vis" ${S.intMode === 'vis' ? 'checked' : ''}> 시정으로 계산 (Table 57)</label><label><input type="radio" name="intMode" value="sel" ${S.intMode === 'sel' ? 'checked' : ''}> 직접 선택</label></div>
             <div class="flex gap-1.5"><input name="vis" type="number" step="100" value="${S.vis}" class="w-24 bg-slate-900 border border-slate-600 rounded-md px-2 py-1 text-[13px] mono text-slate-100" title="시정 (m)"><span class="text-[11px] text-slate-400 self-center">m</span>${hcSel('night', [['0', '주간'], ['1', '야간']], S.night ? '1' : '0')}${hcSel('int', [['VL', '매우 약함'], ['L', '약함'], ['M', '보통'], ['H', '강함']], S.int)}</div></div>
           <label class="flex items-center gap-2 text-[12px] text-amber-200 self-end"><input type="checkbox" name="adj" ${S.adj ? 'checked' : ''}> 플랩·슬랫을 미리 내리고 제방빙 (76% 조정표)</label>
@@ -4321,6 +4341,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
         await page.render({ canvasContext: ctx, viewport: vp }).promise;
         if (R.box) { const k = vp.width / (R.pw || v0.width), [x0, y0, x1, y1] = R.box, pad = 3 * dpr; ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 3.5 * dpr; ctx.strokeRect(x0 * k - pad, y0 * k - pad, (x1 - x0) * k + 2 * pad, (y1 - y0) * k + 2 * pad); }
         box.innerHTML = ''; box.appendChild(cv);
+        const kd = document.createElement('div'); kd.style.cssText = 'background:#0b1220;padding:2px 8px 10px;border-radius:0 0 8px 8px';
+        kd.innerHTML = (['snow', 'snfg', 'snra'].includes(hcS.precip) ? hotKoHtml(74, false).replace(/<div style="margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid #334155[\s\S]*$/, '') : '') + hotKoHtml(R.page, !!hcS.adj);
+        box.appendChild(kd);
       } catch (e) { box.innerHTML = `<div class="text-[12px] text-rose-600 p-2">원본 표를 열지 못했습니다: ${esc(e.message || e)}</div>`; }
     }
     document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-hc-open]')) hcOpen(); });
