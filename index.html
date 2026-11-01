@@ -810,15 +810,21 @@ svg.leaflet-image-layer.leaflet-interactive path {
     @media (max-width: 460px) { #nav-bar .nb { width: 40px; } #nav-bar .nb svg { width: 22px; height: 22px; } }
     #brf-list .sticky.top-0 { top: 0; }
   </style>
+<style>
+  /* 간단히 보기: 잘 안 쓰는 부분 숨김 (헤더 ▤ 버튼으로 전체 보기 전환) */
+  body.pro-slim #fpl-input, body.pro-slim #pkg1-airport-names, body.pro-slim #pkg1-tabs-flt,
+  body.pro-slim .pro-slim-hide, body.pro-slim #map-summary { display: none !important; }
+</style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/01 21:50 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/01 22:00 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
+        <button id="btn-slim" type="button" title="간단히 보기 / 전체 보기" class="h-7 px-1.5 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-[11px] border border-slate-700">▤ 간단히</button>
         <button id="btn-claude-set" type="button" title="Claude 연결 주소 바꾸기" class="w-7 h-7 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-800 text-xs">⚙</button>
       </span>
     </div>
@@ -871,7 +877,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <div id="pkg1-airport-names" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-2 text-[12px]"></div>
 
         <!-- 공항 탭 (3번 섹션 탭과 동일 기능 · 2번에서는 숨김) -->
-        <div class="hidden">
+        <div id="pkg1-tabs-flt" class="hidden">
           <button id="btn-pkg1-tab-dep" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-slate-200"><span id="tab-label-dep">출발 (DEP: --)</span></button>
           <button id="btn-pkg1-tab-dest" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-sky-600 text-white shadow"><span id="tab-label-dest">목적 (DEST: --)</span></button>
           <button id="btn-pkg1-tab-altn" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-slate-200"><span id="tab-label-altn">교체 (ALTN: --)</span></button>
@@ -1023,7 +1029,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <div id="brf-sum"></div>
         <div id="brf-secf" class="flex items-center gap-1 flex-wrap"></div>
         <div id="brf-era" class="flex items-center gap-1 flex-wrap"></div>
-        <div class="text-[10px] text-slate-500">출발·도착·교체(Package 1), ERA(Package 2), FIR(Package 3) 노탐을 OFP 순서대로 한곳에서 봅니다. 위 ETD 조정·퀵턴을 바꾸면 유효 배지와 운항시간대 색이 바로 다시 계산됩니다. 전체 내용이 펼쳐져 있습니다(⚪ 참고는 한 줄로 접힘, 누르면 펼침). 자동 분류는 참고용입니다. ☆를 누르면 중요 노탐으로 지정되고, "중요 노탐 모아보기"에서 출발·도착·교체·ERA·PACKAGE 3별로 모아 볼 수 있습니다. 지정은 이 기기에 90일간 저장됩니다.</div>
+        <div class="pro-slim-hide text-[10px] text-slate-500">출발·도착·교체(Package 1), ERA(Package 2), FIR(Package 3) 노탐을 OFP 순서대로 한곳에서 봅니다. 위 ETD 조정·퀵턴을 바꾸면 유효 배지와 운항시간대 색이 바로 다시 계산됩니다. 전체 내용이 펼쳐져 있습니다(⚪ 참고는 한 줄로 접힘, 누르면 펼침). 자동 분류는 참고용입니다. ☆를 누르면 중요 노탐으로 지정되고, "중요 노탐 모아보기"에서 출발·도착·교체·ERA·PACKAGE 3별로 모아 볼 수 있습니다. 지정은 이 기기에 90일간 저장됩니다.</div>
         <div id="brf-list" class="flex flex-col gap-3"></div>
       </section>
 
@@ -3776,6 +3782,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
     document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-mel-load]')) { if (melDB) melLoadFile(); else melFromCloud(false).then(ok => { if (!ok) melLoadFile(); }); } });
     // 2번 칸(Flight Information)이 다시 그려질 때마다 기상 차트 분석도 다시 넣음 (기상·기온 바로 아래)
+
+    // ===== 간단히 보기 (기본) / 전체 보기 =====
+    (() => {
+      const K = 'notamPro.slim', get = () => { try { return localStorage.getItem(K) !== '0'; } catch (e) { return true; } };
+      const apply = on => { document.body.classList.toggle('pro-slim', on); const b = document.getElementById('btn-slim'); if (b) b.textContent = on ? '▤ 간단히' : '▦ 전체'; };
+      apply(get());
+      document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#btn-slim')) return; const on = !document.body.classList.contains('pro-slim'); try { localStorage.setItem(K, on ? '1' : '0'); } catch (er) { } apply(on); showToast(on ? '간단히 보기 — 잘 안 쓰는 부분을 숨겼습니다' : '전체 보기'); });
+    })();
     // share/fms-wind.js 와 같은 코드 (배포 버전에 그대로 옮길 수 있게 따로 파일로도 둠)
     // ===== FMS 순항 바람 입력 (Airbus CRZ WIND) =====
     // OFP 'WIND AND TEMPERATURE SUMMARY'를 읽어 어느 웨이포인트에 바람·기온을 넣을지 고른다.
@@ -6204,7 +6218,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           ${renderWxRaw([info.dep, info.dest, altnCode])}
         </div>
         <div id="wx-ai"></div>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="pro-slim-hide grid grid-cols-3 gap-2">
           ${tile('순항고도', tocFl ? flTxt(tocFl) : '--', steps.length > 1 ? 'STEP ' + steps.map(flTxt).join(' → ') : '')}
           ${tile('예약 현황', pax ? `${pax.f + pax.c + pax.y}명` : '--', pax ? `F ${pax.f}/${pax.fc} · C ${pax.c}/${pax.cc} · Y ${pax.y}/${pax.yc}` : (pdfFlt ? 'OFP에 예약 정보 없음' : ''), 'text-emerald-300')}
           ${tile('RAMP OUT', fuelTxt(p.ramp), '')}
