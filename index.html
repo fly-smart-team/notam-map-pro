@@ -832,7 +832,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/02 09:05 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/02 12:20 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 제방액 검색기</button>
@@ -4041,14 +4041,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
       ["눈과 함께 안개·연무·연기 등으로 시정이 줄면 이 표가 실제 강설 강도를 높게 볼 수 있습니다. 하지만 METAR에 보고된 강도(-SN 등)는 HOT 기준과 직접 맞지 않아 실제보다 낮게 볼 수 있으므로, 모든 눈 조건에서 이 표를 쓰는 것을 권장합니다.", ""],
       ["예) CYVO 160200Z 15011G17KT 1SM -SN DRSN OVC009 M06/M08 — METAR는 약한 눈(-SN)이지만, 야간·시정 1SM·-6°C를 이 표로 보면 '보통(moderate)'입니다. 지속시간은 METAR의 '약한'이 아니라 '보통'으로 찾아야 합니다.", "표 읽기: 주간/야간 → 기온 구간 → 시정(SM 또는 m)으로 강도를 찾습니다. 야간에는 같은 시정이라도 강도가 더 높게 나옵니다."]
     ];
-    function hotKoHtml(pg, adj) {
+    function hotKoHtml(pg, adj, hl) {
+      const HL = new Set(hl || []);
       const li = (t, tip) => `<li style="margin:4px 0">${esc(t)}${tip ? `<div style="color:#fcd34d;font-size:12px;margin-top:2px">⚠ ${esc(tip)}</div>` : ''}</li>`;
       const box = (title, inner, col) => `<div style="margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid ${col};background:#0f172a;color:#e2e8f0;font-size:13.5px;line-height:1.55"><div style="font-weight:800;color:#a5f3fc;margin-bottom:4px">${title}</div>${inner}</div>`;
       let h = adj ? box('📐 조정표 (Adjusted)', '<div>제빙액을 뿌리기 <b>전에 플랩·슬랫을 미리 내린 경우</b>에 쓰는 표입니다. 지속시간을 원래 표의 <b>76%</b>로 줄인 값입니다.</div>', '#b45309') : '';
       if (pg === 74) h += box('📘 Table 57 설명 (한글 번역)', `<ul style="list-style:disc;padding-left:18px">${HOT_T57.map(x => li(x[0], x[1])).join('')}</ul>`, '#0e7490');
       const K = HOT_KO.p[pg];
       if (K) {
-        h += box('📘 NOTES 한글 번역 (표의 작은 숫자 = 각주 번호)', `<ol style="list-style:none;padding-left:0">${K.n.map(([n, i]) => { const d = HOT_KO.d[i]; return `<li style="margin:5px 0;display:flex;gap:8px"><b style="min-width:20px;color:#67e8f9">${n}</b><div>${esc(d[0])}${d[1] ? `<div style="color:#fcd34d;font-size:12px;margin-top:2px">⚠ ${esc(d[1])}</div>` : ''}</div></li>`; }).join('')}</ol>`, '#0e7490');
+        h += box(`📘 NOTES 한글 번역 (표의 작은 숫자 = 각주 번호)${HL.size ? ' — <span style="color:#fca5a5">빨간 밑줄 = 이번 결과에 해당하는 각주</span>' : ''}`, `<ol style="list-style:none;padding-left:0">${K.n.map(([n, i]) => { const d = HOT_KO.d[i], on = HL.has(n); return `<li style="margin:5px 0;display:flex;gap:8px;${on ? 'background:rgba(220,38,38,.12);border-left:3px solid #ef4444;padding:3px 6px;border-radius:4px' : ''}"><b style="min-width:20px;color:${on ? '#fca5a5' : '#67e8f9'}">${n}</b><div>${on ? '<span style="display:inline-block;margin-right:6px;padding:0 5px;border-radius:4px;background:#dc2626;color:#fff;font-size:11px;font-weight:800">해당</span>' : ''}<span style="${on ? 'text-decoration:underline;text-decoration-color:#ef4444;text-decoration-thickness:2px;text-underline-offset:3px' : ''}">${esc(d[0])}</span>${d[1] ? `<div style="color:#fcd34d;font-size:12px;margin-top:2px">⚠ ${esc(d[1])}</div>` : ''}</div></li>`; }).join('')}</ol>`, '#0e7490');
         if (K.c) h += box(`⚠ CAUTIONS 한글 번역 (${K.c === 'F' ? '서리 표' : 'Type ' + K.c} 공통 주의사항)`, `<ul style="list-style:disc;padding-left:18px">${HOT_CAUT[K.c].map(t => li(t)).join('')}</ul><div style="font-size:11.5px;color:#94a3b8;margin-top:4px">HOT 지침은 정보·안내용이며 규정을 바꾸지 않습니다. 'should'는 동등 이상의 안전 대안이 없는 한 지켜야 하는 것으로 이해합니다.</div>`, '#9f1239');
       }
       h += box('🧭 표 읽는 법', `<ul style="list-style:disc;padding-left:18px">${HOT_READ.map(t => li(t)).join('')}</ul>`, '#334155');
@@ -4231,6 +4232,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const inBand = b => (b.lo == null || oat >= b.lo) && (b.hi == null || oat < b.hi);
       if (S.precip === 'frost') {
         const Fr = S.adj ? D.frost.adj : D.frost.main; R.page = Fr.p; R.pw = Fr.w; R.table = S.adj ? 'Table Adj-1' : 'Table 1'; R.col = '서리';
+        R.notes = ty === 'I' ? [1, 2, 3, 4] : [1, 3, 4];
         if (ty === 'I') { const v = Fr.t1[S.surf]; R.ok = true; R.min = R.max = v[0]; R.box = v[1]; R.band = '모든 기온 (LOUT 이상)'; R.msgs.push('Type I 서리 지속시간은 기온과 관계없이 한 값입니다. 혼합액 어는점이 외기온도보다 10°C 이상 낮아야 합니다.'); return R; }
         const b = Fr.bands.find(inBand); if (!b) return { ...R, err: '이 기온에 해당하는 구간이 없습니다' };
         R.band = b.lbl; const row = b.rows.find(r => r.c === S.conc);
@@ -4252,6 +4254,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       }
       if (S.precip === 'snow') col = T.cols.includes('sn') ? 'sn' : { VL: 'vlsn', L: 'lsn', M: 'msn' }[int];
       if (S.precip === 'snra') { if (int === 'VL' || int === 'L') { col = 'lfzr'; R.msgs.push("약한 눈 + 비는 '눈 섞인 비' 열이 아니라 '약한 어는 비' 열을 씁니다 (각주)."); } else col = 'snra'; }
+      if (S.precip === 'other') { const af = Object.values(T.colfn).flat(), bs = af.length ? Math.min(...af) : 1; for (let i = 1; i < bs; i++) R.notes.push(i); (T.colfn.other || []).forEach(n => R.notes.push(n)); }
       if (S.precip === 'other') return { ...R, col: HC_COLNM.other, noHot: "강한 눈·얼음 싸라기·보통 이상 어는 비·우박은 지속시간이 없습니다. (Type IV는 얼음 싸라기·작은 우박에 한해 회사 승인 시 Allowance Times 표 사용)" };
       R.col = HC_COLNM[col] || col;
       const b = T.bands.find(inBand);
@@ -4285,13 +4288,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const st = A.t53[f.id];
       if (st !== 'EG' && st !== 'PG') return { ...R, err: `${hotTitle(f.name)}은(는) 허용 시간 검증이 안 된 제품입니다 (Table 53: Fluid has not been validated) → 얼음 싸라기 조건에서 사용할 수 없습니다.` };
       const tb = A[st]; R.page = S.adj ? tb.pa : tb.p; R.pw = tb.main.w; R.table = `${S.adj ? 'Table Adj-' + (tb.t - 1) : 'Table ' + tb.t} (Type IV ${st})`; R.conc = S.conc; R.glycol = st;
-      if (S.conc !== '100/0') return { ...R, err: `허용 시간은 희석하지 않은 100/0 제빙액에만 적용됩니다. ${S.conc}로 방빙했다면 허용 시간을 쓸 수 없습니다 → 100/0으로 다시 제방빙하거나, 처음부터 100/0으로 요청하세요.` };
+      if (S.conc !== '100/0') return { ...R, notes: [1], npage: S.adj ? tb.pa + 1 : tb.np, err: `허용 시간은 희석하지 않은 100/0 제빙액에만 적용됩니다. ${S.conc}로 방빙했다면 허용 시간을 쓸 수 없습니다 → 100/0으로 다시 제방빙하거나, 처음부터 100/0으로 요청하세요.` };
       const ci = oat > 0 ? 0 : oat >= -5 ? 1 : oat >= -10 ? 2 : oat >= -16 ? 3 : oat >= -22 ? 4 : -1;
       if (ci < 0) return { ...R, err: '-22°C 미만은 허용 시간이 없습니다.' };
       R.band = A.cols[ci];
       const v = (S.adj ? tb.adj : tb.main).rows[S.plRow][ci];
       if (!v) return { ...R, noHot: `이 조건(${R.col})은 ${R.band}에서 허용 시간이 없습니다 (표의 'Caution: No allowance times currently exist' 칸).` };
       R.ok = true; R.min = R.max = v[0]; R.box = v[1];
+      R.notes = [1, 2, 3, 4, ...(st === 'PG' && ci >= 3 ? [5] : [])]; R.npage = S.adj ? tb.pa + 1 : tb.np;
       R.msgs.push('허용 시간은 마지막 단계 제빙액을 뿌리기 시작한 시각부터 셉니다. 항공기 표면 점검으로 연장할 수 없습니다.');
       R.msgs.push('강수가 허용 시간 안에 그치고 다시 내리지 않으면 제빙 시작부터 90분까지 이륙할 수 있습니다.' + (HC_PL_OATDROP.includes(S.plRow) ? ' 단, 이 조건은 그 90분 동안 외기온도가 내려가면 이륙할 수 없습니다.' : ''));
       if (st === 'PG' && ci >= 3) R.msgs.push('PG 제빙액의 -10°C 미만 값은 회전 속도(Vr) 115KT 이상 항공기만 씁니다 (100KT 미만은 PG 허용 시간 자체가 없음).');
@@ -4300,7 +4304,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     // 허용 시간 표 각주·주의사항 한글 번역
     function hcAtKoHtml(R) {
       const box = (title, inner, col) => `<div style="margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid ${col};background:#0f172a;color:#e2e8f0;font-size:13.5px;line-height:1.55"><div style="font-weight:800;color:#a5f3fc;margin-bottom:4px">${title}</div>${inner}</div>`;
-      const ol = a => `<ol style="list-style:none;padding-left:0">${a.map(([n, t, tip]) => `<li style="margin:5px 0;display:flex;gap:8px"><b style="min-width:20px;color:#67e8f9">${n}</b><div>${esc(t)}${tip ? `<div style="color:#fcd34d;font-size:12px;margin-top:2px">⚠ ${esc(tip)}</div>` : ''}</div></li>`).join('')}</ol>`;
+      const HL = new Set(R.notes || []);
+      const ol = (a, hlOn) => `<ol style="list-style:none;padding-left:0">${a.map(([n, t, tip]) => { const on = hlOn && HL.has(n); return `<li style="margin:5px 0;display:flex;gap:8px;${on ? 'background:rgba(220,38,38,.12);border-left:3px solid #ef4444;padding:3px 6px;border-radius:4px' : ''}"><b style="min-width:20px;color:${on ? '#fca5a5' : '#67e8f9'}">${n}</b><div>${on ? '<span style="display:inline-block;margin-right:6px;padding:0 5px;border-radius:4px;background:#dc2626;color:#fff;font-size:11px;font-weight:800">해당</span>' : ''}<span style="${on ? 'text-decoration:underline;text-decoration-color:#ef4444;text-decoration-thickness:2px;text-underline-offset:3px' : ''}">${esc(t)}</span>${tip ? `<div style="color:#fcd34d;font-size:12px;margin-top:2px">⚠ ${esc(tip)}</div>` : ''}</div></li>`; }).join('')}</ol>`;
       if (!R.glycol) return box('📘 Table 53 (허용 시간 검증 목록) 각주', ol([[1, '허용 시간은 희석하지 않은(100/0) Type III, Type IV EG, Type IV PG 제빙액에만 있습니다. Type II는 허용 시간이 없습니다.', ''], [2, '허용 시간 검증을 아직 받지 않은 제품은 허용 시간이 없습니다 (Fluid has not been validated).', '']]), '#0e7490');
       const eg = R.glycol === 'EG', GS = [
         ['METAR 코드는 얼음 싸라기(PL)만 표에 적혀 있습니다. 작은 우박(GS)이 대신 보고돼도 허용 시간을 쓸 수 있지만 GS 코드는 표에 없습니다.', ''],
@@ -4313,7 +4318,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         [4, `회전 속도(Vr) 100KT 미만 항공기는 ${eg ? 'EG' : 'PG'} 허용 시간이 없습니다.`, ''],
         ...(eg ? GS.map((x, i) => [5 + i, ...x]) : [[5, '회전 속도(Vr) 115KT 미만 항공기는 PG 허용 시간이 없습니다 (표에서 각주 5가 붙은 -10°C 미만 칸).', ''], ...GS.map((x, i) => [6 + i, ...x])])];
       return (R.page > 100 ? box('📐 조정표 (Adjusted)', '<div>제빙액을 뿌리기 <b>전에 플랩·슬랫을 미리 내린 경우</b>에 쓰는 표입니다. 허용 시간을 원래 표의 <b>76%</b>로 줄인 값입니다.</div>', '#b45309') : '')
-        + box(`📘 NOTES 한글 번역 (Table ${eg ? 55 : 56} · ${eg ? 70 : 72}쪽)`, ol(N), '#0e7490')
+        + box(`📘 NOTES 한글 번역 (Table ${eg ? 55 : 56} · ${eg ? 70 : 72}쪽) — <span style="color:#fca5a5">빨간 밑줄 = 이번 결과에 해당</span>`, ol(N, true), '#0e7490')
         + box('📘 Table 53 (허용 시간 검증 목록) 각주', ol([[1, '허용 시간은 희석하지 않은(100/0) Type III, Type IV EG, Type IV PG 제빙액에만 있습니다. Type II는 허용 시간이 없습니다.', ''], [2, '허용 시간 검증을 아직 받지 않은 제품은 허용 시간이 없습니다 (Fluid has not been validated).', '']]), '#0e7490')
         + box('⚠ CAUTIONS 한글 번역 (66쪽, 허용 시간 표 공통)', `<ul style="list-style:disc;padding-left:18px">${['이 자료를 적용하는 책임은 사용자에게 있습니다.', '지상 제방빙액은 비행 중 착빙을 막아주지 않습니다.', '이 표는 출발 계획용이며 이륙 전 점검 절차와 함께 써야 합니다.', '허용 시간은 항공기 중요 표면 점검(검사)으로 연장할 수 없습니다.'].map(t => `<li style="margin:4px 0">${esc(t)}</li>`).join('')}</ul>`, '#9f1239')
         + box('🧭 허용 시간 읽는 법', `<ul style="list-style:disc;padding-left:18px">${['METAR의 SNPL·PLSN은 눈 + 얼음 싸라기(PL)입니다. 눈 알갱이(SP, Snow Pellets)와 다른 현상이라 HOT 표의 눈 열을 쓰면 안 됩니다.', 'HOT 표에서는 얼음 싸라기가 \'기타(Other)\' 열(지속시간 없음)이고, 그 각주가 허용 시간 표로 안내합니다.', '허용 시간은 범위가 아니라 한 값(분)입니다. 강도는 METAR 표기(-: 약함, 표기 없음: 보통)를 씁니다.', '제품별로 EG(Table 55)·PG(Table 56) 중 맞는 표를 써야 합니다 — Table 53에서 확인.', '2025-26년판과 표 번호가 다릅니다: 검증 목록 Table 50→53, PG 허용 시간 Table 53→56.'].map(t => `<li style="margin:4px 0">${esc(t)}</li>`).join('')}</ul>`, '#334155');
@@ -4434,10 +4439,19 @@ svg.leaflet-image-layer.leaflet-interactive path {
         cv.width = vp.width; cv.height = vp.height; cv.style.width = cssW + 'px';
         const ctx = cv.getContext('2d');
         await page.render({ canvasContext: ctx, viewport: vp }).promise;
+        const ul = (c2, pgNo, kk) => { const P = (hcData.npos || {})[pgNo]; if (!P) return; c2.strokeStyle = '#dc2626'; c2.lineWidth = 2.2 * dpr; [...new Set(R.notes || [])].forEach(n => (P[n] || []).forEach(([a, b, y]) => { c2.beginPath(); c2.moveTo(a * kk, (y - 0.4) * kk); c2.lineTo(b * kk, (y - 0.4) * kk); c2.stroke(); })); };
+        if (!R.npage) ul(ctx, R.page, vp.width / v0.width);
         if (R.box) { const k = vp.width / (R.pw || v0.width), [x0, y0, x1, y1] = R.box, pad = 3 * dpr; ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 3.5 * dpr; ctx.strokeRect(x0 * k - pad, y0 * k - pad, (x1 - x0) * k + 2 * pad, (y1 - y0) * k + 2 * pad); }
         box.innerHTML = ''; box.appendChild(cv);
+        if (R.npage) {   // 허용 시간 표는 각주가 다음 쪽에 있음 → 그 쪽도 그리고 해당 각주에 밑줄
+          const p2 = await hotDoc.getPage(R.npage), w0 = p2.getViewport({ scale: 1 }), sc2 = cssW * dpr / w0.width, vp2 = p2.getViewport({ scale: sc2 }), c2 = document.createElement('canvas');
+          c2.width = vp2.width; c2.height = vp2.height * 0.55; c2.style.width = cssW + 'px'; c2.style.borderTop = '2px dashed #94a3b8';
+          const x2 = c2.getContext('2d'); await p2.render({ canvasContext: x2, viewport: vp2 }).promise; ul(x2, R.npage, vp2.width / w0.width);
+          const cap = document.createElement('div'); cap.style.cssText = 'font-size:11px;color:#475569;padding:4px 6px'; cap.textContent = `↓ ${R.npage}쪽 NOTES (빨간 밑줄 = 해당 각주)`;
+          box.appendChild(cap); box.appendChild(c2);
+        }
         const kd = document.createElement('div'); kd.style.cssText = 'background:#0b1220;padding:2px 8px 10px;border-radius:0 0 8px 8px';
-        kd.innerHTML = R.at ? hcAtKoHtml(R) : (['snow', 'snfg', 'snra'].includes(hcS.precip) ? hotKoHtml(74, false).replace(/<div style="margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid #334155[\s\S]*$/, '') : '') + hotKoHtml(R.page, !!hcS.adj);
+        kd.innerHTML = R.at ? hcAtKoHtml(R) : (['snow', 'snfg', 'snra'].includes(hcS.precip) ? hotKoHtml(74, false).replace(/<div style="margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid #334155[\s\S]*$/, '') : '') + hotKoHtml(R.page, !!hcS.adj, R.notes);
         box.appendChild(kd);
       } catch (e) { box.innerHTML = `<div class="text-[12px] text-rose-600 p-2">원본 표를 열지 못했습니다: ${esc(e.message || e)}</div>`; }
     }
