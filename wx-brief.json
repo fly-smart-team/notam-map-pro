@@ -1,6 +1,6 @@
 {
  "note": "OFP 기상 차트 분석 (Claude 작성). 키 = 콜사인|출발|도착|운항일(UTC). 비행 전날 OFP를 주면 추가",
- "version": "2026-10-31 20:50Z",
+ "version": "2026-11-02 23:32Z",
  "items": {
   "KAL476|VVTS|RKSI|2026-10-26": {
    "flight": "KE476 호찌민(VVTS) → 인천(RKSI)",
@@ -771,6 +771,101 @@
      "what": "경로를 따라 고도별 바람, 기온선(갈색), 대류권계면(빨간 별), 수직 윈드시어(VWS, 초록 6~9, 노랑 12 윤곽)를 보여줍니다. 왼쪽이 인천(도착), 오른쪽이 신치토세(출발)이고 분홍 선이 계획 고도(FL340→FL320→FL300→FL260)입니다.",
      "see": "신치토세 상승 구간 FL250~FL330(TOC 부근 FL290 강함), GOLDO~NYUDO 위 FL410~FL450, 한국 쪽 SAPRA~CUN FL320~FL350, 인천 강하 구간 FL170~FL210, 저고도 FL50~FL100 넓게 VWS가 있습니다. 동해 순항 FL340 구간에는 VWS가 없습니다.",
      "apply": "상승 중 FL290 부근 흔들림에 대비하고, 한국 쪽에서는 FL320보다 낮은 고도가 유리할 수 있습니다. 인천 강하 중 FL210~FL170과 저고도에서 속도 변동에 대비합니다."
+    }
+   ]
+  },
+  "AAR1163|RKSI|RJBE|2026-11-02": {
+   "flight": "OZ1163 인천(RKSI) → 고베(RJBE) · HL8364",
+   "etd": "02:55Z",
+   "eta": "04:02Z",
+   "trip": "1시간 7분",
+   "made": "2026-11-02 23:32Z",
+   "source": "OFP 11~16쪽 — UKMET 고도별 바람·기온(FL300·FL340·FL390), WAFC Washington SIGWX, WNI 난기류(ASC), 경로 단면도",
+   "key": [
+    "상승·초기 순항 TORUS~KAE(이륙 약 15~21분 후, 03:10Z~03:16Z) FL310에서 OFP SR 8·7 — 단면도상 FL310 부근에 수직 윈드시어(VWS) 층이 있어 이번 비행에서 가장 흔들리는 구간. 운항관리 비고도 'RKSI~LANAT LGT~MOD'",
+    "PILIT에서 FL350으로 올라간 뒤(이륙 약 21분 후) VWS 층 위로 벗어나 SR 0~2. 동해 위 LANAT(이륙 약 34분 후) 부근에서 제트기류(FL360, 서풍 약 140KT)를 가로지름",
+    "강하 중 FL230~FL200(이륙 약 47~50분 후)과 FL100~FL80(OLIVE~OMBIP, 착륙 약 11~10분 전) VWS 층 통과",
+    "고베 도착 강풍: WNI TAF(참고용, 고베는 공식 TAF 없음) 03Z부터 25025G38KT -SHRA, 04Z부터 27021G32KT — 착륙 시각(04:02Z) 돌풍 30KT대, 접근 중 저고도 흔들림·윈드시어 대비. RWY 27이면 거의 맞바람",
+    "교체 나고야·간사이 TAF에 출발~도착 시간대 TEMPO 3000~4000 SHRA BR"
+   ],
+   "overall": [
+    {
+     "t": "이륙·상승 (02:55Z~03:10Z, TOC·TORUS까지)",
+     "s": "인천 TAF CAVOK, 03Z~05Z 사이 북서풍 15G25KT로 바뀝니다. 출발 직후 저고도 흔들림이 조금 있을 수 있고, 상승 후반 FL270~FL330을 지날 때 단면도상 VWS 층을 통과합니다."
+    },
+    {
+     "t": "강원 상공 FL310 (TORUS~KAE, 이륙 15~21분 후)",
+     "s": "OFP SR 8·7로 이번 비행에서 가장 강합니다. 계획 고도 FL310이 VWS 층(FL280~FL330) 안에 있습니다. 좌석벨트 사인 유지, 객실 서비스 시작 전입니다."
+    },
+    {
+     "t": "동해 FL350 (PILIT~LANAT, 이륙 21~34분 후)",
+     "s": "FL350은 VWS 층 위라 SR 0~2입니다. 다만 운항관리는 LANAT까지 LGT~MOD를 예보했고, LANAT 부근에서 제트기류 축(FL360)을 가로지르니 가벼운 흔들림은 남을 수 있습니다."
+    },
+    {
+     "t": "동해 남부~혼슈 (LANAT~TOD, 이륙 34~46분 후, 착륙 약 33~21분 전)",
+     "s": "SR 1로 이번 비행에서 가장 안정적인 구간입니다. 순풍 약 130~140KT. 객실 서비스에 쓸 수 있는 구간입니다."
+    },
+    {
+     "t": "강하·접근 (TOD~고베, 착륙 약 21분 전~착륙)",
+     "s": "강하 중 FL230~FL200과 FL100~FL80에서 VWS 층을 지납니다. 고베는 서풍 21~25KT 돌풍 32~38KT, 03Z 무렵 약한 소나기. 접근 중 저고도 흔들림과 속도 변동(윈드시어)에 대비합니다."
+    }
+   ],
+   "crew": {
+    "wxKo": "인천은 맑고, 고베는 도착 무렵 바람이 강하게 붑니다(돌풍). 도착 직전 약한 소나기가 지나갈 수 있습니다. 비행 중 소나기구름은 예보되지 않았습니다.",
+    "wxEn": "Clear in Incheon. Strong, gusty winds in Kobe around our arrival, with light showers possible just before. No thunderstorms forecast en route.",
+    "enrouteKo": "이륙 후 약 15분부터 21분까지 보통 정도의 흔들림이 있고, 이륙 약 35분까지는 가벼운 흔들림이 남을 수 있습니다. 그 뒤 착륙 약 20분 전까지는 비교적 안정적입니다. 착륙 약 20분 전부터 착륙까지 강풍으로 다시 흔들립니다.",
+    "enrouteEn": "Moderate turbulence from about 15 to 21 minutes after takeoff, with light bumps possible until about 35 minutes after takeoff. Fairly smooth after that until about 20 minutes before landing. Bumpy again from about 20 minutes before landing until landing due to strong winds.",
+    "turbKo": "이륙 약 15분 후부터 21분 후까지 보통 정도의 흔들림이 예상됩니다. 객실 서비스는 이륙 약 25분 후부터 시작해 착륙 약 20분 전까지 마치고, 고베 강풍으로 착륙 약 20분 전부터는 객실·갤리 고정을 마쳐 주시기 바랍니다.",
+    "turbEn": "Moderate turbulence expected from about 15 to 21 minutes after takeoff. Please start the service about 25 minutes after takeoff and finish it by about 20 minutes before landing. Due to strong winds in Kobe, please have the cabin and galley secured from about 20 minutes before landing."
+   },
+   "charts": [
+    {
+     "page": 11,
+     "title": "고도별 바람·기온 FL300 (300hPa)",
+     "valid": "11/02 03:00Z",
+     "what": "UKMET 예보 모델의 바람(바브)과 기온(°C) 차트입니다. 상승·강하 중 지나는 층입니다. 깃 하나 10KT, 삼각형 50KT.",
+     "see": "경로 전체 서풍 100KT 이상, 기온 -31~-38°C. 계획 고도 FL310(TORUS~KAE)과 가까운 층입니다.",
+     "apply": "상승·강하 중 바람 변화가 커서 속도 변동에 대비합니다."
+    },
+    {
+     "page": 12,
+     "title": "고도별 바람·기온 FL340 (250hPa)",
+     "valid": "11/02 03:00Z",
+     "what": "UKMET 예보 모델의 바람(바브)과 기온(°C) 차트입니다. 순항 고도와 가장 가까운 층입니다. 깃 하나 10KT, 삼각형 50KT.",
+     "see": "FL350 기준 서풍 약 260°/130~145KT(OFP 바람 요약 PILIT 26142, MIHOU 26129). 기온 -41~-43°C(OFP FL350 -44~-46°C)로 표준(-54°C)보다 8~10도 높습니다.",
+     "apply": "강한 순풍(약 +80~95KT 성분)으로 비행시간이 짧습니다. 동해 구간은 바람이 안정적이라 객실 서비스에 쓸 수 있습니다."
+    },
+    {
+     "page": 13,
+     "title": "고도별 바람·기온 FL390 (200hPa)",
+     "valid": "11/02 03:00Z",
+     "what": "UKMET 예보 모델의 바람(바브)과 기온(°C) 차트입니다. 순항 고도 위층 참고용입니다. 깃 하나 10KT, 삼각형 50KT.",
+     "see": "FL390 서풍 강풍, 기온 -51~-54°C. 대류권계면은 단면도상 FL360 부근입니다.",
+     "apply": "단면도상 FL350 위쪽은 VWS가 없으나 대류권계면이 바로 위라 상승 여유는 작습니다."
+    },
+    {
+     "page": 14,
+     "title": "SIGWX 중요 기상 (FL250~FL630)",
+     "valid": "11/02 06:00Z",
+     "what": "세계공역예보센터(Washington)의 고층 중요 기상 차트입니다. 파란 선 = 제트기류(옆 숫자는 고도), 빨간 점선 = 청천난류(CAT) 구역, 분홍 점선 = 대류권계면 등 경계, 초록 물결선 = CB 구역.",
+     "see": "CB·CAT 구역은 경로 위에 없습니다. 제트기류(FL360)가 서해 남부에서 동해로 이어지며 AGSUS~LANAT 사이에서 경로를 가로지릅니다.",
+     "apply": "LANAT(이륙 약 34분 후) 부근 제트기류 통과 때 가벼운 흔들림에 대비합니다. 유효 시각(06Z)이 비행보다 늦어 참고용입니다."
+    },
+    {
+     "page": 15,
+     "title": "난기류 예상 ASC (FL180~FL450)",
+     "valid": "11/02 03:00Z",
+     "what": "웨더뉴스(WNI) 난기류 예상 차트입니다. 하늘색 = MOD, 노랑 = MOD~SEV, 빨강 = SEV. FL180~FL450 사이의 가장 강한 값을 겹쳐 보여줍니다(고도별 판단은 단면도로).",
+     "see": "경로 대부분 하늘색(MOD), AGSUS~FOGEL과 MIHOU~YUBAR 부근 노랑(MOD~SEV). 경로 위 SEV(빨강)는 없습니다.",
+     "apply": "위치 참고용입니다. 계획 고도에서의 흔들림은 단면도의 VWS 층과 OFP SR로 판단합니다(FL310 구간 SR 8·7, FL350 구간 SR 0~2)."
+    },
+    {
+     "page": 16,
+     "title": "경로 단면도 (바람·기온·수직 윈드시어)",
+     "valid": "11/02 03:00Z",
+     "what": "경로를 따라 고도별 바람, 기온선(갈색), 대류권계면(검은 삼각형·빨간 별), 수직 윈드시어(VWS, 초록 6~9, 노랑 12, 빨강 15 이상 윤곽)를 보여줍니다. 왼쪽이 인천, 오른쪽이 고베이고 분홍 선이 계획 고도입니다.",
+     "see": "VWS(초록 6~9) 층: ① FL280~FL330 인천~FOGEL(동해 쪽으로 갈수록 낮아짐), ② FL270 부근 인천~LANAT, ③ FL200~FL230 AGSUS~MIHOU, ④ FL80~FL100 LANAT~고베. 노랑·빨강(강한 VWS)은 없습니다. 대류권계면 FL360 부근.",
+     "apply": "FL310(TORUS~KAE)은 ① 층 안이라 흔들림이 예상되고, FL350으로 올라가면 벗어납니다. FL310이 오래 이어지면 관제에 FL350 조기 상승을 요청합니다. 강하 중 ③·④ 층을 지날 때 흔들림에 대비합니다."
     }
    ]
   }
