@@ -819,6 +819,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .stand-tri-n { display: none; margin-top: 4px; }
   .apt-ko { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   @media (max-width: 639px) { .stand-tri-w { display: none; } .stand-tri-n { display: block; } .apt-ko { white-space: normal; word-break: normal; overflow: visible; text-overflow: clip; min-height: 2.5em; } }
+  .brf-coord { color: #7dd3fc; text-decoration: underline dotted; text-underline-offset: 2px; cursor: pointer; }
+  .brf-coord:hover { color: #bae6fd; background: rgba(14,165,233,.15); }
 </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
@@ -832,7 +834,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/03 10:00 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/03 21:20 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 제방액 검색기</button>
@@ -883,6 +885,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <section id="sec-flt" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
         <h2 class="font-bold text-sm text-slate-100 flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span> 2. Flight Information
+          <button type="button" data-jb-open class="ml-2 px-2 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px]">📝 Joint Brief</button>
         </h2>
 
         <!-- 출발 / 목적 / 교체 공항 이름 (한글 · English) -->
@@ -4955,11 +4958,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <div class="flex items-start gap-2 px-2 py-1">
             <button type="button" data-brf-star="${esc(n.notamId)}" class="shrink-0 w-7 h-7 mt-0.5 rounded-md border text-base leading-none ${r.star ? 'bg-amber-400 border-amber-300 text-slate-950' : 'border-slate-600 text-slate-500'}" title="중요 노탐 지정">${r.star ? '★' : '☆'}</button>
             <div class="min-w-0 flex-1" data-brf-toggle>
-              <div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${T.pill}">${T.label}</span><span class="mono text-[11px] font-bold ${T.txt}">${esc(n.notamId)}</span>${hk ? '<span class="px-1 rounded bg-cyan-900/70 text-cyan-200 text-[10px] font-bold">🧊 HOT</span>' : ''}<span class="text-[10px] text-sky-300 mono whitespace-nowrap">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${r.tb}${r.qt ? `<span class="px-1 rounded text-[10px] font-bold bg-sky-900/70 border border-sky-500/60 text-sky-200">🔄 ${esc(r.qt)}</span>` : ''}<span class="text-[10px] ${T.txt}">${esc(r.why)}</span>${r.same && r.same.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">같은 내용 +${r.same.length}건</span>` : ''}${r.rel && r.rel.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">관련 노탐 ${r.rel.length}건 묶음</span>` : ''}${n.dupIn && n.dupIn.length ? `<span class="text-[9px] text-slate-500">+${esc(n.dupIn.join('·'))} 중복</span>` : ''}${n.geo ? `<button type="button" data-brf-map="${esc(n.notamId)}" class="text-[10px] text-sky-300 border border-sky-800/60 px-1 rounded">📍지도</button>` : ''}<span data-brf-caret class="ml-auto text-[10px] text-slate-500">${open ? '▾ 접기' : '▸ 펼치기'}</span></div>
+              <div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${T.pill}">${T.label}</span><span class="mono text-[11px] font-bold ${T.txt}">${esc(n.notamId)}</span>${hk ? '<span class="px-1 rounded bg-cyan-900/70 text-cyan-200 text-[10px] font-bold">🧊 HOT</span>' : ''}<span class="text-[10px] text-sky-300 mono whitespace-nowrap">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${r.tb}${r.qt ? `<span class="px-1 rounded text-[10px] font-bold bg-sky-900/70 border border-sky-500/60 text-sky-200">🔄 ${esc(r.qt)}</span>` : ''}<span class="text-[10px] ${T.txt}">${esc(r.why)}</span>${r.same && r.same.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">같은 내용 +${r.same.length}건</span>` : ''}${r.rel && r.rel.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">관련 노탐 ${r.rel.length}건 묶음</span>` : ''}${n.dupIn && n.dupIn.length ? `<span class="text-[9px] text-slate-500">+${esc(n.dupIn.join('·'))} 중복</span>` : ''}${n.geo || brfCoordList(n.rawText || n.etext || '').length ? `<button type="button" data-brf-map="${esc(n.notamId)}" class="text-[10.5px] font-bold text-sky-200 bg-sky-950/60 border border-sky-600 px-1.5 rounded">📍 지도 이동</button>` : ''}<span data-brf-caret class="ml-auto text-[10px] text-slate-500">${open ? '▾ 접기' : '▸ 펼치기'}</span></div>
               <div data-brf-line class="${open ? 'hidden' : ''}">${cd ? `<div class="text-[11px] text-teal-200 leading-snug line-clamp-1">📘 ${esc(cd.s)}</div>` : pre ? `<div class="text-[11px] text-emerald-200 leading-snug line-clamp-1">📗 ${esc(pre.s)}</div>` : ai ? `<div class="text-[11px] text-violet-200 leading-snug line-clamp-1">🤖 ${esc(ai.s)}</div>` : `<div class="mono text-[11px] text-slate-300 leading-snug line-clamp-1">${esc(line)}</div>`}</div>
             </div>
           </div>
-          <div class="${open ? '' : 'hidden'} px-2 pb-2 flex flex-col gap-1" data-brf-raw>${hotBtn(hk)}${cdChg ? `<div class="text-[11px] text-amber-300 font-bold">⚠ COAD 내용이 바뀌었습니다 — 저장 요약 없음 (AI 요약 대상)</div>` : ''}${cd ? coadBlock(cd) : pre ? preBlock(pre) : ai ? aiBlock(ai) : `<button type="button" data-ai-one="${esc(n.notamId)}" class="self-start px-2 py-0.5 rounded border border-violet-600/60 bg-violet-950/40 text-violet-200 text-[11px] font-bold" ${aiBusy ? 'disabled' : ''}>🤖 AI로 요약</button>`}${koHtml}<pre class="mono text-[10.5px] whitespace-pre-wrap break-words text-slate-200 bg-slate-900 rounded p-2">${esc(n.validity || '')}\n${brfHl(n)}</pre>${brfLegend(n)}${abbrPanel(n.rawText || n.etext)}</div>
+          <div class="${open ? '' : 'hidden'} px-2 pb-2 flex flex-col gap-1" data-brf-raw>${hotBtn(hk)}${cdChg ? `<div class="text-[11px] text-amber-300 font-bold">⚠ COAD 내용이 바뀌었습니다 — 저장 요약 없음 (AI 요약 대상)</div>` : ''}${cd ? coadBlock(cd) : pre ? preBlock(pre) : ai ? aiBlock(ai) : `<button type="button" data-ai-one="${esc(n.notamId)}" class="self-start px-2 py-0.5 rounded border border-violet-600/60 bg-violet-950/40 text-violet-200 text-[11px] font-bold" ${aiBusy ? 'disabled' : ''}>🤖 AI로 요약</button>`}${koHtml}<pre class="mono text-[10.5px] whitespace-pre-wrap break-words text-slate-200 bg-slate-900 rounded p-2">${esc(n.validity || '')}\n${brfCoordLink(brfHl(n), n.notamId)}</pre>${brfLegend(n)}${abbrPanel(n.rawText || n.etext)}</div>
         </div>`;
       };
       const groupTitle = (sec, code) => { const nm = getAirportNameInfo(code); return `${BRF_SEC[sec] || sec} · ${code}${sec === 'FIR' ? (FIR_NAMES[code] ? ' ' + FIR_NAMES[code] : '') : nm && nm.ko ? ' ' + nm.ko : ''}`; };
@@ -5041,8 +5044,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if ((b = t.closest('[data-brf-era-all]'))) { brfEraSel = b.dataset.brfEraAll === '1' ? null : new Set(); renderBriefing(); return; }
       if ((b = t.closest('[data-brf-map]'))) {
         const id = b.dataset.brfMap, a = airNotams.find(x => x.notamId === id) || airNotams.find(x => x.notamId.startsWith(id + ' · ') && routeCoordinates.length >= 2 && routeHitInfo(x.latlngs, false)) || airNotams.find(x => x.notamId.startsWith(id + ' · '));
-        if (a) gotoNotam(a); else showToast('지도에 표시된 도형이 없습니다'); return;
+        if (a) gotoNotam(a);
+        else { const nn = ofpOrdered.find(x => x.notamId === id), c = nn && brfCoordList(nn.rawText || nn.etext || '')[0]; if (c) gotoCoord(c[0], c[1], id); else showToast('지도에 표시된 도형이 없습니다'); }
+        return;
       }
+      if ((b = t.closest('[data-brf-coord]'))) { e.stopPropagation(); const [la, lo] = b.dataset.brfCoord.split(',').map(Number); gotoCoord(la, lo, b.dataset.brfCid, b.textContent); return; }
       if (t.closest('[data-brf-white]')) { brfShowWhite = true; $('brf-white').checked = true; renderBriefing(); return; }
       if ((b = t.closest('[data-brf-toggle]'))) {
         const card = b.closest('[data-brf-id]'), id = card.dataset.brfId, raw = card.querySelector('[data-brf-raw]');
@@ -6854,8 +6860,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <div class="text-xs text-slate-400 leading-tight" style="min-height:2.5em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc((nm && nm.en) || AIRPORT_EN[icao] || '-')}</div>
             ${hasStand ? `<div class="stand-tri-w" data-stand-tri="${role}"></div>` : ''}
           </div>
-          ${noTime ? '<div class="mt-1 h-[3.25rem]"></div>' : `<div class="mono text-sm font-bold text-white mt-1">${minutes != null ? formatMinutes(minutes) + 'Z' : '--'}</div>
-          <div class="mono text-[11px] text-amber-200 whitespace-nowrap">${lt ? `${lt.md} ${lt.hm} L` : '<span class="text-slate-500">현지시각 없음</span>'}</div>
+          ${noTime ? '<div class="mt-1 h-[3.75rem]"></div>' : `<div class="mono text-sm font-bold text-white mt-1">${minutes != null ? formatMinutes(minutes) + 'Z' : '--'}</div>
+          <div class="mono text-sm font-bold text-amber-200 whitespace-nowrap">${lt ? `${lt.md} ${lt.hm} L` : '<span class="text-slate-500">현지시각 없음</span>'}</div>
           ${lt ? `<div class="mono text-[10px] text-slate-400">${lt.utc}</div>` : ''}`}
           ${slot}
         </div>`;
@@ -6895,7 +6901,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
         </div>
         <div id="efb-perf"></div>
         <div id="mel-card"></div>
-        <div id="fms-wind"></div>
         <div class="flex flex-col gap-1.5">
           <div class="flex items-center justify-between gap-2 flex-wrap"><span class="text-[11px] font-bold text-slate-300">🌤️ 기상 · 기온</span><span class="flex items-center gap-2 text-[10px] text-slate-500">${wxLiveAt ? '실시간 ' + new Date(wxLiveAt).toISOString().slice(11, 16) + 'Z 조회' : ''}<button type="button" data-wx-refresh class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-sky-300 font-bold">🔄 실시간 조회</button></span></div>
           <div class="grid ${altnCode ? 'grid-cols-3' : 'grid-cols-2'} gap-2">
@@ -6905,13 +6910,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
           </div>
           ${renderWxRaw([info.dep, info.dest, altnCode])}
         </div>
+        <div id="fms-wind"></div>
         <div id="wx-ai"></div>
         <div class="pro-slim-hide grid grid-cols-3 gap-2">
           ${tile('순항고도', tocFl ? flTxt(tocFl) : '--', steps.length > 1 ? 'STEP ' + steps.map(flTxt).join(' → ') : '')}
           ${tile('예약 현황', pax ? `${pax.f + pax.c + pax.y}명` : '--', pax ? `F ${pax.f}/${pax.fc} · C ${pax.c}/${pax.cc} · Y ${pax.y}/${pax.yc}` : (pdfFlt ? 'OFP에 예약 정보 없음' : ''), 'text-emerald-300')}
           ${tile('RAMP OUT', fuelTxt(p.ramp), '')}
         </div>
-        <button type="button" data-jb-open class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg">📝 JOINT BRIEF 생성</button>
       </div>`;
       try { renderAcLive(); } catch (e) { }
       try { renderStands(); maybeFetchStands(); } catch (e) { console.warn(e); }
@@ -7327,6 +7332,37 @@ svg.leaflet-image-layer.leaflet-interactive path {
     $('thr-type').addEventListener('change', () => renderMap(false));
     $('thr-src').addEventListener('change', () => renderMap(false));
     $('map-osm').addEventListener('change', e => setOnlineMap(e.target.checked));
+
+    // ===== 4번 노탐 브리핑: 본문 좌표를 누르면 경로 지도의 그 위치로 이동 =====
+    // 형식: 343930.1N1351308.8E · 372645N1270652E · 250344.75N 1211338.96E · 3750N12650E (도·분·초 / 도·분)
+    const BRF_COORD_RE = /(?<![\dA-Z])(\d{2})(\d{2})(\d{2}(?:\.\d+)?)?([NS])\s?(\d{3})(\d{2})(\d{2}(?:\.\d+)?)?([EW])(?![\dA-Z])/g;
+    function brfCoordParse(m) {
+      if ((m[3] == null) !== (m[7] == null)) return null;   // 위도·경도 자릿수 형식이 다르면 좌표 아님
+      let la = +m[1] + +m[2] / 60 + (m[3] ? +m[3] / 3600 : 0), lo = +m[5] + +m[6] / 60 + (m[7] ? +m[7] / 3600 : 0);
+      if (+m[2] >= 60 || +m[6] >= 60 || la > 90 || lo > 180) return null;
+      if (m[4] === 'S') la = -la; if (m[8] === 'W') lo = -lo;
+      return [la, lo];
+    }
+    function brfCoordList(text) { const out = []; for (const m of String(text).matchAll(BRF_COORD_RE)) { const c = brfCoordParse(m); if (c) out.push(c); } return out; }
+    // 강조 HTML 안의 좌표 글자(태그가 섞이지 않은 부분)를 누를 수 있는 링크로
+    function brfCoordLink(html, id) {
+      return String(html).replace(BRF_COORD_RE, (...m) => { const c = brfCoordParse(m); return c ? `<span data-brf-coord="${c[0].toFixed(5)},${c[1].toFixed(5)}" data-brf-cid="${esc(id || '')}" class="brf-coord" title="지도에서 이 위치 보기">${m[0]}</span>` : m[0]; });
+    }
+    function gotoCoord(la, lo, id, label) {
+      if (!lmap) { showToast('지도가 아직 준비되지 않았습니다'); return; }
+      const a = id && airNotams.find(x => x.notamId === id || x.notamId.startsWith(id + ' · '));
+      const sh = a && a._sh || 0, ll = L.latLng(la, lo + sh);
+      const mapEl = $('map'), rc = mapEl.getBoundingClientRect();
+      if (rc.top < 0 || rc.bottom > window.innerHeight) mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      lmap.flyTo(ll, Math.max(lmap.getZoom(), 9), { duration: 0.8 });
+      lmap.once('moveend', () => {
+        const mk = L.circleMarker(ll, { radius: 7, color: '#f43f5e', weight: 3, fillColor: '#fda4af', fillOpacity: 0.9 }).addTo(lmap)
+          .bindPopup(`<b>${esc(id || '')}</b><br><span class="mono">${esc(label || '')}</span><br>${la.toFixed(4)}, ${lo.toFixed(4)}`).openPopup();
+        const ring = L.circleMarker(ll, { radius: 26, color: '#ffffff', weight: 3, dashArray: '4 4', fill: false, interactive: false }).addTo(lmap);
+        let k = 0; const t = setInterval(() => { k++; ring.setStyle({ opacity: k % 2 ? 0.2 : 1 }); if (k > 7) { clearInterval(t); lmap.removeLayer(ring); } }, 300);
+        setTimeout(() => { try { lmap.removeLayer(mk); } catch (e) { } }, 20000);
+      });
+    }
 
     // 2번 목록 → 지도의 해당 노탐 위치로 이동
     function gotoNotam(n) {
