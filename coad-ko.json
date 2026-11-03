@@ -1,5 +1,5 @@
 {
- "version": "2026-11-02 23:31Z",
+ "version": "2026-11-03 11:51Z",
  "note": "COAD 한국어 요약 (Claude 작성). 키 = 원문 정규화 해시. 원문이 바뀌면 키가 달라져 앱에서 \"변경됨\"으로 표시",
  "items": {
   "kk8nd1": {
@@ -497,6 +497,10 @@
   "v2hdzh": {
    "id": "RJBE COAD01/26",
    "s": "제방빙액(SAS 작업): TYPE 1(KILFROST DF PLUS), TYPE 4(KILFROST ABC-S PLUS)."
+  },
+  "wh6201": {
+   "id": "RJFF COAD01/26",
+   "s": "제방빙액(ANA 작업): TYPE 1(CLARIANT SAFEWING MP I LFD 80), TYPE 4(CLARIANT SAFEWING MP IV LAUNCH)."
   }
  }
 }
