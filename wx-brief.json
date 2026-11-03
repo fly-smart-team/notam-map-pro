@@ -1,6 +1,6 @@
 {
  "note": "OFP 기상 차트 분석 (Claude 작성). 키 = 콜사인|출발|도착|운항일(UTC). 비행 전날 OFP를 주면 추가",
- "version": "2026-11-02 23:32Z",
+ "version": "2026-11-03 00:19Z",
  "items": {
   "KAL476|VVTS|RKSI|2026-10-26": {
    "flight": "KE476 호찌민(VVTS) → 인천(RKSI)",
@@ -866,6 +866,187 @@
      "what": "경로를 따라 고도별 바람, 기온선(갈색), 대류권계면(검은 삼각형·빨간 별), 수직 윈드시어(VWS, 초록 6~9, 노랑 12, 빨강 15 이상 윤곽)를 보여줍니다. 왼쪽이 인천, 오른쪽이 고베이고 분홍 선이 계획 고도입니다.",
      "see": "VWS(초록 6~9) 층: ① FL280~FL330 인천~FOGEL(동해 쪽으로 갈수록 낮아짐), ② FL270 부근 인천~LANAT, ③ FL200~FL230 AGSUS~MIHOU, ④ FL80~FL100 LANAT~고베. 노랑·빨강(강한 VWS)은 없습니다. 대류권계면 FL360 부근.",
      "apply": "FL310(TORUS~KAE)은 ① 층 안이라 흔들림이 예상되고, FL350으로 올라가면 벗어납니다. FL310이 오래 이어지면 관제에 FL350 조기 상승을 요청합니다. 강하 중 ③·④ 층을 지날 때 흔들림에 대비합니다."
+    }
+   ]
+  },
+  "AAR1163|RKSI|RJBE|2026-11-03": {
+   "flight": "OZ1163 인천(RKSI) → 고베(RJBE) · HL8533",
+   "etd": "02:55Z",
+   "eta": "04:01Z",
+   "trip": "1시간 6분",
+   "made": "2026-11-03 00:19Z",
+   "source": "OFP 11~16쪽 — UKMET 고도별 바람·기온(FL300·FL340·FL390), WAFC Washington SIGWX, WNI 난기류(ASC), 경로 단면도",
+   "key": [
+    "출발 상승(이륙~약 21분, 인천~PILIT): 인천 부근 FL290에 강한 수직 윈드시어(VWS, 노랑 12), FL290~FL330에 VWS 층. SIGWX 청천난류(CAT) 구역(FL380 아래) 안에서 이륙하고, ASC도 인천~PILIT 노랑(MOD~SEV) — 이번 비행에서 가장 흔들리는 구간",
+    "순항 FL350(PILIT~MIHOU, 이륙 21~44분 후)은 VWS 층(FL320~FL330) 바로 위로 SR 0~3. 서풍 약 120~140KT 순풍",
+    "TOD 부근 MIHOU~고베 FL340~FL360에 VWS 층 — 강하 시작(이륙 약 45분 후, 착륙 약 21분 전)부터 흔들림 가능. 강하 중 FL200 부근, 고베 접근 FL50~FL70에도 VWS",
+    "날씨 양호: 인천 출발 CAVOK(남풍 10KT), 고베 WNI TAF(참고용) 북동풍 7KT 9999 FEW030, 교체 나고야·간사이도 9999",
+    "11/3 0800Z까지 인천 FTGS(Follow the Greens) 사용 불가 — 지상 이동은 관제 지시로"
+   ],
+   "overall": [
+    {
+     "t": "이륙·상승 (02:55Z~03:16Z, 인천~PILIT)",
+     "s": "인천 TAF 03Z 이후 남풍 10KT CAVOK. 상승 중 FL290 부근 강한 VWS(노랑)와 FL290~FL330 VWS 층을 지나고, SIGWX CAT 구역·ASC 노랑 안입니다. TOC 후 FL330→FL340→FL350으로 올라가는 동안 좌석벨트 사인 유지."
+    },
+    {
+     "t": "동해 FL350 (PILIT~LANAT, 이륙 21~34분 후)",
+     "s": "VWS 층 바로 위라 OFP SR 2~3입니다. ESNEG~LANAT ASC 일부 노랑이라 가벼운 흔들림이 남을 수 있습니다."
+    },
+    {
+     "t": "동해 남부~혼슈 (LANAT~MIHOU, 이륙 34~44분 후)",
+     "s": "SR 0~2로 가장 안정적입니다. 순풍 약 120KT. 객실 서비스 구간입니다."
+    },
+    {
+     "t": "강하·접근 (TOD~고베, 착륙 약 21분 전~착륙)",
+     "s": "TOD 부근 FL340~FL360에 VWS 층, 강하 중 FL200 부근과 FL50~FL70에도 VWS가 있습니다. 고베는 약한 바람에 시정 양호합니다."
+    }
+   ],
+   "crew": {
+    "wxKo": "출발·도착 공항 날씨는 좋고, 비행 중 소나기구름은 예보되지 않았습니다.",
+    "wxEn": "Good weather at departure and arrival, no thunderstorms forecast en route.",
+    "enrouteKo": "이륙 후 약 20분까지 상승 중 보통 정도의 흔들림이 있고, 이륙 약 35분까지는 가벼운 흔들림이 남을 수 있습니다. 그 뒤 착륙 약 20분 전까지는 비교적 안정적이며, 강하하면서 다시 가볍게 흔들릴 수 있습니다.",
+    "enrouteEn": "Moderate turbulence during the climb until about 20 minutes after takeoff, with light bumps possible until about 35 minutes. Fairly smooth after that until about 20 minutes before landing, then light bumps possible during descent.",
+    "turbKo": "이륙 후 약 20분까지 보통 정도의 흔들림이 예상됩니다. 객실 서비스는 이륙 약 20분 후부터 시작해 착륙 약 20분 전까지 마쳐 주시기 바랍니다.",
+    "turbEn": "Moderate turbulence expected until about 20 minutes after takeoff. Please start the service about 20 minutes after takeoff and finish it by about 20 minutes before landing."
+   },
+   "charts": [
+    {
+     "page": 11,
+     "title": "고도별 바람·기온 FL300 (300hPa)",
+     "valid": "11/03 03:00Z",
+     "what": "UKMET 예보 모델의 바람(바브)과 기온(°C) 차트입니다. 상승·강하 중 지나는 층입니다. 깃 하나 10KT, 삼각형 50KT.",
+     "see": "경로 전체 서풍 강풍.",
+     "apply": "상승·강하 중 바람 변화가 커서 속도 변동에 대비합니다."
+    },
+    {
+     "page": 12,
+     "title": "고도별 바람·기온 FL340 (250hPa)",
+     "valid": "11/03 03:00Z",
+     "what": "UKMET 예보 모델의 바람(바브)과 기온(°C) 차트입니다. 순항 고도와 가장 가까운 층입니다. 깃 하나 10KT, 삼각형 50KT.",
+     "see": "FL350 기준 서풍 약 270°/115~140KT(OFP 바람 요약), 동쪽으로 갈수록 약해집니다.",
+     "apply": "강한 순풍으로 비행시간이 짧습니다."
+    },
+    {
+     "page": 13,
+     "title": "고도별 바람·기온 FL390 (200hPa)",
+     "valid": "11/03 03:00Z",
+     "what": "UKMET 예보 모델의 바람(바브)과 기온(°C) 차트입니다. 순항 고도 위층 참고용입니다. 깃 하나 10KT, 삼각형 50KT.",
+     "see": "대류권계면은 단면도상 FL340~FL350 부근(검은 삼각형)으로 순항 고도와 거의 같습니다.",
+     "apply": "대류권계면 부근이라 상승 여유는 작습니다."
+    },
+    {
+     "page": 14,
+     "title": "SIGWX 중요 기상 (FL250~FL630)",
+     "valid": "11/03 06:00Z",
+     "what": "세계공역예보센터(Washington)의 고층 중요 기상 차트입니다. 파란 선 = 제트기류, 빨간 점선 = 청천난류(CAT) 구역(380/XXX = FL250 아래~FL380), 분홍 점선 = 대류권계면 등 경계.",
+     "see": "CB 구역은 없습니다. 서해·인천~EGOBA 부근이 CAT 구역 안입니다. 제트기류는 북쪽(FL340)과 남쪽(FL430) 멀리 있어 경로와 만나지 않습니다.",
+     "apply": "출발 상승 중 청천난류 가능성. 유효 시각(06Z)이 비행보다 늦어 참고용입니다."
+    },
+    {
+     "page": 15,
+     "title": "난기류 예상 ASC (FL180~FL450)",
+     "valid": "11/03 03:00Z",
+     "what": "웨더뉴스(WNI) 난기류 예상 차트입니다. 하늘색 = MOD, 노랑 = MOD~SEV, 빨강 = SEV. FL180~FL450 사이의 가장 강한 값을 겹쳐 보여줍니다(고도별 판단은 단면도로).",
+     "see": "인천~PILIT와 ESNEG~LANAT 일부 노랑, 나머지는 하늘색. 경로 위 SEV(빨강)는 없습니다(인천 북쪽 멀리 빨강).",
+     "apply": "위치 참고용입니다. 상승 구간 흔들림은 단면도 VWS(FL290 강함)와 일치합니다."
+    },
+    {
+     "page": 16,
+     "title": "경로 단면도 (바람·기온·수직 윈드시어)",
+     "valid": "11/03 03:00Z",
+     "what": "경로를 따라 고도별 바람, 기온선(갈색), 대류권계면(검은 삼각형·빨간 별), 수직 윈드시어(VWS, 초록 6~9, 노랑 12, 빨강 15 이상 윤곽)를 보여줍니다. 왼쪽이 인천, 오른쪽이 고베, 분홍 선이 계획 고도입니다.",
+     "see": "VWS 층: FL290 부근 인천(노랑 12, 강함), FL290~FL330 인천~MIHOU(여러 겹), FL360~FL370 인천~TORUS·AGSUS~KABKI, FL340~FL360 MIHOU~고베, FL200~FL210 TOC~KABKI, FL80~FL100 ESNEG~KABKI, FL50~FL70 YUBAR~고베.",
+     "apply": "상승 중 FL290~FL330을 지날 때 가장 흔들립니다. FL350은 층 사이라 비교적 안정적이고, TOD 부근 FL340~FL360 층을 지나며 강하가 시작됩니다."
+    }
+   ]
+  },
+  "AAR1153|RJBE|RKSI|2026-11-03": {
+   "flight": "OZ1153 고베(RJBE) → 인천(RKSI) · HL8533",
+   "etd": "06:00Z",
+   "eta": "07:46Z",
+   "trip": "1시간 46분",
+   "made": "2026-11-03 00:19Z",
+   "source": "OFP 9~14쪽 — UKMET 고도별 바람·기온(FL300·FL340·FL390), WAFC Washington SIGWX, WNI 난기류(ASC), 경로 단면도",
+   "key": [
+    "전 구간 비교적 안정: 순항 FL340(이륙 약 17~86분 후) OFP SR 0~2, 단면도상 FL340에 수직 윈드시어(VWS) 없음",
+    "인천 강하 중 FL260~FL300 VWS 층(TOD~ELAPI, 착륙 약 20~14분 전), ASC 인천~CUN 노랑(MOD~SEV), SIGWX 서해 청천난류(CAT) 구역 안으로 들어감",
+    "고베 상승 중 STAGE~TOC 아래 FL80~FL100 VWS(약함). 맞바람 약 100~130KT로 비행시간 1시간 46분",
+    "날씨 양호: 고베 WNI TAF(참고용) 07Z부터 서풍 7KT 9999, 인천 도착 서풍 6KT CAVOK, 교체 김포 CAVOK(14R/32L은 0800Z까지 폐쇄)"
+   ],
+   "overall": [
+    {
+     "t": "이륙·상승 (06:00Z~06:17Z, 고베~TOC)",
+     "s": "고베 바람 약하고 시정 양호. 단면도상 FL80~FL100(GUMID~STAGE 부근)에 약한 VWS가 있습니다."
+    },
+    {
+     "t": "동해·한반도 남부 순항 FL340 (TOC~GUKDO, 이륙 17~74분 후)",
+     "s": "OFP SR 0~2, VWS 없음, ASC도 대부분 하늘색(MOD)이거나 빈칸입니다. 맞바람 약 100~130KT. 객실 서비스 구간입니다."
+    },
+    {
+     "t": "서해안~TOD (GUKDO~TOD, 이륙 74~86분 후, 착륙 약 32~20분 전)",
+     "s": "SR 0~1. ASC 노랑 구역(CUN~인천) 위로 들어갑니다. 가벼운 흔들림에 대비합니다."
+    },
+    {
+     "t": "강하·접근 (TOD~인천, 착륙 약 20분 전~착륙)",
+     "s": "FL300~FL260 VWS 층과 SIGWX CAT 구역을 지나므로 강하 초반 흔들림 가능. 인천은 서풍 6KT CAVOK로 양호합니다."
+    }
+   ],
+   "crew": {
+    "wxKo": "출발·도착 공항 날씨는 좋고, 비행 중 소나기구름은 예보되지 않았습니다.",
+    "wxEn": "Good weather at departure and arrival, no thunderstorms forecast en route.",
+    "enrouteKo": "순항 중에는 비교적 안정적입니다. 착륙 약 30분 전부터 가벼운 흔들림이 있을 수 있고, 착륙 약 20분 전 강하를 시작하면서 조금 흔들릴 수 있습니다.",
+    "enrouteEn": "Fairly smooth during cruise. Light bumps possible from about 30 minutes before landing, and some turbulence as we start the descent about 20 minutes before landing.",
+    "turbKo": "큰 흔들림은 예상되지 않습니다. 객실 서비스는 이륙 약 20분 후부터 시작해 착륙 약 30분 전까지 마쳐 주시기 바랍니다.",
+    "turbEn": "No significant turbulence expected. Please start the service about 20 minutes after takeoff and finish it by about 30 minutes before landing."
+   },
+   "charts": [
+    {
+     "page": 9,
+     "title": "고도별 바람·기온 FL300 (300hPa)",
+     "valid": "11/03 06:00Z",
+     "what": "UKMET 예보 모델의 바람(바브)과 기온(°C) 차트입니다. 상승·강하 중 지나는 층입니다. 깃 하나 10KT, 삼각형 50KT.",
+     "see": "경로 전체 서풍 강풍(맞바람).",
+     "apply": "인천 강하 중 바람 변화로 속도 변동에 대비합니다."
+    },
+    {
+     "page": 10,
+     "title": "고도별 바람·기온 FL340 (250hPa)",
+     "valid": "11/03 06:00Z",
+     "what": "UKMET 예보 모델의 바람(바브)과 기온(°C) 차트입니다. 순항 고도와 같은 층입니다. 깃 하나 10KT, 삼각형 50KT.",
+     "see": "FL340 서풍 약 270°/100~130KT, 서쪽(인천)으로 갈수록 강해집니다(OFP 맞바람 성분 -72~-120KT).",
+     "apply": "맞바람이 강해 연료·시간 확인. 바람 변화가 완만해 순항은 안정적입니다."
+    },
+    {
+     "page": 11,
+     "title": "고도별 바람·기온 FL390 (200hPa)",
+     "valid": "11/03 06:00Z",
+     "what": "UKMET 예보 모델의 바람(바브)과 기온(°C) 차트입니다. 순항 고도 위층 참고용입니다. 깃 하나 10KT, 삼각형 50KT.",
+     "see": "대류권계면은 단면도상 FL330~FL340 부근으로 순항 고도와 거의 같습니다.",
+     "apply": "상승 여유는 작습니다."
+    },
+    {
+     "page": 12,
+     "title": "SIGWX 중요 기상 (FL250~FL630)",
+     "valid": "11/03 06:00Z",
+     "what": "세계공역예보센터(Washington)의 고층 중요 기상 차트입니다. 파란 선 = 제트기류, 빨간 점선 = 청천난류(CAT) 구역(380/XXX = FL250 아래~FL380), 분홍 점선 = 대류권계면 등 경계.",
+     "see": "CB 구역은 없습니다. 서해·인천~BASEM 부근이 CAT 구역 안입니다. 제트기류는 북쪽·남쪽 멀리 있습니다.",
+     "apply": "인천 강하 구간에서 청천난류 가능성에 대비합니다."
+    },
+    {
+     "page": 13,
+     "title": "난기류 예상 ASC (FL180~FL450)",
+     "valid": "11/03 07:00Z",
+     "what": "웨더뉴스(WNI) 난기류 예상 차트입니다. 하늘색 = MOD, 노랑 = MOD~SEV, 빨강 = SEV. FL180~FL450 사이의 가장 강한 값을 겹쳐 보여줍니다(고도별 판단은 단면도로).",
+     "see": "인천~CUN 노랑, ELAPI~BULGA 일부 하늘색, BULGA~YAKMO 대부분 빈칸(흔들림 없음), 고베 부근 하늘색. 경로 위 SEV는 없습니다.",
+     "apply": "위치 참고용입니다. FL340에는 VWS가 없어 노랑 구역은 강하 중 FL300~FL260 층에 해당합니다."
+    },
+    {
+     "page": 14,
+     "title": "경로 단면도 (바람·기온·수직 윈드시어)",
+     "valid": "11/03 06:00Z",
+     "what": "경로를 따라 고도별 바람, 기온선(갈색), 대류권계면(검은 삼각형·빨간 별), 수직 윈드시어(VWS, 초록 6~9, 노랑 12, 빨강 15 이상 윤곽)를 보여줍니다. 오른쪽이 고베, 왼쪽이 인천이고 분홍 선이 계획 고도(FL340)입니다.",
+     "see": "VWS 층(초록 6~9) 두 개뿐: FL260~FL300 인천~ELAPI, FL80~FL100 STAGE~TOC. 노랑·빨강 없음. 대류권계면 FL330~FL340.",
+     "apply": "순항 FL340은 VWS가 없어 안정적입니다. 인천 강하 중 FL300~FL260을 지날 때 흔들림에 대비합니다."
     }
    ]
   }
