@@ -834,7 +834,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/03 22:10 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/04 11:15 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 제방액 검색기</button>
@@ -6236,7 +6236,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const blank = '<span class="jb-blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>';
       const h = [];
       const E = jbEnMap({ p, w, pax, trip, altn }), en = k => jbEnLine(E, k);
-      const WB = (typeof wxOf === 'function' && wxOf()) || null, WC = WB && WB.crew;
+      const WB = (typeof wxOf === 'function' && wxOf()) || null, WC0 = WB && WB.crew;
+      // 객실 서비스 조언 앞에 총 비행 시간을 붙임 (OFP 비행시간)
+      const WC = WC0 && (() => { const tm = trip != null ? trip : null; if (tm == null) return WC0; const H = Math.floor(tm / 60), M = tm % 60;
+        const ko = `총 비행 시간 ${H ? H + '시간 ' : ''}${M}분 — `, en = `Total flight time ${H ? H + ' hr ' : ''}${M} min. `;
+        return { ...WC0, turbKo: /^총 비행 시간/.test(WC0.turbKo || '') ? WC0.turbKo : ko + (WC0.turbKo || ''), turbEn: /^Total flight time/.test(WC0.turbEn || '') ? WC0.turbEn : en + (WC0.turbEn || '') }; })();
       if (WC) { E.turb = [[WC.turbKo, WC.turbEn]]; }
       // Enroute = 경로 설명 (주요 도시만), Enroute Weather = 이륙 후·착륙 전 시간 기준 기상
       const RB = jbRouteBrief();
