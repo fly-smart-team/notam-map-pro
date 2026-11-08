@@ -843,7 +843,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 00:10 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 00:40 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 제방액 검색기</button>
@@ -7593,7 +7593,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     // 그리기: 폭은 미터 기준으로 확대에 맞춰 바뀜
     // OSM 유도로 + index.json names(캡처 대조로 찾은 이름)로 이름 없는 유도로 채움
     function ammWays(A, spec) {
-      const k = Math.cos(37.5 * Math.PI / 180), XY = p => [p[1] * 111320 * k, p[0] * 110540];
+      const k = Math.cos(((A.twy[0] && ammDec(A.twy[0][2])[0][0]) || 37.5) * Math.PI / 180), XY = p => [p[1] * 111320 * k, p[0] * 110540];
       const TW = A.twy.map(t => ({ k: t[0] ? 'tl' : 't', tl: t[0], ref: t[1], pts: ammDec(t[2]) })); TW.extraLbl = [];
       const len = p => { let s = 0; for (let i = 1; i < p.length; i++) { const a = XY(p[i - 1]), b = XY(p[i]); s += Math.hypot(a[0] - b[0], a[1] - b[1]); } return s; };
       ((spec && spec.names) || []).forEach(([ref, la, lo]) => {
@@ -7645,6 +7645,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       // 핫스폿 (index.json: 두 유도로·활주로가 만나는 곳)
       const allW = [...TW.map(t => ({ k: 't', ref: t.ref, pts: t.pts })), ...RW.map(r => ({ k: 'r', ref: r.ref, pts: r.pts }))];
       (spec.hs || []).forEach(h => {
+        if (h.line) { L.polyline(h.line, { renderer: R, color: '#ea580c', weight: 7, opacity: .85, lineCap: 'round' }).bindPopup(`<b>${esc(h.id)}</b> 핫스폿 (AMM 캡처 대조 · 위치 근사)`).addTo(grp); lbl([(h.line[0][0] + h.line[1][0]) / 2, (h.line[0][1] + h.line[1][1]) / 2], esc(h.id), 'amm-hs'); return; }
         if (h.pt) { L.circle(h.pt, { renderer: R, radius: h.r || 150, color: '#ea580c', weight: 2.5, fillColor: '#7c2d12', fillOpacity: .35 }).bindPopup(`<b>${esc(h.id)}</b> 핫스폿 (AMM 캡처 대조 · 위치 근사)`).addTo(grp); lbl([h.pt[0] + (h.r || 150) / 111000 * 0.75, h.pt[1]], esc(h.id), 'amm-hs'); return; }
         const chs = twyChains(allW, h.at[0]), T = twyTargets(allW, h.at[1]); let best = null;
         chs.forEach(ch => { const J = twyJunction(ch, T, k); if (J.d < 60 && (!best || J.d < best.J.d)) best = { ch, J }; });
@@ -7673,7 +7674,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       m.style.display = 'flex';
       m.querySelector('[data-twy-title]').textContent = `🛬 ${icao} 유도로 노탐 지도`;
       const list = m.querySelector('[data-twy-list]'); list.innerHTML = '불러오는 중…';
-      let D; try { D = await twyLoad(icao); } catch (e) { list.innerHTML = `<div style="color:#fca5a5">${esc(icao)} 유도로 데이터가 아직 없습니다.</div>`; return; }
+      let D; try { D = await twyLoad(icao); } catch (e) { if (TWY.idx[icao] && TWY.idx[icao].amm) D = { ways: [], lat0: (TWY.idx[icao].amm.bbox[1] + TWY.idx[icao].amm.bbox[3]) / 2 }; else { list.innerHTML = `<div style="color:#fca5a5">${esc(icao)} 유도로 데이터가 아직 없습니다.</div>`; return; } }
       m.querySelector('[data-twy-sub]').textContent = `중심선 © OpenStreetMap · ${(TWY.idx[icao] && TWY.idx[icao].date) || ''}`;
       if (!TWY.map) {
         TWY.map = L.map('twy-map', { zoomControl: true, attributionControl: true, zoomSnap: 0.5, maxZoom: 19 });
