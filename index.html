@@ -7554,7 +7554,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         (fx.stands || []).forEach(addSt); out.partial = false; return out;
       }
       for (const it of C.items) {
-        if (it.stand) { if (addSt(it.stand).length) out.desc.push(`주기장 ${it.stand}`); else out.miss.push(`주기장 ${it.stand}`); continue; }
+        if (it.stand) { if (addSt(it.stand).length) (out.stOk = out.stOk || []).push(it.stand); else out.miss.push(`주기장 ${it.stand}`); continue; }
         const chains = twyChains(D.ways, it.ref);
         if (!chains.length) { out.miss.push(it.ref); continue; }
         if (it.rwy) {   // 활주로 접속부 ±150m (리드 온·오프 등)
@@ -7575,6 +7575,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           if (hit) { out.desc.push(`${it.ref} · 주기장 ${C.stands.join(', ')} 인근`); out.partial = false; } else { chains.forEach(ch => out.segs.push(ch)); out.desc.push(`${it.ref} 일부 구간`); }
         } else { chains.forEach(ch => out.segs.push(ch)); out.desc.push(C.partial ? `${it.ref} 일부 구간` : `${it.ref} 전체`); }
       }
+      if (out.stOk) out.desc.unshift(`주기장 ${out.stOk.join(', ')}`);
       return out;
     }
     const TWY_KIND = { closed: ['폐쇄', '#ef4444', null], restrict: ['사용 제한', '#ef4444', '12 9'], light: ['등화·표지', '#f59e0b', '4 8'], info: ['정보', '#38bdf8', '2 8'] };
