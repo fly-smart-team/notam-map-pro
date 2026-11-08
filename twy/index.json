@@ -817,7 +817,8 @@
        33.9486,
        -118.42672
       ],
-      "r": 50
+      "r": 50,
+      "note": "Runway incursion risk. Rwy 24L at Twys V, W and Y. 평행 활주로 사이 거리가 짧음 — 24R 착륙 후 지상 이동 속도 관리, 24L 정지 위치(holding position)에서 정지 예상"
      },
      {
       "id": "HS1",
@@ -825,7 +826,8 @@
        33.94887,
        -118.4245
       ],
-      "r": 50
+      "r": 50,
+      "note": "Runway incursion risk. Rwy 24L at Twys V, W and Y. 평행 활주로 사이 거리가 짧음 — 24R 착륙 후 지상 이동 속도 관리, 24L 정지 위치(holding position)에서 정지 예상"
      },
      {
       "id": "HS1",
@@ -833,7 +835,17 @@
        33.94914,
        -118.42243
       ],
-      "r": 50
+      "r": 50,
+      "note": "Runway incursion risk. Rwy 24L at Twys V, W and Y. 평행 활주로 사이 거리가 짧음 — 24R 착륙 후 지상 이동 속도 관리, 24L 정지 위치(holding position)에서 정지 예상"
+     },
+     {
+      "id": "HS2",
+      "pt": [
+       33.93735,
+       -118.38289
+      ],
+      "r": 45,
+      "note": "Runway incursion risk. Rwy 25L at Twy F. 허가 없이 25L 정지 위치를 넘는 사례 — A에서 F로 돌라는 지시를 받으면 25L 앞 정지 예상"
      },
      {
       "id": "HS3",
@@ -841,10 +853,12 @@
        33.93613,
        -118.38308
       ],
-      "r": 62
+      "r": 45,
+      "note": "Surface incident risk. Twy F from Twy A. 관제가 F의 중간 정지 위치(intermediate holding position)에서 정지를 자주 지시 — 허가 없이 F로 진입하지 말 것"
      }
     ],
-    "note": "OSM + 사용자 제공 AMM 캡처(2026-11-08) 대조. 공식 기준: FAA Airport Diagram / Hot Spots (KLAX)"
+    "note": "OSM + 사용자 제공 AMM 캡처(2026-11-08) 대조. 공식 기준: FAA Airport Diagram / Hot Spots (KLAX)",
+    "src": "FAA Chart Supplement/d-TPP Hot Spot (SW-3, 2026)"
    }
   }
  },
