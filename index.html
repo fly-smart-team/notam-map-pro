@@ -844,11 +844,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 07:40 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 08:10 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
-        <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
-        <button id="btn-wind" type="button" title="바람 제한치 계산 · 활주로 상태(Braking Action) — FOM 4.5/5.8 · FCRM 1.17 · FCOM RCAM" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🌬 바람 제한</button>
-        <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 제방액 검색기</button>
+        <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물</button>
+        <button id="btn-wind" type="button" title="바람 제한치 계산 · 활주로 상태(Braking Action) — FOM 4.5/5.8 · FCRM 1.17 · FCOM RCAM" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🌬 Wind</button>
+        <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 ANTI/D-ICING</button>
         <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
         <button id="btn-slim" type="button" title="간단히 보기 / 전체 보기" class="h-7 px-1.5 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-[11px] border border-slate-700">▤ 간단히</button>
         <button id="btn-claude-set" type="button" title="Claude 연결 주소 바꾸기" class="w-7 h-7 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-800 text-xs">⚙</button>
@@ -7932,6 +7932,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         if (!m.classList.contains('hidden')) { const u = url(); $('wind-frame').src = u; $('wind-pop').href = u; }
       });
       $('wind-close').addEventListener('click', () => $('wind-menu').classList.add('hidden'));
+      $('wind-pop').addEventListener('click', e => { e.preventDefault(); const w = window.open(url(), '_blank'); if (!w) location.href = url(); });   // 스크립트로 연 창이라야 '닫기'(window.close)가 됨
     })();
 
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
