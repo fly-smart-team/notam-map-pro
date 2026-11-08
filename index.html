@@ -844,7 +844,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 06:10 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 06:40 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 제방액 검색기</button>
@@ -7651,12 +7651,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const k = Math.cos(((A.twy[0] && ammDec(A.twy[0][2])[0][0]) || 37.5) * Math.PI / 180), XY = p => [p[1] * 111320 * k, p[0] * 110540];
       const TW = A.twy.map(t => ({ k: t[0] ? 'tl' : 't', tl: t[0], ref: t[1], pts: ammDec(t[2]) })); TW.extraLbl = [];
       ((spec && spec.lines) || []).forEach(([ref, pts]) => TW.push({ k: 't', tl: 0, ref, pts }));   // OSM에 선이 없는 유도로(캡처 대조로 추가)
+      const segD = (P, w) => { let b = 1e9; for (let i = 0; i + 1 < w.pts.length; i++) { const a = XY(w.pts[i]), c = XY(w.pts[i + 1]), dx = c[0] - a[0], dy = c[1] - a[1], L2 = dx * dx + dy * dy || 1e-9; let u = ((P[0] - a[0]) * dx + (P[1] - a[1]) * dy) / L2; u = Math.max(0, Math.min(1, u)); b = Math.min(b, Math.hypot(a[0] + u * dx - P[0], a[1] + u * dy - P[1])); } return b; };
+      // AIP 지상이동 차트와 이름이 다른(OSM이 옛 이름) 유도로: [새 이름, 위도, 경도, OSM 옛 이름] → 그 근처(60m) 옛 이름 선을 새 이름으로
+      ((spec && spec.ren) || []).forEach(([ref, la, lo, old]) => { const P = XY([la, lo]); TW.forEach(w => { if (w.ref === old && !w._ren && segD(P, w) <= 60) { w.ref = ref; w._ren = 1; } }); });
       const len = p => { let s = 0; for (let i = 1; i < p.length; i++) { const a = XY(p[i - 1]), b = XY(p[i]); s += Math.hypot(a[0] - b[0], a[1] - b[1]); } return s; };
-      ((spec && spec.names) || []).forEach(([ref, la, lo]) => {
+      ((spec && spec.names) || []).forEach(([ref, la, lo, force]) => {
         const P = XY([la, lo]); let best = null;
         TW.forEach(w => { if (w.tl && !w.ref) return; for (let i = 0; i + 1 < w.pts.length; i++) { const a = XY(w.pts[i]), b = XY(w.pts[i + 1]), dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy || 1e-9; let u = ((P[0] - a[0]) * dx + (P[1] - a[1]) * dy) / L2; u = Math.max(0, Math.min(1, u)); const d = Math.hypot(a[0] + u * dx - P[0], a[1] + u * dy - P[1]); if (!best || d < best.d) best = { d, w, p: [w.pts[i][0] + (w.pts[i + 1][0] - w.pts[i][0]) * u, w.pts[i][1] + (w.pts[i + 1][1] - w.pts[i][1]) * u] }; } });
         if (!best || best.d > 45) return;
-        if (!best.w.ref && len(best.w.pts) < 900) best.w.ref = ref;
+        if (!best.w.ref && (force || len(best.w.pts) < 900)) best.w.ref = ref;
         else if (best.w.ref !== ref) TW.extraLbl.push({ ref, p: best.p });
       });
       const all = TW.concat(A.rwy.map(r => ({ k: 'r', ref: r[0], pts: ammDec(r[2]) }))); all.extraLbl = TW.extraLbl; return all;
@@ -7751,6 +7754,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         amm = forceAmm ? null : ammCached(icao);
         if (!amm && navigator.onLine !== false) { try { amm = await ammFetch(icao, spec.bbox, (a, b) => { list.innerHTML = `고해상도 공항 지도 받는 중… ${a}/${b} (처음 한 번만, 이후 오프라인 사용)`; }); } catch (e) { amm = ammCached(icao); showToast('고해상도 지도를 받지 못했습니다 — 기본 지도로 표시'); } }
       }
+      if (amm && spec.st) { amm.st = { ...(amm.st || {}) }; spec.st.forEach(([r, la, lo]) => { if (!amm.st[r]) amm.st[r] = [la, lo]; }); }   // OSM에 없는 주기장(AIP 차트 대조)
       map.getContainer().style.background = amm ? '#070b14' : '#0b1220';
       if (amm) { try { const st = {}; Object.entries(amm.st || {}).forEach(([r, p]) => { st[stNorm(r)] = p; }); D = { ways: ammWays(amm, spec).filter(w => !w.tl || w.ref).map(w => ({ k: w.k === 'r' ? 'r' : 't', ref: w.ref, pts: w.pts })), lat0: D.lat0, st }; } catch (e) { } if (map.hasLayer(TWY.tile)) map.removeLayer(TWY.tile); const r = ammDraw(map, TWY.layers, amm, spec); allB.extend(r.bounds); m.querySelector('[data-twy-sub]').innerHTML = `고해상도 (AMM 형식) · © OpenStreetMap · ${esc(amm.date)} 받음 <button type="button" data-twy-reamm="${esc(icao)}" style="margin-left:6px;color:#7dd3fc;text-decoration:underline">↻ 새로 받기</button>`; }
       else { if (!map.hasLayer(TWY.tile)) TWY.tile.addTo(map); }
