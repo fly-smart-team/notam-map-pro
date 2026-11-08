@@ -83,7 +83,7 @@
       <label>OAT °C (다져진 눈) <input id="oat" inputmode="decimal" placeholder="예: -10"></label>
       <label>보고된 Braking Action <select id="ba">
         <option value="">—</option><option value="5">Good</option><option value="4">Good to Medium</option><option value="3">Medium</option><option value="2">Medium to Poor</option><option value="1">Poor</option><option value="0">Less than Poor (Nil)</option></select></label>
-      <label>RWYCC (TDZ / MID / END) <span style="display:flex;gap:4px;align-items:center"><input id="cc1" class="dig" data-max="1" data-cc inputmode="numeric" pattern="[0-9]*" maxlength="1" value="5" style="text-align:center"><b style="color:var(--mute)">/</b><input id="cc2" class="dig" data-max="1" data-cc inputmode="numeric" pattern="[0-9]*" maxlength="1" value="5" style="text-align:center"><b style="color:var(--mute)">/</b><input id="cc3" class="dig" data-max="1" data-cc inputmode="numeric" pattern="[0-9]*" maxlength="1" value="5" style="text-align:center"></span></label>
+      <label>RWYCC (TDZ / MID / END) <span style="display:flex;gap:4px;align-items:center"><select id="cc1" style="text-align:center"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option><option value="0">0</option></select><b style="color:var(--mute)">/</b><select id="cc2" style="text-align:center"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option><option value="0">0</option></select><b style="color:var(--mute)">/</b><select id="cc3" style="text-align:center"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option><option value="0">0</option></select></span></label>
       <label>Mu (μ) <input id="mu" inputmode="decimal" placeholder="예: 0.32"></label>
       <label>RCR <input id="rcr" inputmode="numeric" placeholder="예: 11"></label>
     </div>
@@ -494,8 +494,7 @@ function renderTables(o) {
 
 document.querySelectorAll('input.dig').forEach(el => el.addEventListener('input', () => {
   let v = el.value.replace(/\D/g, '').slice(0, +el.dataset.max);
-  if (el.dataset.cc !== undefined && v && +v > 6) v = '6';
-  if (el.value !== v) el.value = v;
+    if (el.value !== v) el.value = v;
   if (v.length === +el.dataset.max) { const all = [...document.querySelectorAll('input.dig')], n = all[all.indexOf(el) + 1]; if (n && n.parentElement === el.parentElement) n.focus(); }
 }));
 $('cond').value = 'DRY';
