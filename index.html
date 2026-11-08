@@ -843,7 +843,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 01:50 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 02:00 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 제방액 검색기</button>
@@ -7614,14 +7614,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (A.aero) area(ammDec(A.aero), { fillColor: '#111a2b' });
       A.apron.forEach(s => area(ammDec(s), { fillColor: '#334155' }));
       const AW = ammWays(A, spec), TW = AW.filter(w => w.k !== 'r'); TW.extraLbl = AW.extraLbl;
-      const PV = TW.filter(t => !t.tl || t.ref);   // 이름 없는 taxilane = 주기장 유도선(가는 노란 선만)
+      const isArea = t => t.pts.length > 3 && Math.abs(t.pts[0][0] - t.pts[t.pts.length - 1][0]) < 1e-6 && Math.abs(t.pts[0][1] - t.pts[t.pts.length - 1][1]) < 1e-6;
+      TW.filter(isArea).forEach(t => area(t.pts, { fillColor: '#4b6784' }));   // 면으로 그려진 유도로(일부 공항)는 면으로
+      const PV = TW.filter(t => (!t.tl || t.ref) && !isArea(t));   // 이름 없는 taxilane = 주기장 유도선(가는 노란 선만)
       PV.forEach(t => line(t.pts, (t.tl ? 16 : 23) + 6, { color: '#2e4256' }, 3));
       PV.forEach(t => line(t.pts, t.tl ? 16 : 23, { color: '#6b8bab' }, 2));
       A.stop.forEach(s => area(ammDec(s), { fillColor: '#3b3f46' }));
       const RW = A.rwy.map(r => ({ ref: r[0], w: r[1], pts: ammDec(r[2]) }));
       (TW.extraLbl || []).forEach(x => lbl(x.p, esc(x.ref), 'amm-tw'));
       RW.forEach(r => { line(r.pts, r.w + 8, { color: '#e5e7eb' }, 5); line(r.pts, r.w, { color: '#23272e' }, 4); line(r.pts, 1, { color: '#f8fafc', dashArray: '14 12', weight: 1.5 }, 1.5); });
-      TW.forEach(t => L.polyline(t.pts, { renderer: R, interactive: false, color: '#facc15', weight: 1.2, opacity: .95 }).addTo(grp));
+      TW.filter(t => !isArea(t)).forEach(t => L.polyline(t.pts, { renderer: R, interactive: false, color: '#facc15', weight: 1.2, opacity: .95 }).addTo(grp));
       A.bld.forEach(b => area(ammDec(b[2]), { fillColor: b[0] === 'T' ? '#64748b' : '#4b5563' }));
       const upd = () => { const m = mpp(); scaled.forEach(l => l.setStyle({ weight: Math.max(l._min, l._m / m) })); const z = map.getZoom(), c = map.getContainer(); c.classList.toggle('amm-z14', z >= 13.8); c.classList.toggle('amm-z15', z >= 15); c.classList.toggle('amm-z16', z >= 16.5); };
       map.on('zoomend', upd); grp.on('remove', () => map.off('zoomend', upd)); upd();
