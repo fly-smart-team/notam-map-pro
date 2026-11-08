@@ -843,7 +843,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/08 23:20 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 00:10 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 제방액 검색기</button>
@@ -7591,26 +7591,41 @@ svg.leaflet-image-layer.leaflet-interactive path {
       return out;
     }
     // 그리기: 폭은 미터 기준으로 확대에 맞춰 바뀜
+    // OSM 유도로 + index.json names(캡처 대조로 찾은 이름)로 이름 없는 유도로 채움
+    function ammWays(A, spec) {
+      const k = Math.cos(37.5 * Math.PI / 180), XY = p => [p[1] * 111320 * k, p[0] * 110540];
+      const TW = A.twy.map(t => ({ k: t[0] ? 'tl' : 't', tl: t[0], ref: t[1], pts: ammDec(t[2]) })); TW.extraLbl = [];
+      const len = p => { let s = 0; for (let i = 1; i < p.length; i++) { const a = XY(p[i - 1]), b = XY(p[i]); s += Math.hypot(a[0] - b[0], a[1] - b[1]); } return s; };
+      ((spec && spec.names) || []).forEach(([ref, la, lo]) => {
+        const P = XY([la, lo]); let best = null;
+        TW.forEach(w => { if (w.tl && !w.ref) return; for (let i = 0; i + 1 < w.pts.length; i++) { const a = XY(w.pts[i]), b = XY(w.pts[i + 1]), dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy || 1e-9; let u = ((P[0] - a[0]) * dx + (P[1] - a[1]) * dy) / L2; u = Math.max(0, Math.min(1, u)); const d = Math.hypot(a[0] + u * dx - P[0], a[1] + u * dy - P[1]); if (!best || d < best.d) best = { d, w, p: [w.pts[i][0] + (w.pts[i + 1][0] - w.pts[i][0]) * u, w.pts[i][1] + (w.pts[i + 1][1] - w.pts[i][1]) * u] }; } });
+        if (!best || best.d > 45) return;
+        if (!best.w.ref && len(best.w.pts) < 900) best.w.ref = ref;
+        else if (best.w.ref !== ref) TW.extraLbl.push({ ref, p: best.p });
+      });
+      return TW.concat(A.rwy.map(r => ({ k: 'r', ref: r[0], pts: ammDec(r[2]) })));
+    }
     function ammDraw(map, grp, A, spec) {
+      const lbl = (p, html, cls) => L.marker(p, { interactive: false, keyboard: false, icon: L.divIcon({ className: cls, html, iconSize: null }) }).addTo(grp);
       const R = L.canvas({ padding: 0.4 }), scaled = [], lat = ammDec(A.twy[0][2])[0][0], k = Math.cos(lat * Math.PI / 180);
       const mpp = () => 40075016.686 * Math.cos(lat * Math.PI / 180) / Math.pow(2, map.getZoom() + 8);
       const line = (pts, m, o, minPx = 0) => { const l = L.polyline(pts, { renderer: R, interactive: false, lineCap: 'butt', lineJoin: 'round', ...o }); l._m = m; l._min = minPx; scaled.push(l); return l.addTo(grp); };
       const area = (pts, o) => L.polygon(pts, { renderer: R, interactive: false, stroke: false, fillOpacity: 1, ...o }).addTo(grp);
       if (A.aero) area(ammDec(A.aero), { fillColor: '#111a2b' });
       A.apron.forEach(s => area(ammDec(s), { fillColor: '#334155' }));
-      const TW = A.twy.map(t => ({ tl: t[0], ref: t[1], pts: ammDec(t[2]) }));
+      const TW = ammWays(A, spec).filter(w => w.k !== 'r');
       const PV = TW.filter(t => !t.tl || t.ref);   // 이름 없는 taxilane = 주기장 유도선(가는 노란 선만)
       PV.forEach(t => line(t.pts, (t.tl ? 16 : 23) + 6, { color: '#2e4256' }, 3));
       PV.forEach(t => line(t.pts, t.tl ? 16 : 23, { color: '#6b8bab' }, 2));
       A.stop.forEach(s => area(ammDec(s), { fillColor: '#3b3f46' }));
       const RW = A.rwy.map(r => ({ ref: r[0], w: r[1], pts: ammDec(r[2]) }));
+      (TW.extraLbl || []).forEach(x => lbl(x.p, esc(x.ref), 'amm-tw'));
       RW.forEach(r => { line(r.pts, r.w + 8, { color: '#e5e7eb' }, 5); line(r.pts, r.w, { color: '#23272e' }, 4); line(r.pts, 1, { color: '#f8fafc', dashArray: '14 12', weight: 1.5 }, 1.5); });
       TW.forEach(t => L.polyline(t.pts, { renderer: R, interactive: false, color: '#facc15', weight: 1.2, opacity: .95 }).addTo(grp));
       A.bld.forEach(b => area(ammDec(b[2]), { fillColor: b[0] === 'T' ? '#64748b' : '#4b5563' }));
       const upd = () => { const m = mpp(); scaled.forEach(l => l.setStyle({ weight: Math.max(l._min, l._m / m) })); const z = map.getZoom(), c = map.getContainer(); c.classList.toggle('amm-z14', z >= 13.8); c.classList.toggle('amm-z15', z >= 15); c.classList.toggle('amm-z16', z >= 16.5); };
       map.on('zoomend', upd); grp.on('remove', () => map.off('zoomend', upd)); upd();
       // 이름표: 유도로(검정 바탕 노랑), 활주로 끝(빨강 원), 주기장 번호
-      const lbl = (p, html, cls) => L.marker(p, { interactive: false, keyboard: false, icon: L.divIcon({ className: cls, html, iconSize: null }) }).addTo(grp);
       const byRef = {}; TW.filter(t => t.ref && !/closed/i.test(t.ref)).forEach(t => (byRef[t.ref] = byRef[t.ref] || []).push(t));
       Object.keys(byRef).forEach(ref => {
         const ways = byRef[ref].map(t => ({ k: 't', ref, pts: t.pts }));
@@ -7630,6 +7645,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       // 핫스폿 (index.json: 두 유도로·활주로가 만나는 곳)
       const allW = [...TW.map(t => ({ k: 't', ref: t.ref, pts: t.pts })), ...RW.map(r => ({ k: 'r', ref: r.ref, pts: r.pts }))];
       (spec.hs || []).forEach(h => {
+        if (h.pt) { L.circle(h.pt, { renderer: R, radius: h.r || 150, color: '#ea580c', weight: 2.5, fillColor: '#7c2d12', fillOpacity: .35 }).bindPopup(`<b>${esc(h.id)}</b> 핫스폿 (AMM 캡처 대조 · 위치 근사)`).addTo(grp); lbl([h.pt[0] + (h.r || 150) / 111000 * 0.75, h.pt[1]], esc(h.id), 'amm-hs'); return; }
         const chs = twyChains(allW, h.at[0]), T = twyTargets(allW, h.at[1]); let best = null;
         chs.forEach(ch => { const J = twyJunction(ch, T, k); if (J.d < 60 && (!best || J.d < best.J.d)) best = { ch, J }; });
         if (!best) return; const p = twyCut(best.ch, best.J.cum, best.J.t, best.J.t + 1)[0];
@@ -7674,7 +7690,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         if (!amm && navigator.onLine !== false) { try { amm = await ammFetch(icao, spec.bbox, (a, b) => { list.innerHTML = `고해상도 공항 지도 받는 중… ${a}/${b} (처음 한 번만, 이후 오프라인 사용)`; }); } catch (e) { amm = ammCached(icao); showToast('고해상도 지도를 받지 못했습니다 — 기본 지도로 표시'); } }
       }
       map.getContainer().style.background = amm ? '#070b14' : '#0b1220';
-      if (amm) { if (map.hasLayer(TWY.tile)) map.removeLayer(TWY.tile); const r = ammDraw(map, TWY.layers, amm, spec); allB.extend(r.bounds); m.querySelector('[data-twy-sub]').innerHTML = `고해상도 (AMM 형식) · © OpenStreetMap · ${esc(amm.date)} 받음 <button type="button" data-twy-reamm="${esc(icao)}" style="margin-left:6px;color:#7dd3fc;text-decoration:underline">↻ 새로 받기</button>`; }
+      if (amm) { try { D = { ways: ammWays(amm, spec).filter(w => !w.tl || w.ref).map(w => ({ k: w.k === 'r' ? 'r' : 't', ref: w.ref, pts: w.pts })), lat0: D.lat0 }; } catch (e) { } if (map.hasLayer(TWY.tile)) map.removeLayer(TWY.tile); const r = ammDraw(map, TWY.layers, amm, spec); allB.extend(r.bounds); m.querySelector('[data-twy-sub]').innerHTML = `고해상도 (AMM 형식) · © OpenStreetMap · ${esc(amm.date)} 받음 <button type="button" data-twy-reamm="${esc(icao)}" style="margin-left:6px;color:#7dd3fc;text-decoration:underline">↻ 새로 받기</button>`; }
       else { if (!map.hasLayer(TWY.tile)) TWY.tile.addTo(map); }
       // 기본 유도로·활주로 + 이름표 (오프라인에서도 보이도록 직접 그림)
       if (!amm) D.ways.forEach(w => { const pl = L.polyline(w.pts, { color: w.k === 'r' ? '#cbd5e1' : '#64748b', weight: w.k === 'r' ? 7 : 3, opacity: .9, interactive: false }).addTo(TWY.layers); allB.extend(pl.getBounds()); });
