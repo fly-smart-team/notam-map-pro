@@ -7539,12 +7539,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
     async function ammFetch(icao, bbox, onProg) {
       const [x0, y0, x1, y1] = bbox, tiles = [];
       for (let x = x0; x < x1 - 1e-9; x += 0.02) for (let y = y0; y < y1 - 1e-9; y += 0.02) tiles.push([x, y, Math.min(x + 0.02, x1), Math.min(y + 0.02, y1)]);
-      const ways = {}, nodes = {}, pts = {}, rels = {}; let done = 0;
+      const ways = {}, raw = {}, nodes = {}, pts = {}, rels = {}; let done = 0;
       const one = async t => {
         const r = await fetch(`https://api.openstreetmap.org/api/0.6/map.json?bbox=${t.map(v => v.toFixed(4)).join(',')}`); if (!r.ok) throw new Error('OSM ' + r.status);
         const j = await r.json();
         j.elements.forEach(e => { if (e.type === 'node') { nodes[e.id] = [e.lat, e.lon]; if (e.tags && e.tags.aeroway === 'parking_position' && e.tags.ref) pts[e.id] = { ref: e.tags.ref, p: [e.lat, e.lon] }; } });
         j.elements.forEach(e => {
+          if (e.type === 'way') raw[e.id] = e.nodes;
           if (e.type === 'way' && e.tags && (e.tags.aeroway || e.tags.building)) ways[e.id] = { t: e.tags, n: e.nodes };
           if (e.type === 'relation' && e.tags && (e.tags.aeroway || e.tags.building)) rels[e.id] = { t: e.tags, m: e.members };
         });
@@ -7567,7 +7568,22 @@ svg.leaflet-image-layer.leaflet-interactive path {
         else if (a === 'terminal' || a === 'hangar' || (t.building && inside(p[0]) && !/apartments|house|residential|school|kindergarten|greenhouse/.test(t.building))) out.bld.push([a === 'terminal' || t.building === 'terminal' ? 'T' : 'B', t.name || '', S(p)]);
       };
       W.forEach(w => addW(w, w.t));
-      Object.values(rels).forEach(r => r.m.filter(m => m.type === 'way' && m.role !== 'inner').forEach(m => { const w = ways[m.ref]; if (w) addW(w, { ...w.t, aeroway: r.t.aeroway || w.t.aeroway, building: r.t.building || w.t.building, name: r.t.name || w.t.name }); }));
+      // 다중 다각형(relation): 바깥 테두리 조각들을 이어 고리로 만든 뒤 그림
+      Object.values(rels).forEach(r => {
+        const segs = r.m.filter(m => m.type === 'way' && m.role !== 'inner' && raw[m.ref]).map(m => raw[m.ref].slice()), rings = [];
+        while (segs.length) {
+          let ring = segs.shift();
+          for (let grew = true; grew && ring[0] !== ring[ring.length - 1];) {
+            grew = false;
+            for (let i = 0; i < segs.length; i++) { const g = segs[i], a = ring[ring.length - 1];
+              if (g[0] === a) ring = ring.concat(g.slice(1)); else if (g[g.length - 1] === a) ring = ring.concat(g.slice(0, -1).reverse()); else continue;
+              segs.splice(i, 1); grew = true; break; }
+          }
+          rings.push(ring);
+        }
+        const t = { aeroway: r.t.aeroway, building: r.t.building, name: r.t.name, ref: r.t.ref };
+        rings.forEach(n => addW({ n }, t));
+      });
       Object.values(pts).forEach(p => { if (!out.st[p.ref]) out.st[p.ref] = p.p; });
       Object.keys(out.st).forEach(r => out.st[r] = [+out.st[r][0].toFixed(5), +out.st[r][1].toFixed(5)]);
       if (!out.twy.length) throw new Error('유도로 자료 없음');
@@ -7581,10 +7597,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const line = (pts, m, o, minPx = 0) => { const l = L.polyline(pts, { renderer: R, interactive: false, lineCap: 'butt', lineJoin: 'round', ...o }); l._m = m; l._min = minPx; scaled.push(l); return l.addTo(grp); };
       const area = (pts, o) => L.polygon(pts, { renderer: R, interactive: false, stroke: false, fillOpacity: 1, ...o }).addTo(grp);
       if (A.aero) area(ammDec(A.aero), { fillColor: '#111a2b' });
-      A.apron.forEach(s => area(ammDec(s), { fillColor: '#2c3a4d' }));
+      A.apron.forEach(s => area(ammDec(s), { fillColor: '#334155' }));
       const TW = A.twy.map(t => ({ tl: t[0], ref: t[1], pts: ammDec(t[2]) }));
-      TW.forEach(t => line(t.pts, (t.tl ? 16 : 23) + 6, { color: '#2e4256' }, 3));
-      TW.forEach(t => line(t.pts, t.tl ? 16 : 23, { color: '#6b8bab' }, 2));
+      const PV = TW.filter(t => !t.tl || t.ref);   // 이름 없는 taxilane = 주기장 유도선(가는 노란 선만)
+      PV.forEach(t => line(t.pts, (t.tl ? 16 : 23) + 6, { color: '#2e4256' }, 3));
+      PV.forEach(t => line(t.pts, t.tl ? 16 : 23, { color: '#6b8bab' }, 2));
       A.stop.forEach(s => area(ammDec(s), { fillColor: '#3b3f46' }));
       const RW = A.rwy.map(r => ({ ref: r[0], w: r[1], pts: ammDec(r[2]) }));
       RW.forEach(r => { line(r.pts, r.w + 8, { color: '#e5e7eb' }, 5); line(r.pts, r.w, { color: '#23272e' }, 4); line(r.pts, 1, { color: '#f8fafc', dashArray: '14 12', weight: 1.5 }, 1.5); });
