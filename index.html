@@ -819,6 +819,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .stand-tri-n { display: none; margin-top: 4px; }
   .apt-ko { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   @media (max-width: 639px) { .stand-tri-w { display: none; } .stand-tri-n { display: block; } .apt-ko { white-space: normal; word-break: normal; overflow: visible; text-overflow: clip; min-height: 2.5em; } }
+  .twy-lbl { background: #1e293b; color: #fde047; font: 700 11px/1.2 ui-monospace, monospace; padding: 1px 4px; border-radius: 3px; border: 1px solid #475569; white-space: nowrap; transform: translate(-50%, -50%); }
+  .twy-lbl.twy-rwy { background: #7f1d1d; color: #fff; border-color: #fca5a5; }
+  .twy-far .twy-lbl:not(.twy-rwy) { display: none; }
   .brf-coord { color: #7dd3fc; text-decoration: underline dotted; text-underline-offset: 2px; cursor: pointer; }
   .brf-coord:hover { color: #bae6fd; background: rgba(14,165,233,.15); }
 </style>
@@ -834,7 +837,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/04 11:15 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/08 22:30 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 제방액 검색기</button>
@@ -1046,6 +1049,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <div id="brf-secf" class="flex items-center gap-1 flex-wrap"></div>
         <div id="brf-era" class="flex items-center gap-1 flex-wrap"></div>
         <div class="pro-slim-hide text-[10px] text-slate-500">출발·도착·교체(Package 1), ERA(Package 2), FIR(Package 3) 노탐을 OFP 순서대로 한곳에서 봅니다. 위 ETD 조정·퀵턴을 바꾸면 유효 배지와 운항시간대 색이 바로 다시 계산됩니다. 전체 내용이 펼쳐져 있습니다(⚪ 참고는 한 줄로 접힘, 누르면 펼침). 자동 분류는 참고용입니다. ☆를 누르면 중요 노탐으로 지정되고, "중요 노탐 모아보기"에서 출발·도착·교체·ERA·PACKAGE 3별로 모아 볼 수 있습니다. 지정은 이 기기에 90일간 저장됩니다.</div>
+        <div id="twy-bar" class="flex items-center gap-1.5 flex-wrap"></div>
         <div id="brf-list" class="flex flex-col gap-3"></div>
       </section>
 
@@ -4925,6 +4929,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const eraBox = $('brf-era');
       if (!ofpOrdered.length) { box.innerHTML = msgBox('OFP PDF를 첨부하면 OFP 순서대로 노탐 영향도를 분류합니다.'); $('brf-sum').innerHTML = ''; if (eraBox) eraBox.innerHTML = ''; return; }
       const ctx = brfContext();
+      try { twyRenderBar(); } catch (e) { }
       const callsign = (($('fpl-input').value.match(/\(FPL-([A-Z0-9]+)/) || [])[1] || '');
       // 여러 FIR에 반복 수록된 같은 노탐은 한 번만
       const firstBy = new Map(), uniq = [];
@@ -5021,7 +5026,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <div class="flex items-start gap-2 px-2 py-1">
             <button type="button" data-brf-star="${esc(n.notamId)}" class="shrink-0 w-7 h-7 mt-0.5 rounded-md border text-base leading-none ${r.star ? 'bg-amber-400 border-amber-300 text-slate-950' : 'border-slate-600 text-slate-500'}" title="중요 노탐 지정">${r.star ? '★' : '☆'}</button>
             <div class="min-w-0 flex-1" data-brf-toggle>
-              <div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${T.pill}">${T.label}</span><span class="mono text-[11px] font-bold ${T.txt}">${esc(n.notamId)}</span>${hk ? '<span class="px-1 rounded bg-cyan-900/70 text-cyan-200 text-[10px] font-bold">🧊 HOT</span>' : ''}<span class="text-[10px] text-sky-300 mono whitespace-nowrap">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${r.tb}${r.qt ? `<span class="px-1 rounded text-[10px] font-bold bg-sky-900/70 border border-sky-500/60 text-sky-200">🔄 ${esc(r.qt)}</span>` : ''}<span class="text-[10px] ${T.txt}">${esc(r.why)}</span>${r.same && r.same.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">같은 내용 +${r.same.length}건</span>` : ''}${r.rel && r.rel.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">관련 노탐 ${r.rel.length}건 묶음</span>` : ''}${n.dupIn && n.dupIn.length ? `<span class="text-[9px] text-slate-500">+${esc(n.dupIn.join('·'))} 중복</span>` : ''}${n.geo || brfCoordList(n.rawText || n.etext || '').length ? `<button type="button" data-brf-map="${esc(n.notamId)}" class="text-[10.5px] font-bold text-sky-200 bg-sky-950/60 border border-sky-600 px-1.5 rounded">📍 지도 이동</button>` : ''}<span data-brf-caret class="ml-auto text-[10px] text-slate-500">${open ? '▾ 접기' : '▸ 펼치기'}</span></div>
+              <div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${T.pill}">${T.label}</span><span class="mono text-[11px] font-bold ${T.txt}">${esc(n.notamId)}</span>${hk ? '<span class="px-1 rounded bg-cyan-900/70 text-cyan-200 text-[10px] font-bold">🧊 HOT</span>' : ''}<span class="text-[10px] text-sky-300 mono whitespace-nowrap">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${r.tb}${r.qt ? `<span class="px-1 rounded text-[10px] font-bold bg-sky-900/70 border border-sky-500/60 text-sky-200">🔄 ${esc(r.qt)}</span>` : ''}<span class="text-[10px] ${T.txt}">${esc(r.why)}</span>${r.same && r.same.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">같은 내용 +${r.same.length}건</span>` : ''}${r.rel && r.rel.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">관련 노탐 ${r.rel.length}건 묶음</span>` : ''}${n.dupIn && n.dupIn.length ? `<span class="text-[9px] text-slate-500">+${esc(n.dupIn.join('·'))} 중복</span>` : ''}${n.geo || brfCoordList(n.rawText || n.etext || '').length ? `<button type="button" data-brf-map="${esc(n.notamId)}" class="text-[10.5px] font-bold text-sky-200 bg-sky-950/60 border border-sky-600 px-1.5 rounded">📍 지도 이동</button>` : ''}${twyHas(n) ? `<button type="button" data-twy-open="${esc(n.secCode)}" data-twy-id="${esc(n.notamId)}" class="text-[10.5px] font-bold px-1.5 rounded" style="background:#7f1d1d;border:1px solid #f87171;color:#fff">🛬 유도로</button>` : ''}<span data-brf-caret class="ml-auto text-[10px] text-slate-500">${open ? '▾ 접기' : '▸ 펼치기'}</span></div>
               <div data-brf-line class="${open ? 'hidden' : ''}">${cd ? `<div class="text-[11px] text-teal-200 leading-snug line-clamp-1">📘 ${esc(cd.s)}</div>` : pre ? `<div class="text-[11px] text-emerald-200 leading-snug line-clamp-1">📗 ${esc(pre.s)}</div>` : ai ? `<div class="text-[11px] text-violet-200 leading-snug line-clamp-1">🤖 ${esc(ai.s)}</div>` : `<div class="mono text-[11px] text-slate-300 leading-snug line-clamp-1">${esc(line)}</div>`}</div>
             </div>
           </div>
@@ -7399,6 +7404,191 @@ svg.leaflet-image-layer.leaflet-interactive path {
     $('thr-type').addEventListener('change', () => renderMap(false));
     $('thr-src').addEventListener('change', () => renderMap(false));
     $('map-osm').addEventListener('change', e => setOnlineMap(e.target.checked));
+
+    // ===== 🛬 유도로 노탐 지도 =====
+    // 공항 유도로 중심선(twy/ICAO.txt, OpenStreetMap)에 노탐 문장 규칙으로 찾은 구간을 표시
+    //   'TWY X BTN A AND B' → X의 A~B 사이 · 'TWY X CLSD' → X 전체 · 규칙으로 못 찾는 구간은 twy/index.json fix(노탐 번호별)로 보완
+    const TWY = { idx: null, fix: {}, data: {}, map: null, layers: null };
+    fetch('twy/index.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => {
+      if (!d) return; TWY.idx = d.airports || {}; TWY.fix = d.fix || {}; try { renderBriefing(); } catch (e) { }
+    }).catch(() => { });
+    async function twyLoad(icao) {
+      if (TWY.data[icao]) return TWY.data[icao];
+      const r = await fetch(`twy/${icao}.txt`); if (!r.ok) throw new Error('유도로 데이터 없음');
+      const ways = (await r.text()).split('\n').filter(l => l && l[0] !== '#').map(l => {
+        const [k, ref, s] = l.split('|'), v = s.split(',').map(Number), pts = []; let a = 0, o = 0;
+        for (let i = 0; i + 1 < v.length; i += 2) { a += v[i]; o += v[i + 1]; pts.push([a / 1e5, o / 1e5]); }
+        return { k, ref, pts };
+      });
+      return (TWY.data[icao] = { ways, lat0: ways[0] ? ways[0].pts[0][0] : 0 });
+    }
+    const TWY_STOP = new Set(['AND', 'TO', 'AT', 'ON', 'OF', 'IS', 'BE', 'IN', 'BY', 'OR', 'AS', 'NR', 'NO', 'FM', 'UP', 'U', 'S']);
+    const TWY_ID = '[A-Z]{1,2}\\d{0,2}[A-Z]?', TWY_ID2 = '(?:\\d{2}[LRC]?\\/\\d{2}[LRC]?|\\d{2}[LRC]?|[A-Z]{1,2}\\d{0,2}[A-Z]?)';
+    const TWY_BTN = new RegExp(`\\b(?:TWY|TXL|TAXIWAY|TAXILANE)\\s+(${TWY_ID})\\s*(?:\\([^)]*\\)\\s*)?(?:BTN|BETWEEN|FM|FROM)\\s+(?:(?:TWY|RWY|TXL)\\s+)?(${TWY_ID2})\\s*(?:\\((?:INCLUDED|EXCLUDED|INCL|EXCL)\\)\\s*)?(?:AND|TO|&)\\s+(?:(?:TWY|RWY|TXL)\\s+)?(${TWY_ID2})`, 'g');
+    const TWY_WHOLE = new RegExp(`\\b(?:TWY|TXL|TAXIWAY|TAXILANE)S?\\s+((?:${TWY_ID}(?:\\s*(?:,|AND|&)\\s*(?=(?:TWY\\s+)?[A-Z]{1,2}\\d{0,2}\\b))?)+)`, 'g');
+    // 노탐 → { kind, items:[{ref,a,b}] , partial }  (유도로 노탐이 아니면 null)
+    function twyClauses(n) {
+      const u = String(n.etext || n.rawText || '').toUpperCase().replace(/\s+/g, ' ');
+      if (!/\b(?:TWY|TXL|TAXIWAY|TAXILANE)S?\b/.test(u)) return null;
+      const closed = /\b(CLSD|CLOSED)\b/.test(u);
+      const kind = !closed && /\b(LGT|LGTS|LIGHTS?|RETILS?|CL|EDGE|SIGNS?|MARKINGS?|STOP ?BARS?)\b/.test(u) ? 'light'
+        : closed ? 'closed' : /\b(ONLY AVBL|NOT AVBL FOR|RESTRICTED|WINGSPAN|CODE LETTER|MAX(?:IMUM)? (?:WINGSPAN|WEIGHT|WIDTH)|PROHIBITED)\b/.test(u) ? 'restrict' : 'info';
+      const items = []; let rest = u;
+      for (const m of u.matchAll(TWY_BTN)) { items.push({ ref: m[1], a: m[2], b: m[3] }); rest = rest.replace(m[0], ' '); }
+      rest = rest.split(/\bRMKS?\b|\bREMARKS?\b|COMMENT\)/)[0];   // 비고(RMK)의 '정상 운용' 유도로는 제외
+      for (const m of rest.matchAll(TWY_WHOLE)) if (!/^\s*(NML|NORMAL|OPEN|REOPEN|AVBL)\b/.test(rest.slice(m.index + m[0].length))) m[1].split(/\s*(?:,|AND|&)\s*|\s+/).map(s => s.replace(/^TWY$/, '')).filter(t => t && !TWY_STOP.has(t) && new RegExp(`^${TWY_ID}$`).test(t)).forEach(t => { if (!items.some(x => x.ref === t)) items.push({ ref: t }); });
+      if (!items.length) return null;
+      const partial = items.some(x => !x.a) && /\b(PORTION|PART OF|BEHIND|ABEAM|NORTH OF|SOUTH OF|EAST OF|WEST OF|STAND|PRKG BAY|SPOT)\b/.test(u);
+      return { kind, items, partial };
+    }
+    const twyHas = n => !!(TWY.idx && TWY.idx[n.secCode] && twyClauses(n));
+    // --- 기하 (미터 평면) ---
+    const twyXY = (p, k) => [p[1] * k * 111320, p[0] * 110540];
+    function twyChains(ways, ref) {
+      const segs = ways.filter(w => w.k !== 'r' && w.ref === ref).map(w => w.pts.slice());
+      const near = (a, b) => Math.abs(a[0] - b[0]) < 4e-5 && Math.abs(a[1] - b[1]) < 4e-5;
+      for (let changed = true; changed;) {
+        changed = false;
+        outer: for (let i = 0; i < segs.length; i++) for (let j = 0; j < segs.length; j++) {
+          if (i === j) continue; const A = segs[i], B = segs[j]; let m = null;
+          if (near(A[A.length - 1], B[0])) m = A.concat(B.slice(1));
+          else if (near(A[A.length - 1], B[B.length - 1])) m = A.concat(B.slice(0, -1).reverse());
+          else if (near(A[0], B[B.length - 1])) m = B.concat(A.slice(1));
+          else if (near(A[0], B[0])) m = B.slice().reverse().concat(A.slice(1));
+          if (m) { segs[i] = m; segs.splice(j, 1); changed = true; break outer; }
+        }
+      }
+      return segs;
+    }
+    function twyTargets(ways, tok) {
+      if (/^\d{2}[LRC]?(\/\d{2}[LRC]?)?$/.test(tok)) { const ks = tok.split('/'); return ways.filter(w => w.k === 'r' && ks.some(k => w.ref.split('/').includes(k))).map(w => w.pts); }
+      return ways.filter(w => w.k !== 'r' && w.ref === tok).map(w => w.pts);
+    }
+    // 체인 위에서 목표(다른 유도로·활주로)와 만나는(가장 가까운) 위치: { t: 체인 시작부터 거리(m), d: 떨어진 거리(m) }
+    function twyJunction(chain, targets, k) {
+      const C = chain.map(p => twyXY(p, k)), cum = [0];
+      for (let i = 1; i < C.length; i++) cum.push(cum[i - 1] + Math.hypot(C[i][0] - C[i - 1][0], C[i][1] - C[i - 1][1]));
+      let best = { t: 0, d: Infinity };
+      const proj = (P, i) => { const A = C[i], B = C[i + 1], dx = B[0] - A[0], dy = B[1] - A[1], L2 = dx * dx + dy * dy || 1e-9; let u = ((P[0] - A[0]) * dx + (P[1] - A[1]) * dy) / L2; u = Math.max(0, Math.min(1, u)); return { t: cum[i] + u * Math.sqrt(L2), d: Math.hypot(A[0] + u * dx - P[0], A[1] + u * dy - P[1]) }; };
+      for (const T of targets) {
+        const Q = T.map(p => twyXY(p, k));
+        for (let i = 0; i + 1 < C.length; i++) {
+          for (let j = 0; j + 1 < Q.length; j++) {   // 교차
+            const p = C[i], r = [C[i + 1][0] - p[0], C[i + 1][1] - p[1]], q = Q[j], s = [Q[j + 1][0] - q[0], Q[j + 1][1] - q[1]];
+            const den = r[0] * s[1] - r[1] * s[0]; if (Math.abs(den) < 1e-9) continue;
+            const tt = ((q[0] - p[0]) * s[1] - (q[1] - p[1]) * s[0]) / den, uu = ((q[0] - p[0]) * r[1] - (q[1] - p[1]) * r[0]) / den;
+            if (tt >= 0 && tt <= 1 && uu >= 0 && uu <= 1) { const t = cum[i] + tt * Math.hypot(r[0], r[1]); if (best.d > 0 || t < best.t) best = { t, d: 0 }; }
+          }
+          if (best.d > 0) for (const P of Q) { const c = proj(P, i); if (c.d < best.d) best = c; }
+        }
+        if (best.d > 0) for (let i = 0; i < C.length; i++) for (let j = 0; j + 1 < Q.length; j++) {   // 체인 꼭짓점 → 목표 선분
+          const A = Q[j], B = Q[j + 1], dx = B[0] - A[0], dy = B[1] - A[1], L2 = dx * dx + dy * dy || 1e-9; let u = ((C[i][0] - A[0]) * dx + (C[i][1] - A[1]) * dy) / L2; u = Math.max(0, Math.min(1, u));
+          const d = Math.hypot(A[0] + u * dx - C[i][0], A[1] + u * dy - C[i][1]); if (d < best.d) best = { t: cum[i], d };
+        }
+      }
+      return { ...best, len: cum[cum.length - 1], cum };
+    }
+    function twyCut(chain, cum, t1, t2) {
+      const [a, b] = t1 <= t2 ? [t1, t2] : [t2, t1], out = [], at = t => { for (let i = 1; i < cum.length; i++) if (cum[i] >= t) { const u = (t - cum[i - 1]) / ((cum[i] - cum[i - 1]) || 1); return [chain[i - 1][0] + (chain[i][0] - chain[i - 1][0]) * u, chain[i - 1][1] + (chain[i][1] - chain[i - 1][1]) * u]; } return chain[chain.length - 1]; };
+      out.push(at(a)); for (let i = 0; i < cum.length; i++) if (cum[i] > a && cum[i] < b) out.push(chain[i]); out.push(at(b));
+      return out;
+    }
+    const twyNearest = (chain, k, p) => twyJunction(chain, [[p, [p[0] + 1e-7, p[1] + 1e-7]]], k);
+    // 노탐 하나 → 지도에 그릴 선들
+    function twyResolve(D, icao, n) {
+      const k = Math.cos(D.lat0 * Math.PI / 180), C = twyClauses(n) || { kind: 'info', items: [] }, out = { kind: C.kind, segs: [], desc: [], miss: [], partial: C.partial };
+      const fx = TWY.fix[`${icao} ${n.notamId.replace(/^[A-Z]{4}\s+/, '')}`] || TWY.fix[n.notamId];
+      if (fx) {
+        if (fx.kind) out.kind = fx.kind;
+        (fx.parts || []).forEach(f => {
+          let best = null; for (const ch of twyChains(D.ways, f.ref)) { const A = twyNearest(ch, k, f.from), B = twyNearest(ch, k, f.to); if (A.d < 80 && B.d < 80 && (!best || A.d + B.d < best.s)) best = { s: A.d + B.d, seg: twyCut(ch, A.cum, A.t, B.t) }; }
+          if (best) { out.segs.push(best.seg); out.desc.push(f.desc || f.ref); } else out.miss.push(f.ref);
+        });
+        out.partial = false; return out;
+      }
+      for (const it of C.items) {
+        const chains = twyChains(D.ways, it.ref);
+        if (!chains.length) { out.miss.push(it.ref); continue; }
+        if (it.a) {
+          const TA = twyTargets(D.ways, it.a), TB = twyTargets(D.ways, it.b); let best = null;
+          if (TA.length && TB.length) for (const ch of chains) { const A = twyJunction(ch, TA, k), B = twyJunction(ch, TB, k); if (A.d < 80 && B.d < 80 && (!best || A.d + B.d < best.s)) best = { s: A.d + B.d, seg: twyCut(ch, A.cum, A.t, B.t) }; }
+          if (best) { out.segs.push(best.seg); out.desc.push(`${it.ref} · ${it.a} ~ ${it.b} 사이`); } else out.miss.push(`${it.ref} (${it.a}~${it.b})`);
+        } else { chains.forEach(ch => out.segs.push(ch)); out.desc.push(C.partial ? `${it.ref} 일부 구간` : `${it.ref} 전체`); }
+      }
+      return out;
+    }
+    const TWY_KIND = { closed: ['폐쇄', '#ef4444', null], restrict: ['사용 제한', '#ef4444', '12 9'], light: ['등화·표지', '#f59e0b', '4 8'], info: ['정보', '#38bdf8', '2 8'] };
+    function twyRenderBar() {
+      const bar = $('twy-bar'); if (!bar) return;
+      if (!TWY.idx || !ofpOrdered.length) { bar.innerHTML = ''; return; }
+      const cnt = {}; ofpOrdered.forEach(n => { if (twyHas(n)) cnt[n.secCode] = (cnt[n.secCode] || 0) + 1; });
+      bar.innerHTML = Object.keys(cnt).map(c => `<button type="button" data-twy-open="${esc(c)}" style="background:#7f1d1d;border:1px solid #f87171;color:#fff" class="px-2 py-1 rounded-lg text-[12px] font-bold">🛬 ${esc(c)} 유도로 노탐 지도 <span style="background:#fff;color:#b91c1c" class="ml-0.5 px-1 rounded">${cnt[c]}</span></button>`).join('');
+    }
+    async function twyOpen(icao, focusId) {
+      let m = $('twy-modal');
+      if (!m) {
+        m = document.createElement('div'); m.id = 'twy-modal';
+        m.style.cssText = 'position:fixed;inset:0;z-index:9650;background:rgba(2,6,23,.88);display:flex;align-items:center;justify-content:center;padding:8px';
+        m.innerHTML = `<div style="background:#0f172a;border:1px solid #475569;border-radius:14px;width:100%;max-width:980px;height:96vh;display:flex;flex-direction:column;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #334155"><b data-twy-title style="color:#fff;font-size:14px"></b><span style="color:#94a3b8;font-size:11px" data-twy-sub></span><button type="button" data-twy-close style="margin-left:auto;background:#334155;color:#fff;border-radius:8px;padding:3px 10px;font-weight:700;white-space:nowrap">✕</button></div>
+          <div id="twy-map" style="flex:1 1 60%;min-height:240px;background:#0b1220"></div>
+          <div data-twy-list style="flex:0 1 40%;overflow:auto;padding:8px 10px;color:#e2e8f0;font-size:13px"></div></div>`;
+        document.body.appendChild(m);
+        m.addEventListener('click', e => {
+          if (e.target === m || e.target.closest('[data-twy-close]')) { m.style.display = 'none'; return; }
+          const it = e.target.closest('[data-twy-item]'); if (it) twyFocus(+it.dataset.twyItem);
+        });
+      }
+      m.style.display = 'flex';
+      m.querySelector('[data-twy-title]').textContent = `🛬 ${icao} 유도로 노탐 지도`;
+      const list = m.querySelector('[data-twy-list]'); list.innerHTML = '불러오는 중…';
+      let D; try { D = await twyLoad(icao); } catch (e) { list.innerHTML = `<div style="color:#fca5a5">${esc(icao)} 유도로 데이터가 아직 없습니다.</div>`; return; }
+      m.querySelector('[data-twy-sub]').textContent = `중심선 © OpenStreetMap · ${(TWY.idx[icao] && TWY.idx[icao].date) || ''}`;
+      if (!TWY.map) {
+        TWY.map = L.map('twy-map', { zoomControl: true, attributionControl: true, zoomSnap: 0.5 });
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, maxNativeZoom: 19, opacity: 0.35, attribution: '&copy; OpenStreetMap contributors' }).addTo(TWY.map);
+        TWY.map.on('zoomend', () => TWY.map.getContainer().classList.toggle('twy-far', TWY.map.getZoom() < 14.5));
+      }
+      const map = TWY.map; setTimeout(() => map.invalidateSize(), 50);
+      if (TWY.layers) TWY.layers.remove(); TWY.layers = L.layerGroup().addTo(map);
+      // 기본 유도로·활주로 + 이름표 (오프라인에서도 보이도록 직접 그림)
+      const k = Math.cos(D.lat0 * Math.PI / 180), allB = L.latLngBounds([]), done = new Set();
+      D.ways.forEach(w => { const pl = L.polyline(w.pts, { color: w.k === 'r' ? '#cbd5e1' : '#64748b', weight: w.k === 'r' ? 7 : 3, opacity: .9, interactive: false }).addTo(TWY.layers); allB.extend(pl.getBounds()); });
+      [...new Set(D.ways.filter(w => w.ref).map(w => w.ref))].forEach(ref => {
+        const chs = w => w.k === 'r' ? D.ways.filter(x => x.k === 'r' && x.ref === ref).map(x => x.pts) : twyChains(D.ways, ref);
+        chs(D.ways.find(x => x.ref === ref)).forEach(ch => {
+          if (ch.length < 2) return; const J = twyJunction(ch, [], k), mid = twyCut(ch, J.cum, J.len * 0.45, J.len * 0.55)[0];
+          L.marker(mid, { interactive: false, icon: L.divIcon({ className: 'twy-lbl' + (/\//.test(ref) ? ' twy-rwy' : ''), html: esc(ref), iconSize: null }) }).addTo(TWY.layers);
+        });
+      });
+      // 노탐 구간
+      const ctx = brfContext(); TWY.items = [];
+      const rows = ofpOrdered.filter((n, i, a) => n.secCode === icao && twyClauses(n) && a.findIndex(x => x.notamId === n.notamId) === i);
+      rows.forEach(n => {
+        const R = twyResolve(D, icao, n), win = brfWindow(n, ctx), act = win ? notamIsActive(n, win[0], win[1]) : true;
+        const K = TWY_KIND[R.kind] || TWY_KIND.info, color = act ? K[1] : '#9ca3af', dash = act ? K[2] : '6 8';
+        const pre = typeof preOf === 'function' ? preOf(n) : null, sum = pre && pre.s ? pre.s : String(n.etext || n.rawText || '').replace(/\s+/g, ' ').slice(0, 160);
+        const grp = L.featureGroup();
+        R.segs.forEach(s => { L.polyline(s, { color: '#000', weight: 13, opacity: .35, interactive: false }).addTo(grp); L.polyline(s, { color, weight: 9, opacity: .95, dashArray: dash, lineCap: 'round' }).addTo(grp); });
+        const pop = `<b>${esc(n.notamId)}</b> · ${esc(K[0])}${act ? '' : ' · <span style="color:#6b7280">비행 시간대 아님</span>'}<br>${esc(R.desc.join(' / '))}<br><span style="font-size:11px">${esc(sum)}</span><br><span style="font-size:10.5px;color:#475569">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>`;
+        grp.bindPopup(pop, { maxWidth: 320 }); if (R.segs.length) grp.addTo(TWY.layers);
+        TWY.items.push({ n, R, grp, act, K, sum, color });
+      });
+      map.fitBounds(allB.isValid() ? allB : [[0, 0], [0, 0]], { padding: [10, 10] });
+      list.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:#94a3b8;margin-bottom:6px"><span><b style="color:#ef4444">━</b> 폐쇄</span><span><b style="color:#ef4444">┅</b> 사용 제한</span><span><b style="color:#f59e0b">┅</b> 등화·표지</span><span><b style="color:#9ca3af">┅</b> 비행 시간대 아님</span><span>· 줄이나 목록을 누르면 확대</span></div>`
+        + TWY.items.map((x, i) => `<div data-twy-item="${i}" style="cursor:pointer;border:1px solid ${x.R.segs.length ? x.color : '#475569'};border-left-width:6px;border-radius:8px;padding:5px 8px;margin-bottom:5px;background:#111827">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><b class="mono" style="color:#fff">${esc(x.n.notamId)}</b><span style="background:${x.color};color:#fff;border-radius:4px;padding:0 5px;font-size:11px;font-weight:700">${esc(x.K[0])}${x.act ? '' : ' · 시간대 아님'}</span><b style="color:#fde68a">${esc(x.R.desc.join(' / '))}</b>${x.R.partial ? '<span style="color:#fbbf24;font-size:11px">⚠ 일부 구간 — 위치는 원문 확인</span>' : ''}${x.R.miss.length ? `<span style="color:#fca5a5;font-size:11px">지도에 없음: ${esc(x.R.miss.join(', '))}</span>` : ''}</div>
+            <div style="font-size:12px;color:#cbd5e1;margin-top:2px">${esc(x.sum)}</div>
+            <div style="font-size:10.5px;color:#94a3b8">🕒 ${esc((x.n.validFrom || '') + ' ~ ' + (x.n.validTo || 'PERM'))}${x.n.schedule ? ' · ' + esc(x.n.schedule) : ''}</div></div>`).join('')
+        + `<div style="font-size:10.5px;color:#64748b;margin-top:6px">유도로 중심선은 OpenStreetMap 자료이며 노탐 문장을 규칙으로 읽어 표시한 참고용입니다. 지상 이동은 Jeppesen 차트·관제 지시를 따르세요.</div>`;
+      if (focusId) { const i = TWY.items.findIndex(x => x.n.notamId === focusId); if (i >= 0) setTimeout(() => twyFocus(i), 300); }
+    }
+    function twyFocus(i) {
+      const x = TWY.items && TWY.items[i]; if (!x || !x.R.segs.length) return;
+      TWY.map.fitBounds(x.grp.getBounds(), { maxZoom: 17, padding: [40, 40] }); setTimeout(() => x.grp.openPopup(x.grp.getBounds().getCenter()), 450);
+      let c = 0; const t = setInterval(() => { x.grp.eachLayer(l => l.options.color !== '#000' && l.setStyle({ opacity: c % 2 ? .95 : .25 })); if (++c > 7) clearInterval(t); }, 250);
+    }
+    document.addEventListener('click', e => { const b = e.target.closest('[data-twy-open]'); if (!b) return; e.preventDefault(); e.stopPropagation(); twyOpen(b.dataset.twyOpen, b.dataset.twyId); }, true);
 
     // ===== 4번 노탐 브리핑: 본문 좌표를 누르면 경로 지도의 그 위치로 이동 =====
     // 형식: 343930.1N1351308.8E · 372645N1270652E · 250344.75N 1211338.96E · 3750N12650E (도·분·초 / 도·분)

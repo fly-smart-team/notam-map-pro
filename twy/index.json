@@ -1,0 +1,32 @@
+{
+ "note": "유도로 노탐 지도 — 공항별 중심선 파일(twy/ICAO.txt, OpenStreetMap)과 규칙으로 못 찾는 노탐의 구간 보완(fix: 노탐 번호 → ref·from·to 좌표)",
+ "airports": {
+  "RCTP": {
+   "name": "Taipei Taoyuan",
+   "date": "2026-11-08"
+  },
+  "RKSI": {
+   "name": "Incheon",
+   "date": "2026-11-08"
+  }
+ },
+ "fix": {
+  "RCTP A3865/26": {
+   "kind": "closed",
+   "parts": [
+    {
+     "ref": "L",
+     "from": [
+      25.09912,
+      121.24415
+     ],
+     "to": [
+      25.0984,
+      121.24323
+     ],
+     "desc": "L · 주기장 525 뒤 (524 출발기는 동쪽 향해 푸시백, 520 옆까지 간 뒤 지상 이동)"
+    }
+   ]
+  }
+ }
+}
