@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PEK 제빙 핸드북</title>
+<style>
+  :root { --bg:#0b1220; --card:#111a2b; --line:#24324a; --tx:#e2e8f0; --mute:#94a3b8; --hi:#fb923c; --ok:#34d399; --sky:#7dd3fc; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--tx); font:15px/1.6 -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+  .wrap { max-width:760px; margin:0 auto; padding:14px 16px 40px; }
+  header { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+  header h1 { font-size:19px; margin:0; }
+  .tag { font-size:11px; color:var(--mute); }
+  .back { margin-left:auto; background:#334155; color:#fff; border-radius:8px; padding:4px 10px; text-decoration:none; font-weight:700; font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:10px 0; }
+  h2 { font-size:15px; margin:0 0 6px; color:var(--sky); }
+  h3 { font-size:14px; margin:10px 0 4px; }
+  ol, ul { margin:4px 0; padding-left:20px; }
+  li { margin:3px 0; }
+  b.hi, .hi { color:var(--hi); }
+  .key { background:#1e293b; border-left:4px solid var(--hi); border-radius:8px; padding:8px 10px; margin:8px 0; }
+  .say { font-family:ui-monospace, monospace; background:#0f172a; border:1px solid #334155; border-radius:6px; padding:1px 6px; color:#fde68a; }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin-top:6px; }
+  th, td { border:1px solid var(--line); padding:5px 6px; text-align:center; }
+  th { background:#1e293b; }
+  img { width:100%; border-radius:8px; border:1px solid var(--line); background:#fff; display:block; }
+  .note { font-size:12px; color:var(--mute); }
+  .pads td:first-child { font-weight:700; }
+  a { color:var(--sky); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>❄️ 베이징 수도공항(PEK/ZBAA) 제빙 — 조종사 브리프</h1>
+    <span class="tag">BCIA de-icing Pilot Brief Handbook 한글 정리</span>
+    <a class="back" href="javascript:history.length>1?history.back():window.close()">← 돌아가기</a>
+  </header>
+
+  <div class="card key">
+    <b>한눈에 보기</b>
+    <ul>
+      <li>서리(frost) → <b>주기장에서</b> 제상 · 눈(snow) → <b>원격 제빙패드</b>(일부 기종은 주기장 제빙 가능)</li>
+      <li>제빙 요청은 <b class="hi">STD 45분 전까지</b> FOC/AOC에 — 방식(1단계/2단계)과 부위(날개·동체·수평·수직안정판)</li>
+      <li>Beijing Delivery 허가 받을 때 <span class="say">"aircraft de-icing required"</span></li>
+      <li>패드에서는 마샬러 없음 → <b>STOP 표지 옆(abeam)</b>에 정지, 파킹브레이크, 엔진 GND IDLE</li>
+      <li>VHF 담당은 <b class="hi">제빙/방빙 시작 시각만</b> 알려줌 (용액 종류·비율·양은 VHF로 묻지 말 것)</li>
+      <li>끝나면 즉시 <b>Beijing Apron</b>에 택시 허가 요청 · 택시아웃 후 조종면 점검</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Ⅰ. 제상(Defrosting) 방식</h2>
+    서리가 낀 날씨에는 <b>주기장(parking stand)에서</b> 제상한다.
+  </div>
+
+  <div class="card">
+    <h2>Ⅱ. 제빙(De-icing) 방식</h2>
+    눈이 오는 날씨에는 <b>원격 제빙패드(remote de-icing pad)</b>에서 제빙한다. 일부 지정 기종은 주기장 제빙도 가능하다.
+    <p>어떤 방식인지 확실하지 않으면 <b>가능한 한 빨리 FOC/AOC와 지상조업사</b>에 확인한다.</p>
+    <p class="note">* 도착 전에 미리 제상·제빙(pre-defrosting/pre-de-icing)을 받은 항공기도, 도착 후 다시 제상·제빙이 필요한지 승무원이 확인해야 한다.</p>
+  </div>
+
+  <div class="card">
+    <h2>Ⅲ. 주기장 제상·제빙 절차</h2>
+    <ol>
+      <li>제빙·제상 요청을 <b class="hi">STD(출발 예정 시각) 45분 전까지</b> FOC 또는 AOC에 알린다 → 제빙 업체로 전달된다.</li>
+      <li>항공기–제빙 업체 사이 교신은 <b>인터폰</b>으로 한다. 비상 상황이 생기면 인터폰 담당자에게 알린다.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>Ⅳ. 원격 제빙패드 절차</h2>
+
+    <h3>(1) 제빙 요청은 어떻게?</h3>
+    <ol>
+      <li><b class="hi">STD 45분 전까지</b> FOC 또는 AOC에 알린다.</li>
+      <li>요청 내용
+        <ul>
+          <li><b class="hi">방식</b>: 1단계(제빙만) 또는 2단계(제빙 + 방빙)</li>
+          <li><b class="hi">부위</b>: 날개 · 동체 · 수평안정판 · 수직안정판</li>
+        </ul></li>
+      <li>Beijing Delivery에 허가 요청할 때 <span class="say">"aircraft de-icing required"</span> 라고 알린다.</li>
+    </ol>
+
+    <h3>(2) DEICING HOLDING POSITION(제빙 대기 위치)에 도착하면?</h3>
+    <ol>
+      <li>해당 제빙패드의 <b>VHF 담당(communicator)</b>과 교신한다 (주파수는 아래 표).</li>
+      <li>VHF 담당의 지시에 따라 <b class="hi">노란 유도등(yellow light)을 따라</b> 지정 패드로 이동한다. 등이 고장 나면 Follow-me 차량이 안내한다.</li>
+      <li>대기 위치에 도착한 뒤에는 <b class="hi">VHF 담당이 제빙 요청 내용을 다시 확인하지 않는다</b>.
+        요청을 바꿔야 하면 <b class="hi">조종사가 먼저 VHF 담당에게 말해야</b> 한다.</li>
+    </ol>
+
+    <h3>(3) 제빙패드에 들어가면?</h3>
+    <ol>
+      <li>엔진을 켠 상태의 제빙에는 <b>마샬러가 없다</b>. 모든 패드에 <b>"STOP" 표지</b>가 있으니, 항공기를 <b>STOP 표지 옆(abeam)</b>에 세우고 대기한다.</li>
+      <li>파킹브레이크를 걸고 제빙 준비를 한다. 각 단계가 끝날 때마다 <b>즉시 VHF 담당에게 알려</b> 제빙 차량이 동시에 준비할 수 있게 한다.
+        <ul class="note">
+          <li>파킹브레이크가 걸리면 제빙 차량이 패드로 들어와 대기한다.</li>
+          <li>제빙 준비가 끝나면 제빙 차량이 작업을 시작한다.</li>
+        </ul></li>
+      <li>엔진 출력은 <b>GND IDLE</b>. 지시가 있을 때까지 <b>절대 움직이지 않는다</b>. 비상 시 VHF 담당에게 알린다.</li>
+    </ol>
+    <img src="ZBAA-deice-stop.jpg" alt="제빙패드 STOP 표지와 정지 위치 그림" loading="lazy">
+    <p class="note">LED 표시판(Deicing Stand) · 패드 중심선(노란 선) · 기수가 STOP 표지 옆(빨간 점선)에 오면 정지</p>
+
+    <h3>(4) 제빙이 끝나면?</h3>
+    <ol>
+      <li>VHF 담당은 <b class="hi">제빙/방빙 시작 시각만</b> 알려준다. 용액 종류·혼합비·양은 <b>VHF로 묻지 않는다</b>.</li>
+      <li>최대한 빨리 <b>Beijing Apron</b>에 연락해 택시아웃 허가를 받는다. <b>택시아웃 후 조종면(flight control) 점검</b>을 한다.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>Ⅴ. 기타 주의사항</h2>
+    <h3>(1) 제빙액 — 모든 업체가 Newave Aerochemical 제품을 같은 비율로 사용</h3>
+    <table>
+      <tr><th colspan="3">Type I</th><th colspan="3">Type II</th></tr>
+      <tr><th>제조사</th><th>모델</th><th>비율</th><th>제조사</th><th>모델</th><th>비율</th></tr>
+      <tr><td>Chengdu Newave</td><td>FCY-1Bio+</td><td>50:50</td><td>Chengdu Newave</td><td>FCY-2</td><td>100:0</td></tr>
+    </table>
+    <p class="note">→ 홀드오버 타임(HOT)은 위 제품·비율로 찾는다. 앱의 홀드오버 표에서 FCY-2(Type II)를 확인하세요.</p>
+
+    <h3>(2) 기수·윈드실드 등에 눈이 쌓여 있으면</h3>
+    제빙패드로 가기 전에 <b>원래 주기장에서 지상요원이 먼저 치운다</b>.
+
+    <h3>(3) 제빙패드 위치와 VHF 주파수</h3>
+    <table class="pads">
+      <tr><th>패드</th><th>VHF</th><th>위치(그림 기준)</th></tr>
+      <tr><td>No.2</td><td>128.200</td><td>서쪽 활주로 쪽, T1·T2 남쪽</td></tr>
+      <tr><td>No.3</td><td>127.025</td><td>T3 남쪽, 서편</td></tr>
+      <tr><td>No.4</td><td>126.225</td><td>T3 남쪽, 동편</td></tr>
+      <tr><td>No.7</td><td>128.200</td><td>공항 북쪽, 서편</td></tr>
+      <tr><td>No.8</td><td>127.025</td><td>공항 북쪽, 중앙</td></tr>
+      <tr><td>No.9</td><td>126.225</td><td>공항 북쪽, 동편</td></tr>
+    </table>
+    <img src="ZBAA-deice-pads.jpg" alt="베이징 수도공항 제빙패드 위치와 주파수 그림" loading="lazy" style="margin-top:8px">
+    <p class="note">⚠ 그림은 <b>오른쪽이 북쪽(▷ North)</b>입니다. 위치 설명은 그림을 기준으로 한 대략적인 것이니 실제 패드 배정은 VHF 지시를 따르세요.</p>
+  </div>
+
+  <p class="note">출처: Beijing Capital International Airport Co., Ltd. 「BCIA de-icing Pilot Brief Handbook」 · <a href="ZBAA-deicing-handbook-en.pdf">영문 원본 PDF</a><br>
+  한글 정리는 참고용입니다. 회사 절차·AIP·관제 지시가 우선합니다.</p>
+</div>
+</body>
+</html>

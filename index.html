@@ -844,7 +844,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 06:40 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 07:00 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 제방액 검색기</button>
@@ -900,6 +900,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
         <!-- 출발 / 목적 / 교체 공항 이름 (한글 · English) -->
         <div id="flt-info"></div>
+        <div id="apt-ref" class="flex flex-wrap gap-2"></div>
         <div id="pkg1-airport-names" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-2 text-[12px]"></div>
 
         <!-- 공항 탭 (3번 섹션 탭과 동일 기능 · 2번에서는 숨김) -->
@@ -4448,6 +4449,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           ${noteHtml}
           ${R.at ? '' : ''}<div class="text-[11px] text-slate-500 mt-2">회사 기종은 모두 고속 항공기(회전 속도 약 100KT 이상) 기준입니다 — LOUT는 수용 목록(Table 58~61)의 고속 항공기 값을 봅니다. 참고용 계산입니다. 아래 원본 표의 빨간 테두리 칸으로 값을 다시 확인하고, 회사 절차·LOUT·제품 목록(Table 58~61)을 따르세요.</div>
         </div>
+        ${aptRefHtml([[info && info.dep, '']].filter(x => x[0]), 'deice') ? `<div class="mt-2 flex flex-wrap gap-2">${aptRefHtml([[info.dep, '']], 'deice')}</div>` : ''}
         ${hcLogHtml(S, R)}
         <div class="mt-3 rounded-xl bg-white p-1" data-hc-page style="min-height:120px"><div class="text-[12px] text-slate-500 p-2">원본 표 불러오는 중… (${R.page || ''}쪽)</div></div>`;
       hcRenderPage(R);
@@ -6911,7 +6913,22 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (t.closest('[data-crew-reset]')) { const R = crewPlan(); if (R.key) delete crewCfg.adj[R.key]; crewSave(); renderCrew(); }
     });
 
+    // ===== 공항별 참고 문서 (출발·목적·교체 공항에 있으면 버튼으로) =====
+    const APT_REF = {
+      ZBAA: [{ k: 'deice', t: '❄️ PEK 제빙 조종사 핸드북 (한글)', u: 'docs/ZBAA-deicing.html' }],
+    };
+    function aptRefHtml(list, kind) {
+      const seen = new Set(), out = [];
+      list.forEach(([c, role]) => (APT_REF[c] || []).forEach(d => { if ((kind && d.k !== kind) || seen.has(d.u)) return; seen.add(d.u); out.push(`<a href="${d.u}" target="_blank" rel="noopener" class="px-2.5 py-1 rounded-lg text-[12px] font-bold" style="background:#0c4a6e;border:1px solid #38bdf8;color:#e0f2fe;text-decoration:none">${d.t}${role ? ` <span style="opacity:.75;font-weight:600">· ${role}</span>` : ''}</a>`); }));
+      return out.join('');
+    }
+    function aptRefRender() {
+      const el = $('apt-ref'); if (!el) return;
+      const L = [[info.dep, '출발'], [info.dest, '목적'], ...String(info.altn || '').split(/[\s,/]+/).filter(Boolean).map(a => [a, '교체'])].filter(x => x[0]);
+      el.innerHTML = aptRefHtml(L);
+    }
     function renderFlightInfo() {
+      try { aptRefRender(); } catch (e) { }
       const box = $('flt-info'); if (!box) return;
       const p = pdfFlt || {}, fpl = $('fpl-input').value;
       if (!pdfFlt && !info.dep) { box.innerHTML = ''; return; }
