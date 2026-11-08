@@ -7603,7 +7603,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         if (!best.w.ref && len(best.w.pts) < 900) best.w.ref = ref;
         else if (best.w.ref !== ref) TW.extraLbl.push({ ref, p: best.p });
       });
-      return TW.concat(A.rwy.map(r => ({ k: 'r', ref: r[0], pts: ammDec(r[2]) })));
+      const all = TW.concat(A.rwy.map(r => ({ k: 'r', ref: r[0], pts: ammDec(r[2]) }))); all.extraLbl = TW.extraLbl; return all;
     }
     function ammDraw(map, grp, A, spec) {
       const lbl = (p, html, cls) => L.marker(p, { interactive: false, keyboard: false, icon: L.divIcon({ className: cls, html, iconSize: null }) }).addTo(grp);
@@ -7613,7 +7613,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const area = (pts, o) => L.polygon(pts, { renderer: R, interactive: false, stroke: false, fillOpacity: 1, ...o }).addTo(grp);
       if (A.aero) area(ammDec(A.aero), { fillColor: '#111a2b' });
       A.apron.forEach(s => area(ammDec(s), { fillColor: '#334155' }));
-      const TW = ammWays(A, spec).filter(w => w.k !== 'r');
+      const AW = ammWays(A, spec), TW = AW.filter(w => w.k !== 'r'); TW.extraLbl = AW.extraLbl;
       const PV = TW.filter(t => !t.tl || t.ref);   // 이름 없는 taxilane = 주기장 유도선(가는 노란 선만)
       PV.forEach(t => line(t.pts, (t.tl ? 16 : 23) + 6, { color: '#2e4256' }, 3));
       PV.forEach(t => line(t.pts, t.tl ? 16 : 23, { color: '#6b8bab' }, 2));
