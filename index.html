@@ -843,7 +843,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 01:15 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 01:20 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물 규정</button>
         <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 제방액 검색기</button>
@@ -7634,8 +7634,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
           for (let i = 0; i < n; i++) { const f = (i + 0.5) / n; lbl(twyCut(ch, J.cum, J.len * f, J.len * f + 1)[0], esc(ref), 'amm-tw' + (i ? ' amm-tw2' : '')); }
         });
       });
+      const rwLen = r => { let s = 0; for (let i = 1; i < r.pts.length; i++) s += Math.hypot(r.pts[i][0] - r.pts[i - 1][0], (r.pts[i][1] - r.pts[i - 1][1]) * k); return s; };
       RW.forEach(r => {
         const ends = r.ref.split('/'); if (ends.length !== 2) return;
+        if (RW.some(o => o !== r && o.ref === r.ref && rwLen(o) > rwLen(r))) return;   // 같은 활주로가 여러 조각이면 가장 긴 것에만 번호
         const a = r.pts[0], b = r.pts[r.pts.length - 1], brg = (Math.atan2((b[1] - a[1]) * k, b[0] - a[0]) * 180 / Math.PI + 360) % 360;
         const hd = e => parseInt(e, 10) * 10, d = (x, y) => { const v = Math.abs(x - y) % 360; return v > 180 ? 360 - v : v; };
         const [ea, eb] = d(hd(ends[0]), brg) < d(hd(ends[1]), brg) ? ends : [ends[1], ends[0]];   // a 끝에서 출발하는 활주로 번호
