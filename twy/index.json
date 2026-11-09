@@ -1792,6 +1792,62 @@
     "hs": [],
     "src": "FD Pro AMM 캡처(2026-11-09) — OSM 이름 대조 예정"
    }
+  },
+  "RJTT": {
+   "name": "Tokyo Haneda",
+   "date": "2026-11-09",
+   "amm": {
+    "bbox": [
+     139.74,
+     35.52,
+     139.83,
+     35.575
+    ],
+    "hs": [],
+    "src": "OpenStreetMap (기기에서 처음 열 때 받기)"
+   }
+  },
+  "RJAA": {
+   "name": "Tokyo Narita",
+   "date": "2026-11-09",
+   "amm": {
+    "bbox": [
+     140.36,
+     35.735,
+     140.415,
+     35.8
+    ],
+    "hs": [],
+    "src": "OpenStreetMap (기기에서 처음 열 때 받기)"
+   }
+  },
+  "RJFF": {
+   "name": "Fukuoka",
+   "date": "2026-11-09",
+   "amm": {
+    "bbox": [
+     130.43,
+     33.565,
+     130.465,
+     33.605
+    ],
+    "hs": [],
+    "src": "OpenStreetMap (기기에서 처음 열 때 받기)"
+   }
+  },
+  "RJCC": {
+   "name": "New Chitose",
+   "date": "2026-11-09",
+   "amm": {
+    "bbox": [
+     141.665,
+     42.755,
+     141.715,
+     42.805
+    ],
+    "hs": [],
+    "src": "OpenStreetMap (기기에서 처음 열 때 받기)"
+   }
   }
  },
  "fix": {
