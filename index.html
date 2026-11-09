@@ -844,7 +844,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 17:00 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 18:40 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물</button>
         <button id="btn-wind" type="button" title="바람 제한치 계산 · 활주로 상태(Braking Action) — FOM 4.5/5.8 · FCRM 1.17 · FCOM RCAM" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🌬 Wind</button>
@@ -7688,6 +7688,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
       });
       const all = TW.concat(A.rwy.map(r => ({ k: 'r', ref: r[0], pts: ammDec(r[2]) }))); all.extraLbl = TW.extraLbl; return all;
     }
+    // OFP 기종 날개폭(m)
+    function acSpan() {
+      const t = String((typeof pdfFlt !== 'undefined' && pdfFlt && pdfFlt.type) || '').toUpperCase();
+      return /A21N|A321|A320|A20N/.test(t) ? 35.8 : /A33/.test(t) ? 60.3 : /A35/.test(t) ? 64.75 : /A38/.test(t) ? 79.75 : /B77W|B773/.test(t) ? 64.8 : /B77/.test(t) ? 60.9 : /B78/.test(t) ? 60.1 : null;
+    }
+    function acSpanName() { const t = String((typeof pdfFlt !== 'undefined' && pdfFlt && pdfFlt.type) || '').toUpperCase(); return t || ''; }
     function ammDraw(map, grp, A, spec) {
       const lbl = (p, html, cls) => L.marker(p, { interactive: false, keyboard: false, icon: L.divIcon({ className: cls, html, iconSize: null }) }).addTo(grp);
       const R = L.canvas({ padding: 0.4 }), scaled = [], lat = ammDec(A.twy[0][2])[0][0], k = Math.cos(lat * Math.PI / 180);
@@ -7740,6 +7746,17 @@ svg.leaflet-image-layer.leaflet-interactive path {
         L.circle(p, { renderer: R, radius: h.r || 170, color: '#ea580c', weight: 2.5, fillColor: '#7c2d12', fillOpacity: .35, interactive: true }).bindPopup(`<b>${esc(h.id)}</b> 핫스폿 (위치 근사 · ${esc(h.at.join(' × '))})${h.note ? '<br>' + esc(h.note) : ''}`).addTo(grp);
         lbl([p[0] + (h.r || 170) / 111000 * 0.75, p[1]], esc(h.id), 'amm-hs');
       });
+      // 날개폭 제한 유도로 — 이 기종(OFP)이 걸리는 구간만 보라색 점선
+      const span = acSpan(); if (span) {
+        const Dst = { st: {} }; Object.entries(A.st || {}).forEach(([r, p]) => { Dst.st[stNorm(r)] = p; });
+        (spec.wing || []).filter(w => w.ref && (w.gt ? span > w.lim : span >= w.lim)).forEach(w => {
+          let segs = twyChains(allW, w.ref);
+          if (w.a) { const TA = twyTargets(allW, w.a, Dst), TB = twyTargets(allW, w.b, Dst); let best = null;
+            if (TA.length && TB.length) segs.forEach(ch => { const J1 = twyJunction(ch, TA, k), J2 = twyJunction(ch, TB, k); if (J1.d < 200 && J2.d < 200 && (!best || J1.d + J2.d < best.s)) best = { s: J1.d + J2.d, seg: twyCut(ch, J1.cum, J1.t, J2.t) }; });
+            segs = best ? [best.seg] : []; }
+          segs.forEach(sg => { L.polyline(sg, { color: '#d946ef', weight: 6, opacity: .9, dashArray: '2 9', lineCap: 'round' }).bindPopup(`<b>날개폭 제한</b> ${esc(w.txt)}<br>이 기종 ${span} m → 사용 불가`).addTo(grp); });
+        });
+      }
       return { bounds: L.latLngBounds(TW.flatMap(t => t.pts)), mpp };
     }
     async function twyOpen(icao, focusId, forceAmm) {
@@ -7811,6 +7828,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><b class="mono" style="color:#fff">${esc(x.n.notamId)}</b><span style="background:${x.color};color:#fff;border-radius:4px;padding:0 5px;font-size:11px;font-weight:700">${esc(x.K[0])}${x.act ? '' : ' · 시간대 아님'}</span><b style="color:#fde68a">${esc(x.R.desc.join(' / '))}</b><span data-twy-hid style="display:none;color:#94a3b8;font-size:11px">(숨김)</span>${x.R.partial ? '<span style="color:#fbbf24;font-size:11px">⚠ 일부 구간 — 위치는 원문 확인</span>' : ''}${x.R.miss.length ? `<span style="color:#fca5a5;font-size:11px">지도에 없음: ${esc(x.R.miss.join(', '))}</span>` : ''}</div>
             <div style="font-size:12px;color:#cbd5e1;margin-top:2px">${esc(x.sum)}</div>
             <div style="font-size:10.5px;color:#94a3b8">🕒 ${esc((x.n.validFrom || '') + ' ~ ' + (x.n.validTo || 'PERM'))}${x.n.schedule ? ' · ' + esc(x.n.schedule) : ''}</div></div>`).join('')
+        + (() => {
+            if (!spec || !(spec.notes || spec.wing)) return '';
+            const sp = acSpan(), hit = sp ? (spec.wing || []).filter(w => w.gt ? sp > w.lim : sp >= w.lim) : [];
+            const wl = sp ? `<div style="margin:4px 0;padding:5px 8px;border-radius:8px;border:1px solid ${hit.length ? '#d946ef' : '#16a34a'};background:${hit.length ? '#3b0764' : '#052e16'};font-size:12px">✈ ${esc(acSpanName())} 날개폭 ${sp} m — ${hit.length ? '<b>사용 불가:</b> ' + hit.map(w => esc(w.txt)).join(' · ') + ' <span style="color:#f0abfc">(지도에 보라색 점선)</span>' : '날개폭 제한 유도로 없음'}</div>` : '';
+            return `<details open style="margin-top:6px;border:1px solid #334155;border-radius:8px;padding:5px 8px;background:#0b1220"><summary style="cursor:pointer;color:#7dd3fc;font-weight:700;font-size:12.5px">📋 공항 운영 참고 (${esc(spec.notesSrc || 'Jeppesen')})</summary>${wl}<ul style="margin:4px 0 0;padding-left:16px;font-size:12px;color:#cbd5e1">${(spec.notes || []).map(t => `<li style="margin:2px 0">${esc(t)}</li>`).join('')}</ul></details>`;
+          })()
         + `<div style="font-size:10.5px;color:#64748b;margin-top:6px">유도로 중심선은 OpenStreetMap 자료이며 노탐 문장을 규칙으로 읽어 표시한 참고용입니다. 지상 이동은 Jeppesen 차트·관제 지시를 따르세요.</div>`;
       if (focusId) { const i = TWY.items.findIndex(x => x.n.notamId === focusId); if (i >= 0) setTimeout(() => twyFocus(i), 300); }
     }
