@@ -1250,7 +1250,22 @@
       126.40185
      ]
     ],
-    "src": "AIP RKSI AD 2-6~2-9 (AIRAC 15 OCT 2026) 대조"
+    "src": "AIP RKSI AD 2-6~2-9 (AIRAC 15 OCT 2026) 대조 · Jeppesen 20-9 (6 NOV 26)",
+    "notesSrc": "Jeppesen 20-9 · 20-9A4 · 20-9A7 · AIP AD 2-6",
+    "notes": [
+     "우선 활주로: 33L/R 또는 34L/R을 배풍 8 kt까지 사용 권장. 따를 수 없으면 ETD/ETA 20분 전까지 ATC에 이유 통보 (교통 상황에 따라 지연 가능).",
+     "택시 속도: A·B·C·D·M·N·P 유도로에서는 10 kt 이상으로 택시 (원활한 흐름). 불가하면 ATC에 알릴 것.",
+     "비표준 택시 경로일 때 Incheon Apron이 Apron 2·3·4·Cargo Apron 사이 전환 택시 지시를 줌. Apron 1·2·3·4, Cargo Apron 1·2, Maintenance Apron 1·2, 제빙패드의 푸시백·택시 지시는 INCHEON APRON.",
+     "TCP(관제이양지점, 예: 4E·14W)를 Apron/Ground(Tower) 허가 없이 넘지 말 것. 이동지역(Maneuvering area) 진입은 Tower/Ground 허가 필요.",
+     "R17 다리(Bridge) 유도선: 15 kt 미만으로 택시. 풍속 60~70 kt면 Code C·D 제한 가능, 70 kt 이상이면 모든 항공기 제한 가능.",
+     "RE·RW 유도선은 Code C 이하(날개폭 36 m 이하)만 — A321 사용 가능.",
+     "CAT I ILS 15L/33R 접근 시 활공각 안테나 근처 택시 항공기로 GS 신호 흔들림 가능 → 접근 경로·강하율 면밀히 감시. CAT I 택시 경로는 CAT II/III와 같음 (20-9F~20-9J).",
+     "금지구역(P-518, P-73A/B)·특수공역(ACMI, R-17) 주의 — 특히 NCN VOR R-270~R-080 북쪽 비행 시.",
+     "화물기(Cargo Apron 사용)는 Seoul Approach에 \"cargo\"임을 알려 활주로 배정받을 것.",
+     "고속 탈출 유도로는 그루빙 처리. VDGS 장착 (T1·Concourse·T2). 공항 주변 조류 많음.",
+     "엔진 런업: Maintenance Apron 북쪽. 사용 불가 시 임시 런업 지역 14A(A 유도로 북쪽) 배정 가능. 엔진 점검 중 122.175 MHz 청취.",
+     "D 제빙패드: D NORTH(851·852) / D SOUTH(841·842). 원격 승객탑승교(RPBB): 501·503·512·514."
+    ]
    }
   },
   "VVTS": {
