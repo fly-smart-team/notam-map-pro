@@ -844,7 +844,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 18:50 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/09 19:30 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물</button>
         <button id="btn-wind" type="button" title="바람 제한치 계산 · 활주로 상태(Braking Action) — FOM 4.5/5.8 · FCRM 1.17 · FCOM RCAM" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🌬 Wind</button>
@@ -7772,6 +7772,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         m.addEventListener('click', e => {
           if (e.target === m || e.target.closest('[data-twy-close]')) { m.style.display = 'none'; return; }
           const ab = e.target.closest('[data-twy-all]'); if (ab) { twyShowAll(ab.dataset.twyAll); return; }
+          const hb = e.target.closest('[data-twy-hide]'); if (hb) { TWY.map.closePopup(); twySetVis(+hb.dataset.twyHide, false); return; }
           const it = e.target.closest('[data-twy-item]'); if (it) twyToggle(+it.dataset.twyItem);
           const ra = e.target.closest('[data-twy-reamm]'); if (ra) twyOpen(ra.dataset.twyReamm, null, true);
         });
@@ -7813,19 +7814,20 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const rows = ofpOrdered.filter((n, i, a) => n.secCode === icao && twyClauses(n) && a.findIndex(x => x.notamId === n.notamId) === i);
       rows.forEach(n => {
         const R = twyResolve(D, icao, n), win = brfWindow(n, ctx), act = win ? notamIsActive(n, win[0], win[1]) : true;
-        const K = TWY_KIND[R.kind] || TWY_KIND.info, color = act ? K[1] : '#34d399', dash = act ? K[2] : '6 8';
+        const K = TWY_KIND[R.kind] || TWY_KIND.info, color = act ? K[1] : '#3b82f6', dash = act ? K[2] : '6 8';
         const refT = win && ctx.w ? (win[2] === 'ETD' ? ctx.w.etd : ctx.w.eta) : null, refD = refT ? new Date(refT) : null;
         const when = refD ? `${win[2] === 'ETD' ? 'ETD' : 'ETA'} ${String(refD.getUTCDate()).padStart(2, '0')}${'JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC'.substr(refD.getUTCMonth() * 3, 3)} ${String(refD.getUTCHours()).padStart(2, '0')}:${String(refD.getUTCMinutes()).padStart(2, '0')}Z` : '';
         const pre = typeof preOf === 'function' ? preOf(n) : null, sum = pre && pre.s ? pre.s : String(n.etext || n.rawText || '').replace(/\s+/g, ' ').slice(0, 160);
         const grp = L.featureGroup();
         R.segs.forEach(s => { L.polyline(s, { color: '#000', weight: 13, opacity: .35, interactive: false }).addTo(grp); L.polyline(s, { color, weight: amm ? 11 : 9, opacity: .95, dashArray: dash, lineCap: 'round' }).addTo(grp); });
-        const pop = `<b>${esc(n.notamId)}</b> · ${esc(K[0])}${act ? '' : ' · <span style="color:#059669">비행 시간대 아님</span>'}<br>${esc(R.desc.join(' / '))}<br><span style="font-size:11px">${esc(sum)}</span><br><span style="font-size:12.5px;color:#334155;font-weight:600">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${when ? `<br><span style="font-size:12.5px;font-weight:800;color:#0369a1">✈ ${esc(when)}</span>` : ''}`;
+        const pop = `<b>${esc(n.notamId)}</b> · ${esc(K[0])}${act ? '' : ' · <span style="color:#2563eb">비행 시간대 아님</span>'}<br>${esc(R.desc.join(' / '))}<br><span style="font-size:11px">${esc(sum)}</span><br><span style="font-size:12.5px;color:#334155;font-weight:600">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${when ? `<br><span style="font-size:12.5px;font-weight:800;color:#0369a1">✈ ${esc(when)}</span>` : ''}`;
         R.pts.forEach(p => { L.circle([p[0], p[1]], { radius: 22, color, weight: 3, fillColor: color, fillOpacity: act ? .45 : .2 }).addTo(grp); L.marker([p[0], p[1]], { icon: L.divIcon({ className: 'twy-stn', html: `<span style="background:${color}">${esc(p[2])}</span>`, iconSize: null }) }).addTo(grp); });
-        grp.bindPopup(pop, { maxWidth: 320 }); if (R.segs.length || R.pts.length) grp.addTo(TWY.layers);
+        const idx = TWY.items.length;
+        grp.bindPopup(pop + `<div style="margin-top:6px"><button type="button" data-twy-hide="${idx}" style="background:#334155;color:#fff;border-radius:6px;padding:3px 10px;font-weight:700;font-size:12px">👁‍🗨 지도에서 숨기기</button></div>`, { maxWidth: 320 }); if (R.segs.length || R.pts.length) grp.addTo(TWY.layers);
         TWY.items.push({ n, R, grp, act, K, sum, color, when });
       });
       map.fitBounds(allB.isValid() ? allB : [[0, 0], [0, 0]], { padding: [10, 10] });
-      list.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:#94a3b8;margin-bottom:6px"><span><b style="color:#ef4444">━</b> 폐쇄</span><span><b style="color:#ef4444">┅</b> 사용 제한</span><span><b style="color:#f59e0b">┅</b> 등화·표지</span><span><b style="color:#34d399">┅</b> 비행 시간대 아님</span><span>· 목록을 누르면 확대 · 한 번 더 누르면 숨김</span><span style="margin-left:auto;display:flex;gap:6px"><button type="button" data-twy-all="0" style="background:#334155;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">👁‍🗨 전체 숨기기</button><button type="button" data-twy-all="1" style="background:#334155;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">👁 전체 보이기</button><button type="button" data-twy-all="L" style="background:#78350f;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">등화·표지 숨기기</button></span></div>`
+      list.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:#94a3b8;margin-bottom:6px"><span><b style="color:#ef4444">━</b> 폐쇄</span><span><b style="color:#ef4444">┅</b> 사용 제한</span><span><b style="color:#f59e0b">┅</b> 등화·표지</span><span><b style="color:#3b82f6">┅</b> 비행 시간대 아님</span><span>· 목록을 누르면 확대 · 한 번 더 누르면 숨김</span><span style="margin-left:auto;display:flex;gap:6px"><button type="button" data-twy-all="0" style="background:#334155;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">👁‍🗨 전체 숨기기</button><button type="button" data-twy-all="1" style="background:#334155;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">👁 전체 보이기</button><button type="button" data-twy-all="L" style="background:#78350f;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">등화·표지 숨기기</button></span></div>`
         + TWY.items.map((x, i) => `<div data-twy-item="${i}" style="cursor:pointer;border:1px solid ${x.R.segs.length || x.R.pts.length ? x.color : '#475569'};border-left-width:6px;border-radius:8px;padding:5px 8px;margin-bottom:5px;background:#111827">
             <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><b class="mono" style="color:#fff">${esc(x.n.notamId)}</b><span style="background:${x.color};color:#fff;border-radius:4px;padding:0 5px;font-size:11px;font-weight:700">${esc(x.K[0])}${x.act ? '' : ' · 시간대 아님'}</span><b style="color:#fde68a">${esc(x.R.desc.join(' / '))}</b><span data-twy-hid style="display:none;color:#94a3b8;font-size:11px">(숨김)</span>${x.R.partial ? '<span style="color:#fbbf24;font-size:11px">⚠ 일부 구간 — 위치는 원문 확인</span>' : ''}${x.R.miss.length ? `<span style="color:#fca5a5;font-size:11px">지도에 없음: ${esc(x.R.miss.join(', '))}</span>` : ''}</div>
             <div style="font-size:12px;color:#cbd5e1;margin-top:2px">${esc(x.sum)}</div>
@@ -7856,7 +7858,20 @@ svg.leaflet-image-layer.leaflet-interactive path {
       TWY.last = i;
       const x = TWY.items && TWY.items[i]; if (!x || !(x.R.segs.length || x.R.pts.length)) return;
       TWY.map.fitBounds(x.grp.getBounds(), { maxZoom: 17, padding: [40, 40] }); setTimeout(() => x.grp.openPopup(x.grp.getBounds().getCenter()), 450);
-      let c = 0; const t = setInterval(() => { x.grp.eachLayer(l => l.setStyle && l.options.color !== '#000' && l.setStyle({ opacity: c % 2 ? .95 : .25 })); if (++c > 7) clearInterval(t); }, 250);
+      // 선택한 노탐: 흰색·굵게 깜빡임(약 5초), 나머지는 흐리게 → 끝나면 원래대로
+      if (TWY.flash) TWY.flash();
+      const orig = []; x.grp.eachLayer(l => { if (l.setStyle) orig.push([l, { color: l.options.color, weight: l.options.weight, opacity: l.options.opacity, fillOpacity: l.options.fillOpacity }]); });
+      const others = TWY.items.filter((y, j) => j !== i && TWY.layers.hasLayer(y.grp)), dim = [];
+      others.forEach(y => y.grp.eachLayer(l => { if (l.setStyle) { dim.push([l, l.options.opacity, l.options.fillOpacity]); l.setStyle({ opacity: .15, fillOpacity: .05 }); } }));
+      x.grp.bringToFront && x.grp.bringToFront();
+      let c = 0;
+      const stop = () => { clearInterval(t); orig.forEach(([l, o]) => l.setStyle(o)); dim.forEach(([l, o, f]) => l.setStyle({ opacity: o, fillOpacity: f })); TWY.flash = null; };
+      const t = setInterval(() => {
+        const on = c % 2 === 0;
+        orig.forEach(([l, o]) => { if (o.color === '#000') return; l.setStyle({ color: on ? '#ffffff' : o.color, weight: (o.weight || 3) + (on ? 6 : 2), opacity: 1 }); });
+        if (++c > 13) stop();
+      }, 380);
+      TWY.flash = stop;
     }
     document.addEventListener('click', e => { const b = e.target.closest('[data-twy-open]'); if (!b) return; e.preventDefault(); e.stopPropagation(); twyOpen(b.dataset.twyOpen, b.dataset.twyId); }, true);
 
