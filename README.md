@@ -86,3 +86,8 @@
 - 비밀값: `ACCESS_TOKEN`(필수), `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY` (키 있는 AI만 사용)
 - 선택 변수: `AI_ORDER`(기본 `deepseek,anthropic`), `DEEPSEEK_MODEL`, `ANTHROPIC_MODEL`
 - 같은 원문 요약은 7일 캐시 (요금 절약)
+
+## 회귀 테스트 (고칠 때마다 실행)
+- `python3 tools/regress.py` — 유도로·주기장 노탐 문장 해석 사례(`tests/twy-cases.json`)를 확인합니다.
+- 과거 OFP 비교: `NOTAM_TEST_DIR=/저장소 밖 폴더 python3 tools/regress.py` — 폴더 안 `*.pdf`의 분류 결과(등급·이유·수동 확인)를 `*.snap.json`과 비교. 처음 실행하면 스냅샷을 만들고, 의도한 변경이면 `--update`로 갱신.
+- OFP와 스냅샷은 회사 자료라 **저장소에 올리지 않습니다**.
