@@ -844,7 +844,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/11 00:10 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/11 00:30 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물</button>
         <button id="btn-wind" type="button" title="바람 제한치 계산 · 활주로 상태(Braking Action) — FOM 4.5/5.8 · FCRM 1.17 · FCOM RCAM" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🌬 Wind</button>
@@ -1020,7 +1020,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           </div>
         </div>
         <details id="brf-tools" class="group rounded-lg border border-amber-800/50 bg-amber-950/10">
-          <summary class="cursor-pointer select-none list-none flex items-center gap-2 flex-wrap px-2 py-1 text-[11px]"><span class="text-amber-300 font-bold"><span class="group-open:hidden">▸</span><span class="hidden group-open:inline">▾</span> ⏱ 출발 지연 ETD 조정 · 🔄 퀵턴(복편)</span><span id="brf-tools-status" class="text-[10px] text-slate-400 font-mono-code">계획값 사용 중</span></summary>
+          <summary class="cursor-pointer select-none list-none flex items-center gap-2 flex-wrap px-2 py-1 text-[11px]"><span class="text-amber-300 font-bold"><span class="group-open:hidden">▸</span><span class="hidden group-open:inline">▾</span> ⏱ ETD·ETA 조정 · 🔄 퀵턴(복편)</span><span id="brf-tools-status" class="text-[10px] text-slate-400 font-mono-code">계획값 사용 중</span></summary>
           <div class="flex flex-col gap-1.5 p-2 pt-0">
             <div class="flex flex-col gap-1.5 bg-amber-950/30 p-2 rounded-lg border border-amber-700/40">
               <div class="flex items-center justify-between flex-wrap gap-1">
@@ -1034,6 +1034,17 @@ svg.leaflet-image-layer.leaflet-interactive path {
                 <button id="pkg1-etd-plus30" type="button" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-200 border border-slate-700">+30분</button>
                 <button id="pkg1-etd-plus60" type="button" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-200 border border-slate-700">+60분</button>
                 <button id="pkg1-etd-reset" type="button" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700">계획값으로</button>
+              </div>
+            </div>
+            <div class="flex flex-col gap-1.5 bg-emerald-950/25 p-2 rounded-lg border border-emerald-700/40">
+              <span class="text-[11px] text-emerald-300 font-bold">🛬 도착 ETA 조정 <span class="font-normal text-slate-400">(홀딩·도착 지연·조기 도착 — 비우면 ETD + 비행시간으로 자동)</span></span>
+              <div class="flex items-center gap-1.5 flex-wrap text-[11px]">
+                <input id="pkg1-eta-input" type="text" inputmode="numeric" maxlength="4" placeholder="ETA HHMM" class="w-28 bg-slate-900 text-emerald-300 text-center font-mono-code rounded border border-slate-700 px-2 py-1 focus:outline-none focus:border-emerald-500" />
+                <button id="pkg1-eta-apply" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all active:scale-95">적용</button>
+                <button id="pkg1-eta-m15" type="button" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-200 border border-slate-700">−15분</button>
+                <button id="pkg1-eta-p15" type="button" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-200 border border-slate-700">+15분</button>
+                <button id="pkg1-eta-p30" type="button" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-200 border border-slate-700">+30분</button>
+                <button id="pkg1-eta-reset" type="button" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700">자동으로</button>
               </div>
             </div>
 
@@ -1252,6 +1263,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
     // ======== 개발버전(v4.8)에서 가져온 기능: 2. 공항 · 3. Package 1 · 4. Package 2 ERA ========
     let etdOverride = null;   // 출발 지연 반영 {key, etdMin}
+    let etaOverride = null;   // 도착 시각 직접 조정 (홀딩·도착 지연·조기 도착) {key, etaMin}
     let package1AirportNotams = [], package2AirportNotams = [], package2AreaNotams = [];
     let era2Selected = new Set();
     let pkg2ValidOnly = false;
@@ -1811,7 +1823,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         if (vt !== null && vt !== Infinity && vt >= ws && vt <= we) events.push(`${hhmm(vt)} 유효 종료`);
         rows.push({ n, role, planAct, adjAct, events, critical: adjAct && ['RWY', 'NAV', 'APCH_MIN'].includes(n.category) });
       });
-      const adjusted = !!etdOverride;
+      const adjusted = !!etdOverride || !!etaOverride;
       const tally = ['DEP', 'DEST', 'ALTN'].filter(r => rows.some(x => x.role === r)).map(r => {
         const rs = rows.filter(x => x.role === r);
         const apt = r === 'DEP' ? ci.dep : r === 'DEST' ? ci.dest : ci.altn;
@@ -1825,7 +1837,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       box.innerHTML = `
         <div class="rounded-lg border border-amber-800/40 bg-amber-950/20 p-2 flex flex-col gap-1.5">
           <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
-            <span class="text-amber-300 font-bold">📋 ${adjusted ? '조정 ETD 기준' : '계획 ETD 기준'} 유효 노탐 점검</span>
+            <span class="text-amber-300 font-bold">📋 ${adjusted ? (etaOverride ? '조정 ETD·ETA 기준' : '조정 ETD 기준') : '계획 ETD 기준'} 유효 노탐 점검</span>
             ${tally}
             ${critCount ? `<span class="px-1.5 py-0.5 rounded bg-rose-950/60 border border-rose-800/60 text-rose-300">중요(RWY/NAV/APCH) 유효 ${critCount}건</span>` : ''}
           </div>
@@ -2076,7 +2088,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         } else if (isDep) {
           timeBanner.textContent = `🛫 출발 ${depStr} (${etdOverride ? '조정' : '계획'} ETD ${formatMinutes(info.etdMinutes)}Z)${quickturnActive && retEtaMs ? ` ➔ 🔄 복편도착 ETA ${formatMinutes(quickturnReturnEtaMin)}Z` : ''}`;
         } else if (isDest) {
-          timeBanner.textContent = `🛬 목적지 ${destStr} (${etdOverride ? '조정' : '계획'} ETA ${formatMinutes(info.etaMinutes)}Z)${quickturnActive && retEtdMs ? ` ➔ 🔄 퀵턴출발 ETD ${formatMinutes(quickturnReturnEtdMin)}Z` : ''}`;
+          timeBanner.textContent = `🛬 목적지 ${destStr} (${etdOverride || etaOverride ? '조정' : '계획'} ETA ${formatMinutes(info.etaMinutes)}Z)${quickturnActive && retEtdMs ? ` ➔ 🔄 퀵턴출발 ETD ${formatMinutes(quickturnReturnEtdMin)}Z` : ''}`;
         } else {
           timeBanner.textContent = `📍 교체공항 ${altnStr} (도착 ETA ${formatMinutes(info.etaMinutes)}Z 기준)`;
         }
@@ -2273,8 +2285,37 @@ svg.leaflet-image-layer.leaflet-interactive path {
       ci.etdMinutes = ci.plannedEtdMinutes;
       ci.etaMinutes = ci.plannedEtdMinutes + (ci.eetMinutes || 0);
       applyEtdOverride();
+      applyEtaOverride();
       updateEtdStatus();
     }
+    const etKey = ci => `${ci.dep}|${ci.flightDate}|${ci.plannedEtdMinutes}`;
+    function applyEtaOverride() {
+      const ci = info;
+      if (!etaOverride || ci.plannedEtdMinutes === undefined || etaOverride.key !== etKey(ci)) return;
+      ci.etaMinutes = etaOverride.etaMin;
+    }
+    function setEtaOverride(etaMin) {
+      const ci = info;
+      if (!ci.dep || ci.plannedEtdMinutes === undefined || ci.plannedEtdMinutes === null) { showToast('먼저 OFP PDF 또는 FPL을 불러와 주세요.', 'error'); return; }
+      if (etaMin <= ci.etdMinutes) { showToast('ETA가 ETD보다 빠릅니다 — 시각을 확인해 주세요.', 'error'); return; }
+      etaOverride = { key: etKey(ci), etaMin };
+      recomputeEtd(); refreshForEtdChange();
+      showToast(`도착 시각 조정: ETA ${formatMinutes(ci.etaMinutes)}Z (ETD ${formatMinutes(ci.etdMinutes)}Z 기준 자동값 ${formatMinutes(ci.etdMinutes + (ci.eetMinutes || 0))}Z)`);
+    }
+    function resetEtaOverride() {
+      etaOverride = null; recomputeEtd(); refreshForEtdChange();
+      showToast('ETA를 ETD + 비행시간 자동 계산으로 되돌렸습니다.');
+    }
+    function applyEtaFromInput() {
+      const ci = info, v = ($('pkg1-eta-input')?.value || '').trim();
+      if (!/^\d{4}$/.test(v) || +v.slice(0, 2) > 23 || +v.slice(2) > 59) { showToast('HHMM 형식으로 입력해 주세요 (예: 1630)', 'error'); return; }
+      if (ci.plannedEtdMinutes === undefined || ci.plannedEtdMinutes === null) { showToast('먼저 OFP PDF 또는 FPL을 불러와 주세요.', 'error'); return; }
+      const auto = ci.etdMinutes + (ci.eetMinutes || 0); let m = +v.slice(0, 2) * 60 + +v.slice(2);
+      m = [m - 1440, m, m + 1440, m + 2880].reduce((b, c) => Math.abs(c - auto) < Math.abs(b - auto) ? c : b);   // 자정을 넘기는 비행 처리
+      setEtaOverride(m);
+      if (Math.abs(m - auto) > 180) setTimeout(() => showToast(`⚠ ETA가 자동값보다 ${Math.round(Math.abs(m - auto) / 60)}시간 이상 ${m > auto ? '늦습니다' : '빠릅니다'} — 날짜(UTC)를 확인하세요`, 'error'), 1800);
+    }
+    function shiftEta(d) { const ci = info; if (ci.etaMinutes === null || ci.etaMinutes === undefined) { showToast('먼저 OFP PDF 또는 FPL을 불러와 주세요.', 'error'); return; } setEtaOverride(ci.etaMinutes + d); }
 
     function applyEtdOverride() {
       const ci = info;
@@ -2282,6 +2323,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (etdOverride.key !== `${ci.dep}|${ci.flightDate}|${ci.plannedEtdMinutes}`) return; // 다른 OFP/계획이면 무시
       ci.etdMinutes = etdOverride.etdMin;
       ci.etaMinutes = etdOverride.etdMin + (ci.eetMinutes || 0);
+      applyEtaOverride();
       updateEtdStatus();
     }
 
@@ -2292,13 +2334,18 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const fmt = formatMinutes;
       const planEta = ci.plannedEtdMinutes + (ci.eetMinutes || 0);
       let text, cls;
+      const etaTag = etaOverride ? ` · ETA 직접 조정 ${fmt(ci.etaMinutes)}Z (계획 ${fmt(planEta)}Z, ${ci.etaMinutes - planEta >= 0 ? '+' : ''}${ci.etaMinutes - planEta}분)` : '';
+      if (!etdOverride && etaOverride) {
+        text = `계획 ETD ${fmt(ci.plannedEtdMinutes)}Z${etaTag}`; cls = 'text-[10px] text-amber-300 font-mono-code font-bold';
+        els.forEach(el => { el.textContent = text; el.className = cls; }); return;
+      }
       if (!etdOverride) {
         text = `계획값 사용 중 · ETD ${fmt(ci.plannedEtdMinutes)}Z / ETA ${fmt(planEta)}Z`;
         cls = 'text-[10px] text-slate-400 font-mono-code';
       } else {
         const diff = ci.etdMinutes - ci.plannedEtdMinutes;
         const dayTag = ci.etdMinutes < 0 ? ' (전일 UTC)' : ci.etdMinutes >= 1440 ? ' (익일 UTC)' : '';
-        text = `계획 ETD ${fmt(ci.plannedEtdMinutes)}Z → 조정 ETD ${fmt(ci.etdMinutes)}Z (${diff >= 0 ? '+' : ''}${diff}분)${dayTag} · 조정 ETA ${fmt(ci.etaMinutes)}Z`;
+        text = `계획 ETD ${fmt(ci.plannedEtdMinutes)}Z → 조정 ETD ${fmt(ci.etdMinutes)}Z (${diff >= 0 ? '+' : ''}${diff}분)${dayTag}${etaOverride ? etaTag : ' · 조정 ETA ' + fmt(ci.etaMinutes) + 'Z'}`;
         cls = 'text-[10px] text-amber-300 font-mono-code font-bold';
       }
       els.forEach(el => { el.textContent = text; el.className = cls; });
@@ -6989,7 +7036,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const pax = p.pax;
       const altnCode = p.altn || info.altn || '';
       const altnNm = getAirportNameInfo(altnCode);
-      const adjusted = !!etdOverride;
+      const adjusted = !!etdOverride || !!etaOverride;
       box.innerHTML = `<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3 flex flex-col gap-3">
         <div class="flex items-center flex-wrap gap-x-2.5 gap-y-1">
           <span class="text-lg font-bold mono text-white">${esc(cs || '--')}</span>
@@ -7005,7 +7052,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <div class="text-[10px] text-slate-400">비행시간</div>
             <div class="flex items-center gap-1"><span class="w-4 sm:w-8 border-t border-dashed border-slate-600"></span><span class="text-sky-300">✈︎</span><span class="w-4 sm:w-8 border-t border-dashed border-slate-600"></span></div>
             <div class="mono font-bold text-sky-200">${hm(p.tripMin ?? info.eetMinutes)}</div>
-            ${adjusted ? '<div class="text-[9px] text-amber-300">조정 ETD 반영</div>' : ''}
+            ${adjusted ? `<div class="text-[9px] text-amber-300">${etaOverride ? '조정 ETA 반영' : '조정 ETD 반영'}</div>` : ''}
           </div>
           ${endpoint('DEST', info.dest, w ? w.eta : null, info.etaMinutes, altnCode ? 'center' : true)}
           ${altnCode ? `<div class="flex flex-col items-center gap-1 px-0.5" style="align-self:end;margin-bottom:1.6rem">
@@ -7365,7 +7412,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       $('pdf-label').textContent = 'OFP PDF 파일 첨부';
       $('pdf-sub').textContent = '클릭하거나 PDF를 끌어다 놓으세요';
       info = { dep:'', dest:'', altn:'', era:[], etdMinutes:null, etaMinutes:null, eetMinutes:null, flightDate:'' };
-      pdfFlt = null; etdOverride = null; package1AirportNotams = []; package2AirportNotams = []; package2AreaNotams = []; era2Selected.clear();
+      pdfFlt = null; etdOverride = null; etaOverride = null; package1AirportNotams = []; package2AirportNotams = []; package2AreaNotams = []; era2Selected.clear();
       routeCoordinates = []; routeTokens = []; routeElapsed = []; routeFir = []; routeSource = '없음';
       firNotams = []; airNotams = []; otherNotams = []; ofpOrdered = []; pdfEtp = []; pdfEdto = null; renderEdtoBanner();
       pdfNav = []; pdfFirCode = null; pdfFirList = []; pdfAltn = null; pdfEra = [];
@@ -7382,6 +7429,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
     $('pkg1-etd-plus30').addEventListener('click', () => shiftEtd(30));
     $('pkg1-etd-plus60').addEventListener('click', () => shiftEtd(60));
     $('pkg1-etd-reset').addEventListener('click', resetEtdOverride);
+    $('pkg1-eta-apply').addEventListener('click', applyEtaFromInput);
+    $('pkg1-eta-input').addEventListener('keydown', e => { if (e.key === 'Enter') applyEtaFromInput(); });
+    $('pkg1-eta-m15').addEventListener('click', () => shiftEta(-15));
+    $('pkg1-eta-p15').addEventListener('click', () => shiftEta(15));
+    $('pkg1-eta-p30').addEventListener('click', () => shiftEta(30));
+    $('pkg1-eta-reset').addEventListener('click', resetEtaOverride);
     $('chk-pkg1-valid-only').addEventListener('change', e => { pkg1ValidOnly = e.target.checked; renderPackage1Notams(); });
     {
       const ACTIVE_CLS = "flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-sky-600 text-white shadow";
@@ -7930,7 +7983,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         (TWY.res || (TWY.res = {}))[n.notamId] = R;
         const K = TWY_KIND[R.kind] || TWY_KIND.info, color = act ? K[1] : near ? '#a855f7' : '#3b82f6', dash = act ? K[2] : '6 8';
         const refT = win && ctx.w ? (win[2] === 'ETD' ? ctx.w.etd : ctx.w.eta) : null, refD = refT ? new Date(refT) : null;
-        const when = refD ? `${typeof etdOverride !== 'undefined' && etdOverride ? '조정 ' : ''}${win[2] === 'ETD' ? 'ETD' : 'ETA'} ${String(refD.getUTCDate()).padStart(2, '0')}${'JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC'.substr(refD.getUTCMonth() * 3, 3)} ${String(refD.getUTCHours()).padStart(2, '0')}:${String(refD.getUTCMinutes()).padStart(2, '0')}Z` : '';
+        const when = refD ? `${(win[2] === 'ETD' ? etdOverride : (etdOverride || etaOverride)) ? '조정 ' : ''}${win[2] === 'ETD' ? 'ETD' : 'ETA'} ${String(refD.getUTCDate()).padStart(2, '0')}${'JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC'.substr(refD.getUTCMonth() * 3, 3)} ${String(refD.getUTCHours()).padStart(2, '0')}:${String(refD.getUTCMinutes()).padStart(2, '0')}Z` : '';
         const pre = typeof preOf === 'function' ? preOf(n) : null, sum = pre && pre.s ? pre.s : String(n.etext || n.rawText || '').replace(/\s+/g, ' ').slice(0, 160);
         const grp = L.featureGroup();
         R.segs.forEach(s => { L.polyline(s, { color: '#000', weight: R.rwy ? 20 : 13, opacity: .35, interactive: false }).addTo(grp); L.polyline(s, { color, weight: R.rwy ? (amm ? 16 : 12) : (amm ? 11 : 9), opacity: R.rwy ? .8 : .95, dashArray: dash, lineCap: R.rwy ? 'butt' : 'round' }).addTo(grp); });
