@@ -4004,20 +4004,21 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <table class="mono text-[13px] mt-1 w-full max-w-[340px]"><tr class="text-[10.5px] text-slate-400"><td>FL</td><td>WIND</td><td>TEMP</td></tr>
             ${p.levels.map(l => `<tr class="${l.fl === p.cru ? 'text-sky-200 font-bold' : 'text-slate-200'}"><td>${l.fl}${l.fl === p.cru ? ' ◀' : ''}</td><td>${fmtW(l)}</td><td>${fmtT(l.tmp)}</td></tr>`).join('')}</table></div>`;
         const all = P.rows.map(r => `<tr class="${r.pick ? 'text-amber-200 font-bold' : 'text-slate-300'}"><td>${r.pick ? '▶ ' : ''}${esc(r.name)}</td><td>${r.cru}</td><td>${fmtW(r.cur)}${r.cur.interp ? '*' : ''}</td><td>${fmtT(r.cur.tmp)}</td><td>${r.d ? `${r.d.dir}° / ${r.d.spd > 0 ? '+' : ''}${r.d.spd}KT / ${r.d.tmp > 0 ? '+' : ''}${r.d.tmp}°C` : '—'}</td></tr>`).join('');
-        return `<div class="rounded-xl border-2 border-sky-700 bg-slate-950/40 p-2.5 flex flex-col gap-2">
-          <div class="flex items-center gap-2 flex-wrap"><span class="text-[14px] font-bold text-sky-200">🧭 FMS 순항 바람 입력 (CRZ WIND)</span><span class="text-[11px] text-slate-400">${P.picks.length}곳 · 기준 풍향 &gt;30° · 풍속 &gt;30KT · 기온 &gt;5°C (Airbus)</span></div>
-          <div class="grid gap-2 sm:grid-cols-2">${P.picks.map(card).join('')}</div>
+        return `<details id="fms-wind-box" class="group rounded-xl border-2 border-sky-700 bg-slate-950/40 p-2.5"><summary class="cursor-pointer select-none list-none flex items-center gap-2 flex-wrap"><span class="text-sky-300 text-[12px]"><span class="group-open:hidden">▸</span><span class="hidden group-open:inline">▾</span></span><span class="text-[14px] font-bold text-sky-200">🧭 FMS 순항 바람 입력 (CRZ WIND)</span><span class="text-[11px] text-slate-400">${P.picks.length}곳 · 기준 풍향 &gt;30° · 풍속 &gt;30KT · 기온 &gt;5°C (Airbus)</span><span class="ml-auto text-[11px] text-slate-500 group-open:hidden">눌러서 펼치기</span></summary>
+          <div class="flex flex-col gap-2 mt-2"><div class="grid gap-2 sm:grid-cols-2">${P.picks.map(card).join('')}</div>
           <details><summary class="cursor-pointer select-none text-[11.5px] text-slate-300">전체 웨이포인트 비교 (순항 고도, 마지막 입력값 대비)</summary>
             <table class="mono text-[11.5px] mt-1 w-full"><tr class="text-slate-500"><td>WPT</td><td>FL</td><td>WIND</td><td>TEMP</td><td>변화 (풍향/풍속/기온)</td></tr>${all}</table>
             <div class="text-[10px] text-slate-500 mt-0.5">* 표의 고도 사이를 보간한 값 (비교용)</div></details>
-          <div class="text-[10.5px] text-slate-500">◀ 순항 고도. FMS는 입력한 바람을 다음 입력 지점까지 그대로 씁니다. OFP 바람 요약이 기준이며, 순항 고도가 바뀌면 다시 확인하세요.</div>
-        </div>`;
+          <div class="text-[10.5px] text-slate-500">◀ 순항 고도. FMS는 입력한 바람을 다음 입력 지점까지 그대로 씁니다. OFP 바람 요약이 기준이며, 순항 고도가 바뀌면 다시 확인하세요.</div></div>
+        </details>`;
       }
 
       function render(text, nav, el) {
         if (!el) return null;
         let P = null; try { P = plan(text, nav); } catch (e) { P = null; }
+        const was = el.querySelector('#fms-wind-box'), op = was && was.open;
         el.innerHTML = html(P);
+        if (op) { const b = el.querySelector('#fms-wind-box'); if (b) b.open = true; }
         return P;
       }
       return { parse, plan, html, render, LIM };
@@ -7951,6 +7952,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         m.addEventListener('click', e => {
           if (e.target === m || e.target.closest('[data-twy-close]')) { m.style.display = 'none'; return; }
           const ab = e.target.closest('[data-twy-all]'); if (ab) { twyShowAll(ab.dataset.twyAll); return; }
+          const sb = e.target.closest('[data-twy-star]'); if (sb) { e.stopPropagation(); const x = TWY.items[+sb.dataset.twyStar]; if (x) { const on = !isStar(x.n); setStar(x.n, on); sb.textContent = on ? '★' : '☆'; sb.style.background = on ? '#fbbf24' : 'transparent'; sb.style.color = on ? '#0f172a' : '#94a3b8'; sb.style.borderColor = on ? '#fcd34d' : '#64748b'; try { renderBriefing(); } catch (er) { } } return; }
           const hb = e.target.closest('[data-twy-hide]'); if (hb) { TWY.map.closePopup(); twySetVis(+hb.dataset.twyHide, false); return; }
           const it = e.target.closest('[data-twy-item]'); if (it) twyToggle(+it.dataset.twyItem);
           const ra = e.target.closest('[data-twy-reamm]'); if (ra) twyOpen(ra.dataset.twyReamm, null, true);
@@ -8012,7 +8014,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       map.fitBounds(allB.isValid() ? allB : [[0, 0], [0, 0]], { padding: [10, 10] });
       list.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:#94a3b8;margin-bottom:6px"><span><b style="color:#ef4444">━</b> 폐쇄 (활주로는 ✕)</span><span><b style="color:#f97316">┅</b> 활주로 ILS·공시거리</span><span><b style="color:#ef4444">┅</b> 사용 제한</span><span><b style="color:#f59e0b">┅</b> 등화·표지</span><span><b style="color:#3b82f6">┅</b> 비행 시간대 아님</span><span><b style="color:#93c5fd">┅</b> ±2h 내 유효(지연 시 해당)</span><span>· 목록을 누르면 확대 · 한 번 더 누르면 숨김</span><span style="margin-left:auto;display:flex;gap:6px"><button type="button" data-twy-all="0" style="background:#334155;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">👁‍🗨 전체 숨기기</button><button type="button" data-twy-all="1" style="background:#334155;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">👁 전체 보이기</button><button type="button" data-twy-all="L" style="background:#78350f;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">등화·표지 숨기기</button></span></div>`
         + TWY.items.map((x, i) => `<div data-twy-item="${i}" style="cursor:pointer;border:1px solid ${x.R.segs.length || x.R.pts.length ? x.color : '#475569'};border-left-width:6px;border-radius:8px;padding:5px 8px;margin-bottom:5px;background:#111827">
-            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><b class="mono" style="color:#fff">${esc(x.n.notamId)}</b><span style="background:${x.color};color:#fff;border-radius:4px;padding:0 5px;font-size:11px;font-weight:700">${esc(x.K[0])}${x.act ? '' : x.near ? ' · 시간대 아님 (±2h 내 유효 — 지연 시 해당)' : ' · 시간대 아님'}</span><b style="color:#fde68a">${esc(x.R.desc.join(' / '))}</b><span data-twy-hid style="display:none;color:#94a3b8;font-size:11px">(숨김)</span>${x.R.partial ? '<span style="color:#fbbf24;font-size:11px">⚠ 일부 구간 — 위치는 원문 확인</span>' : ''}${x.R.miss.length ? `<span style="color:#fca5a5;font-size:11px">지도에 없음: ${esc(x.R.miss.join(', '))}</span>` : ''}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><button type="button" data-twy-star="${i}" title="중요 노탐 지정 (브리핑과 같이 적용)" style="width:28px;height:28px;border-radius:6px;border:1px solid ${isStar(x.n) ? '#fcd34d' : '#64748b'};background:${isStar(x.n) ? '#fbbf24' : 'transparent'};color:${isStar(x.n) ? '#0f172a' : '#94a3b8'};font-size:16px;line-height:1">${isStar(x.n) ? '★' : '☆'}</button><b class="mono" style="color:#fff">${esc(x.n.notamId)}</b><span style="background:${x.color};color:#fff;border-radius:4px;padding:0 5px;font-size:11px;font-weight:700">${esc(x.K[0])}${x.act ? '' : x.near ? ' · 시간대 아님 (±2h 내 유효 — 지연 시 해당)' : ' · 시간대 아님'}</span><b style="color:#fde68a">${esc(x.R.desc.join(' / '))}</b><span data-twy-hid style="display:none;color:#94a3b8;font-size:11px">(숨김)</span>${x.R.partial ? '<span style="color:#fbbf24;font-size:11px">⚠ 일부 구간 — 위치는 원문 확인</span>' : ''}${x.R.miss.length ? `<span style="color:#fca5a5;font-size:11px">지도에 없음: ${esc(x.R.miss.join(', '))}</span>` : ''}</div>
             <div style="font-size:12px;color:#cbd5e1;margin-top:2px">${esc(x.sum)}</div>${x.raw && x.pre ? `<div style="font-size:11px;color:#94a3b8;margin-top:1px;font-family:ui-monospace,monospace"><span style="font-family:sans-serif;font-size:9.5px;color:#64748b">원문 </span>${esc(x.raw)}</div>` : ''}
             <div style="font-size:13.5px;color:#e2e8f0;font-weight:600;margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span>🕒 ${esc((x.n.validFrom || '') + ' ~ ' + (x.n.validTo || 'PERM'))}${x.n.schedule ? ' · ' + esc(x.n.schedule) : ''}</span>${x.when ? `<span style="background:#0c4a6e;border:1px solid #38bdf8;color:#e0f2fe;border-radius:6px;padding:0 6px;font-weight:800">✈ ${esc(x.when)}</span>` : ''}</div></div>`).join('')
         + (() => {
