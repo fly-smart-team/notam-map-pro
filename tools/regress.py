@@ -39,6 +39,12 @@ async def main():
                 ok = r is not None and r[0] == kind and (exp is None or r[1] == exp)
                 if not ok: fails += 1; print(f'✗ 유도로 해석: {txt[:60]}\n    기대 {kind} {exp} / 실제 {r}')
             print(f'유도로 해석 {len(cases) - fails}/{len(cases)} 통과')
+            rc = json.load(open(os.path.join(ROOT, 'tests', 'rwy-cases.json'))); f0 = fails
+            got = await pg.evaluate("T => T.map(t => rwyClauses({ etext: t }))", [c[0] for c in rc])
+            for (txt, kind, rw), g in zip(rc, got):
+                r = (g['kind'], g['rwy']) if g else (None, None)
+                if r != (kind, rw): fails += 1; print(f'✗ 활주로 해석: {txt[:60]}\n    기대 {kind} {rw} / 실제 {r}')
+            print(f'활주로 해석 {len(rc) - (fails - f0)}/{len(rc)} 통과')
             for pdf in sorted(glob.glob(os.path.join(TDIR, '*.pdf'))) if TDIR else []:
                 q = await b.new_page(viewport={'width': 1100, 'height': 1300}); q.on('pageerror', lambda e: errs.append(str(e)))
                 await q.route(lambda u: 'localhost' not in u, lambda r: r.abort())

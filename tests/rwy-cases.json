@@ -1,0 +1,57 @@
+[
+ [
+  "RWY 16R/34L CLSD DUE WIP",
+  "closed",
+  "16R/34L"
+ ],
+ [
+  "ILS 'ISN' 110.1 RWY 34L U/S",
+  "nav",
+  "34L"
+ ],
+ [
+  "RWY 25R ILS 'ITFR' 108.75 NOT AVBL",
+  "nav",
+  "25R"
+ ],
+ [
+  "DECLARED DISTANCE AND GRADIENT CHANGES RWY TODA 34L 4052",
+  "dist",
+  "34L"
+ ],
+ [
+  "RWY 16R/34L STOPBARS AND RWY GUARD LGT NOT AVBL DUE WIP",
+  "light",
+  "16R/34L"
+ ],
+ [
+  "GP RWY 08 U/S",
+  "nav",
+  "08"
+ ],
+ [
+  "RWY 15L THR DISPLACED 300M. LDA 3450M",
+  "dist",
+  "15L"
+ ],
+ [
+  "RWY 33R PAPI U/S",
+  "light",
+  "33R"
+ ],
+ [
+  "RWY 16L/34R CLSD BTN TWY B AND TWY C",
+  "closed",
+  "16L/34R"
+ ],
+ [
+  "TWY A2 LEAD-OFF LGT ON RWY 34L NOT TO STD",
+  null,
+  null
+ ],
+ [
+  "LOW LEVEL WINDSHEAR ALERT SYSTEM SERVICE NOT AVBL",
+  null,
+  null
+ ]
+]
