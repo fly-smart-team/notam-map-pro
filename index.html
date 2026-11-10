@@ -6623,9 +6623,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
     function arrCompose() {
       const A = arr, B = '＿＿';
-      const at = A.eta != null ? A.eta - (+A.mins || 0) * 6e4 : null;
+      const at = Date.now();
       let lt = null; if (at != null) { const tz = airportTz(A.dest); if (tz) { try { const f = (loc, o) => new Intl.DateTimeFormat(loc, Object.assign({ timeZone: tz }, o)).format(new Date(at)); const hm = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(at)).map(p => [p.type, p.value])); lt = { mo: +f('en-US', { month: 'numeric' }), d: +f('en-US', { day: 'numeric' }), wk: f('ko-KR', { weekday: 'long' }), ewk: f('en-US', { weekday: 'long' }), emo: f('en-US', { month: 'long' }), h: +hm.hour % 24, m: +hm.minute }; } catch (e) { } } }
-      const sel = ARR_WX.filter(x => A.wxSel.includes(x[0])), wxKo = sel.length ? sel.map(x => x[1]).join(' ') : B, wxEn = sel.length ? sel.map(x => x[2]).join(' and ') : B;
+      const sel = ARR_WX.filter(x => x[0] === A.wx || (x[0] === 'wind' && A.windy)), wxKo = sel.length ? sel.map(x => x[1]).join(' ') : B, wxEn = sel.length ? sel.map(x => x[2]).join(' and ') : B;
       const c = A.tempC === '' || isNaN(+A.tempC) ? null : +A.tempC, f = c == null ? null : Math.round(c * 9 / 5 + 32);
       const kh = lt ? (lt.h < 12 ? '오전' : '오후') + ' ' + (lt.h % 12 || 12) + '시 ' + lt.m + '분' : `오전(/오후) ${B}시 ${B}분`;
       const eh = lt ? `${lt.h % 12 || 12}:${String(lt.m).padStart(2, '0')} ${lt.h < 12 ? 'a.m.' : 'p.m.'}` : `${B}:${B} a.m.(/p.m.)`;
@@ -6645,11 +6645,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const ov = $('arr-overlay'); if (!ov || !arr) return;
       const C = arrCompose(), line = (t, lang) => `<div class="flex gap-2 items-start py-1.5 border-t border-dashed border-slate-200 first:border-0"><button type="button" data-arr-say="${lang}" data-arr-t="${esc(t)}" class="shrink-0 w-8 h-7 rounded-md border border-sky-300 bg-sky-100 text-[14px]" style="color:#0369a1">🔊</button><div style="color:${lang === 'en-US' ? '#0c4a6e' : '#111827'};font-weight:${lang === 'en-US' ? 600 : 500};font-size:16px;line-height:1.45">${esc(t)}</div></div>`;
       ov.querySelector('[data-arr-doc]').innerHTML = `<div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:4px">한국어</div>${C.ko.map(t => line(t, 'ko-KR')).join('')}<div style="font-size:12px;font-weight:700;color:#64748b;margin:12px 0 4px">English</div>${C.en.map(t => line(t, 'en-US')).join('')}`;
-      ov.querySelector('[data-arr-wx]').innerHTML = ARR_WX.map(x => `<button type="button" data-arr-wxk="${x[0]}" class="px-2 py-1 rounded-md border text-[13px] ${arr.wxSel.includes(x[0]) ? 'bg-teal-600 border-teal-300 text-white font-bold' : 'bg-slate-900 border-slate-700 text-slate-300'}">${ARR_SHORT[x[0]]}</button>`).join('');
+      const sw = ov.querySelector('[data-arr-wxsel]'), sd = ov.querySelector('[data-arr-wind]');
+      if (!sw.options.length) { sw.innerHTML = `<option value="">(선택 안 함 — 빈칸)</option>` + ARR_WX.filter(x => x[0] !== 'wind').map(x => `<option value="${x[0]}">${ARR_SHORT[x[0]]}</option>`).join(''); }
+      sw.value = arr.wx; sd.value = arr.windy ? '1' : '0';
+      ov.querySelector('[data-arr-wxnote]').textContent = arr.auto ? (arr.wx === arr.auto && !!arr.windy === arr.autoWindy ? '← METAR 값 (기본)' : '← 직접 선택함') : '';
       ov.querySelector('[data-arr-src]').textContent = arr.src ? `날씨·기온 출처: ${arr.src}` : '날씨·기온 자료 없음 — 직접 고르세요';
     }
     function openArrival() {
-      const A = arrAuto(); arr = { dest: A.dest, eta: A.eta, ko: A.ko, en: A.en, mins: A.mins, wxSel: A.wx, tempC: A.tempC, src: A.src };
+      const A = arrAuto(); arr = { dest: A.dest, eta: A.eta, ko: A.ko, en: A.en, mins: A.mins, wx: A.wx.find(k => k !== 'wind') || '', windy: A.wx.includes('wind'), tempC: A.tempC, src: A.src, auto: A.wx.find(k => k !== 'wind') || '', autoWindy: A.wx.includes('wind') };
       let ov = $('arr-overlay');
       if (!ov) {
         ov = document.createElement('div'); ov.id = 'arr-overlay'; ov.className = 'fixed inset-0 z-[10000] bg-slate-950 flex flex-col';
@@ -6658,21 +6661,22 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <div class="rounded-xl border border-slate-700 bg-slate-900 p-3 flex flex-col gap-2 text-[13px] text-slate-200">
               <div class="flex items-center gap-2 flex-wrap"><label>착륙까지 <input data-arr-in="mins" type="number" inputmode="numeric" min="1" class="w-16 bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-center mono"> 분</label><button type="button" data-arr="now" class="px-2 py-1 rounded-md border border-slate-600 text-slate-200">지금 시각 기준으로 계산</button><span data-arr-eta class="text-[12px] text-slate-400"></span></div>
               <div class="flex items-center gap-2 flex-wrap"><label>공항 <input data-arr-in="ko" class="w-56 bg-slate-950 border border-slate-600 rounded px-1.5 py-1"></label><label>English <input data-arr-in="en" class="w-48 bg-slate-950 border border-slate-600 rounded px-1.5 py-1"></label><label>기온 °C <input data-arr-in="tempC" type="number" inputmode="numeric" class="w-16 bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-center mono"></label></div>
-              <div><div class="text-[12px] text-slate-400 mb-1">날씨 (여러 개 선택 가능)</div><div data-arr-wx class="flex flex-wrap gap-1.5"></div></div>
+              <div class="flex items-center gap-2 flex-wrap"><label>날씨 <select data-arr-wxsel class="bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-[14px]"></select></label><label>바람 <select data-arr-wind class="bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-[14px]"><option value="0">보통</option><option value="1">강한 바람</option></select></label><span data-arr-wxnote class="text-[12px] text-teal-300"></span></div>
               <div data-arr-src class="text-[11px] text-slate-500"></div></div>
             <div data-arr-doc class="rounded-xl bg-white p-4 shadow-xl"></div>
-            <div class="text-[11px] text-slate-500">빈칸은 자동으로 채운 값입니다 — 방송 전에 실제 날씨·시각과 맞는지 확인하세요. 현지 시각은 “ETA − 착륙까지 분”으로 계산합니다.</div></div></div>`;
+            <div class="text-[11px] text-slate-500">빈칸은 자동으로 채운 값입니다 — 방송 전에 실제 날씨·시각과 맞는지 확인하세요. 현지 시각은 지금 이 순간의 목적지 현지 시각이며 20초마다 갱신됩니다.</div></div></div>`;
         document.body.appendChild(ov);
         ov.addEventListener('click', e => {
-          const b = e.target.closest('[data-arr]'), sy = e.target.closest('[data-arr-say]'), wk = e.target.closest('[data-arr-wxk]');
+          const b = e.target.closest('[data-arr]'), sy = e.target.closest('[data-arr-say]');
           if (sy) { jbSpeak(sy.dataset.arrT, sy.dataset.arrSay); return; }
-          if (wk) { const k = wk.dataset.arrWxk; arr.wxSel = arr.wxSel.includes(k) ? arr.wxSel.filter(x => x !== k) : [...arr.wxSel, k]; arrRender(); return; }
           if (!b) return;
           if (b.dataset.arr === 'close') { ov.style.display = 'none'; try { speechSynthesis.cancel(); } catch (_) { } }
           else if (b.dataset.arr === 'now') { if (arr.eta == null) { showToast('ETA 정보가 없습니다'); return; } arr.mins = Math.max(1, Math.round((arr.eta - Date.now()) / 6e4)); arrSync(); arrRender(); showToast(`ETA까지 ${arr.mins}분`); }
           else if (b.dataset.arr === 'copy') { const C = arrCompose(); const t = C.ko.join('\n') + '\n\n' + C.en.join('\n'); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => showToast('복사했습니다'), () => showToast('복사하지 못했습니다')); }
         });
-        ov.addEventListener('input', e => { const i = e.target.closest('[data-arr-in]'); if (!i) return; arr[i.dataset.arrIn] = i.value; arrRender(); });
+        ov.addEventListener('input', e => { const i = e.target.closest('[data-arr-in]'); if (i) { arr[i.dataset.arrIn] = i.value; arrRender(); } });
+        ov.addEventListener('change', e => { if (e.target.matches('[data-arr-wxsel]')) { arr.wx = e.target.value; arrRender(); } else if (e.target.matches('[data-arr-wind]')) { arr.windy = e.target.value === '1'; arrRender(); } });
+        setInterval(() => { if (ov.style.display !== 'none' && arr && !ov.contains(document.activeElement && document.activeElement.tagName === 'INPUT' ? document.activeElement : null)) arrRender(); }, 20000);
       }
       ov.style.display = 'flex'; arrSync(); arrRender();
     }
