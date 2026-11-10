@@ -743,6 +743,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     /* 글씨 크기 상향 — 조종석 조명·흔들림에서도 읽히도록 (9~11px → 11~13px) */
     .text-\[9px\]{font-size:11px!important}.text-\[10px\]{font-size:12px!important}.text-\[10\.5px\]{font-size:12.5px!important}.text-\[11px\]{font-size:13px!important}.text-\[12px\]{font-size:13.5px!important}
     header button{white-space:nowrap}
+    .mel-reg{color:#ff3b3b;font-weight:900;background:rgba(239,68,68,.22);border-radius:3px;padding:0 2px}
     .ico { width: 1.05em; height: 1.05em; display: inline-block; vertical-align: -0.16em; flex-shrink: 0; }
     .ico-dot { width: .62em; height: .62em; border-radius: 50%; display: inline-block; vertical-align: .05em; margin: 0 .12em; }
     .ico-p { display: inline-grid; place-items: center; width: 1.15em; height: 1.15em; border-radius: 3px; background: #22d3ee; color: #04202a; font: 800 .78em/1 sans-serif; }
@@ -3854,28 +3855,49 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (!P.items.length) { box.innerHTML = ''; return; }
       const reg = ((window.pdfFlt || (typeof pdfFlt !== 'undefined' ? pdfFlt : null)) || {}).reg || '';
       const RI = (melDB && melDB.meta && melDB.meta.ri) || {};
-      const pre = t => `<pre class="mono text-[11px] whitespace-pre-wrap break-words text-slate-200 bg-slate-950/70 rounded p-2 mt-1">${esc(t)}</pre>`;
+      // 이 비행 기번(예: HL8004)이 나오는 곳은 숫자 부분을 빨갛게
+      const regNum = (/^HL(\d{4})$/.exec(reg) || [])[1] || '';
+      const hl = t => { const h = esc(t).replace(/\uE113/g, '■').replace(/\uE114/g, '●'); return regNum ? h.replace(new RegExp(`HL(${regNum})(?!\\d)`, 'g'), 'HL<span class="mel-reg">$1</span>') : h; };
+      const pre = t => `<pre class="mono text-[12px] leading-relaxed whitespace-pre-wrap break-words text-slate-100 bg-slate-950/80 rounded p-2 mt-1">${hl(t)}</pre>`;
+      const appChip = app => { const all = !app || /\bALL\b/.test(app), hit = !all && reg && app.includes(reg);
+        return `<div class="text-[12px] mt-1 flex flex-wrap items-center gap-1.5"><span class="text-slate-400">적용 기체</span><span class="mono text-slate-300 break-words">${all ? 'ALL' : hl(app)}</span>${reg ? (all || hit ? `<span class="px-1.5 py-0.5 rounded bg-emerald-800 text-emerald-100 text-[11px] font-bold">✓ ${esc(reg)} 적용</span>` : `<span class="px-1.5 py-0.5 rounded bg-slate-700 text-slate-200 text-[11px] font-bold">${esc(reg)} 해당 없음</span>`) : ''}</div>`; };
+      const aiMel = (no, it, opTxt) => `${no}|${(it.text || '').length}|${(opTxt || '').length}`;
       const card = x => {
         const L = x.kind === 'MEL' ? melLookup(x.no) : null, it = L && L.it;
         const appOk = !it || !reg || /\bALL\b/.test(it.app || '') || (it.app || '').includes(reg);
         const badges = it ? [
-          `<span class="px-1.5 py-0.5 rounded bg-slate-700 text-[11px]">수리 기한 <b>${esc(it.ri || '-')}</b>${RI[it.ri] ? ` · ${esc(RI[it.ri])}` : ''}</span>`,
-          `<span class="px-1.5 py-0.5 rounded bg-slate-700 text-[11px]">설치 ${esc(it.inst || '-')} / 필요 ${esc(it.req || '-')}</span>`,
-          it.o ? '<span class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[11px] font-bold">(o) 운항 절차 있음</span>' : '<span class="px-1.5 py-0.5 rounded bg-emerald-800 text-emerald-100 text-[11px]">운항 절차 없음</span>',
-          it.m ? '<span class="px-1.5 py-0.5 rounded bg-amber-700 text-white text-[11px]">(m) 정비 절차</span>' : '',
-          melCabin(x.no) ? '<span class="px-1.5 py-0.5 rounded bg-violet-700 text-white text-[11px]">객실 관련</span>' : '',
-          !appOk ? `<span class="px-1.5 py-0.5 rounded bg-rose-700 text-white text-[11px]">⚠ ${esc(reg)} 적용 대상 확인</span>` : ''].join(' ') : '';
-        const op = L && L.op ? `<div class="mt-1.5 rounded-md border border-rose-600/60 bg-rose-950/30 p-1.5"><div class="text-[12px] font-bold text-rose-200">🧑‍✈️ 운항 절차 (OpsProc ${esc(x.no)})</div>${pre(L.op.text)}</div>` : '';
+          `<span class="px-1.5 py-0.5 rounded bg-slate-700 text-[12px]">수리 기한 <b>${esc(it.ri || '-')}</b>${RI[it.ri] ? ` · ${esc(RI[it.ri])}` : ''}</span>`,
+          `<span class="px-1.5 py-0.5 rounded bg-slate-700 text-[12px]">설치 ${esc(it.inst || '-')} / 필요 ${esc(it.req || '-')}</span>`,
+          it.o ? '<span class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[12px] font-bold">(o) 운항 절차 있음</span>' : '<span class="px-1.5 py-0.5 rounded bg-emerald-800 text-emerald-100 text-[12px]">운항 절차 없음</span>',
+          it.m ? '<span class="px-1.5 py-0.5 rounded bg-amber-700 text-white text-[12px]">(m) 정비 절차</span>' : '',
+          melCabin(x.no) ? '<span class="px-1.5 py-0.5 rounded bg-violet-700 text-white text-[12px]">객실 관련</span>' : ''].join(' ') : '';
+        // 운항 절차: 이 기번에 해당하는 판을 먼저, 나머지는 접어서
+        let opHtml = '', opAll = '';
+        if (L && L.op) {
+          const vs = L.op.vs && L.op.vs.length ? L.op.vs : [{ app: '', text: L.op.text }];
+          opAll = vs.map(v => v.text).join('\n');
+          const fits = v => !v.app || /\bALL\b/.test(v.app) || (reg && v.app.includes(reg));
+          const mine = reg ? vs.filter(fits) : [], others = vs.filter(v => !mine.includes(v));
+          const blk = v => `<div class="mt-1">${v.app ? appChip(v.app) : ''}${pre(v.text)}</div>`;
+          opHtml = `<div class="mt-2 rounded-md border border-rose-600/60 bg-rose-950/30 p-1.5"><div class="text-[13px] font-bold text-rose-200">🧑‍✈️ 운항 절차 원문 (OpsProc ${esc(x.no)})</div>
+            ${(mine.length ? mine : vs).map(blk).join('')}
+            ${mine.length && others.length ? `<details class="mt-1"><summary class="cursor-pointer select-none text-[12px] text-slate-300">다른 기체판 ${others.length}개 (${esc(reg)} 해당 없음)</summary>${others.map(blk).join('')}</details>` : ''}
+            ${!L.op.vs ? '<div class="text-[11px] text-slate-500 mt-1">※ 기체별로 절차가 다를 수 있습니다 — 원본 MEL의 Applicable to 확인</div>' : ''}</div>`;
+        }
+        const cached = it ? (() => { try { return localStorage.getItem('notamPro.melAi.' + aiMel(x.no, it, opAll)) || ''; } catch (e) { return ''; } })() : '';
+        const gl = !it ? '' : L.ko ? `<div class="mt-2 text-[13px] leading-snug text-slate-100 rounded-md bg-sky-950/40 border border-sky-800/60 px-2 py-1.5"><span class="mr-1 px-1 py-0.5 rounded bg-sky-700 text-white text-[10px] font-bold align-middle">해설</span>${esc(L.ko)}</div>`
+          : cached ? `<div class="mt-2 text-[13px] leading-snug text-slate-100 rounded-md bg-violet-950/40 border border-violet-800/60 px-2 py-1.5"><span class="mr-1 px-1 py-0.5 rounded bg-violet-700 text-white text-[10px] font-bold align-middle">AI 해설</span>${esc(cached)}<div class="text-[11px] text-slate-400 mt-1">AI 설명은 참고용입니다 — 위 원문이 기준입니다.</div></div>`
+          : `<div class="mt-2"><button type="button" data-mel-ai="${esc(x.no)}" class="px-2 py-1 rounded-md border border-violet-500/70 bg-violet-950/40 text-violet-100 text-[12px] font-bold">🤖 AI 해설 만들기</button><span data-mel-ai-msg="${esc(x.no)}" class="ml-2 text-[11px] text-slate-400"></span></div>`;
         return `<div class="rounded-lg border ${it && it.o ? 'border-rose-500/70' : 'border-slate-700'} bg-slate-900/70 p-2">
-          <div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded ${x.kind === 'MEL' ? 'bg-sky-700' : 'bg-slate-600'} text-white text-[12px] font-bold">${x.kind}</span><span class="mono text-[14px] font-bold text-white">${esc(x.no)}</span>${it ? `<span class="text-[13px] font-bold text-sky-200">${esc(it.t)}${it.cond ? ` · ${esc(it.cond)}` : ''}</span>` : ''}</div>
-          <div class="mono text-[11px] text-amber-200 mt-0.5">OFP: ${esc(x.desc)}</div>
+          <div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded ${x.kind === 'MEL' ? 'bg-sky-700' : 'bg-slate-600'} text-white text-[12px] font-bold">${x.kind}</span><span class="mono text-[15px] font-bold text-white">${esc(x.no)}</span>${it ? `<span class="text-[13px] font-bold text-sky-200">${esc(it.t)}${it.cond ? ` · ${esc(it.cond)}` : ''}</span>` : ''}</div>
+          <div class="mono text-[12px] text-amber-200 mt-0.5">OFP: ${esc(x.desc)}</div>
           ${badges ? `<div class="flex flex-wrap gap-1 mt-1 text-slate-100">${badges}</div>` : ''}
-          ${L && L.ko ? `<div class="mt-1.5 text-[12.5px] leading-snug text-slate-100 rounded-md bg-sky-950/40 border border-sky-800/60 px-2 py-1"><span class="mr-1 px-1 py-0.5 rounded bg-sky-700 text-white text-[9px] font-bold align-middle">요약</span>${esc(L.ko)}</div>` : ''}
-          ${op}
-          ${it ? `<details class="mt-1"><summary class="cursor-pointer select-none text-[11.5px] text-slate-300">MEL 원문 (조건·비고)</summary>${pre(it.text)}<div class="text-[10px] text-slate-500 mt-0.5">적용 기체: ${esc(it.app || '')}</div></details>` : ''}
-          ${x.kind === 'MEL' && !melDB ? '<div class="text-[11.5px] text-slate-400 mt-1">MEL 데이터를 불러오면 원문과 운항 절차가 나옵니다.</div>' : ''}
-          ${x.kind === 'MEL' && melDB && !it ? '<div class="text-[11.5px] text-amber-300 mt-1">이 번호를 MEL 데이터에서 찾지 못했습니다 — 번호·개정판 확인</div>' : ''}
-          ${x.kind === 'CDL' ? '<div class="text-[11.5px] text-slate-400 mt-1">CDL(외형 결함 목록) 항목입니다 — 성능 감소(무게·연료) 여부는 OFP·CDL 원문으로 확인하세요.</div>' : ''}
+          ${it ? `<div class="mt-2"><div class="text-[13px] font-bold text-slate-200">📄 MEL 원문</div>${pre(it.text)}${appChip(it.app)}</div>` : ''}
+          ${opHtml}
+          ${gl}
+          ${x.kind === 'MEL' && !melDB ? '<div class="text-[12px] text-slate-400 mt-1">MEL 데이터를 불러오면 원문과 운항 절차가 나옵니다.</div>' : ''}
+          ${x.kind === 'MEL' && melDB && !it ? '<div class="text-[12px] text-amber-300 mt-1">이 번호를 MEL 데이터에서 찾지 못했습니다 — 번호·개정판 확인</div>' : ''}
+          ${x.kind === 'CDL' ? '<div class="text-[12px] text-slate-400 mt-1">CDL(외형 결함 목록) 항목입니다 — 성능 감소(무게·연료) 여부는 OFP·CDL 원문으로 확인하세요.</div>' : ''}
         </div>`;
       };
       const nO = P.items.filter(x => { const L = x.kind === 'MEL' && melLookup(x.no); return L && L.it.o; }).length;
@@ -3887,6 +3909,25 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <div class="text-[10.5px] text-slate-500">MEL 원문과 회사 최신 개정판·Tech Log가 기준입니다. MEL 데이터는 이 기기에만 저장되고 서버에 올라가지 않습니다.</div>
       </div>`;
     }
+    document.addEventListener('click', async e => {
+      const b = e.target.closest && e.target.closest('[data-mel-ai]'); if (!b || b.disabled) return;
+      const no = b.dataset.melAi, L = melLookup(no); if (!L || !L.it) return;
+      const msg = document.querySelector(`[data-mel-ai-msg="${no}"]`), say = t => { if (msg) msg.textContent = t; };
+      if (!aiToken() && !aiAskToken()) return;
+      const vs = L.op ? (L.op.vs && L.op.vs.length ? L.op.vs : [{ text: L.op.text }]) : [], opTxt = vs.map(v => v.text).join('\n');
+      const key = 'notamPro.melAi.' + `${no}|${(L.it.text || '').length}|${opTxt.length}`;
+      const text = `[MEL 해설 요청] 이것은 NOTAM이 아니라 항공기 MEL(최소장비목록) 항목이다. 운항 승무원이 이해하도록 ① 무엇이 고장나도 되는지 ② 출발 조건·제한 ③ 승무원이 할 조치를 한국어로 설명하라(원문에 없는 내용 추가 금지, 숫자·약어·스위치 이름은 원문 그대로).\nMEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ? '\n[운항 절차]\n' + opTxt : ''}`.slice(0, 4000);
+      b.disabled = true; say('AI 해설 만드는 중…');
+      try {
+        const res = await fetch(aiBase() + '/ai/notam-summary', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Access-Token': aiToken() }, body: JSON.stringify({ notams: [{ id: 'mel', text }] }) });
+        const d = await res.json().catch(() => ({}));
+        if (res.status === 401) { try { localStorage.removeItem(AI_TOKEN_KEY); } catch (_) { } throw new Error('접근 토큰이 맞지 않습니다'); }
+        if (!res.ok) throw new Error(d.error || `AI 서버 오류 ${res.status}`);
+        const it = (d.items || [])[0]; if (!it || !it.summary) throw new Error('AI가 해설을 만들지 못했습니다');
+        try { localStorage.setItem(key, it.summary); } catch (_) { }
+        renderMelCard();
+      } catch (er) { b.disabled = false; const m = String((er && er.message) || ''); say(/fetch|network|load failed/i.test(m) ? '인터넷에 연결되어 있지 않습니다' : m); }
+    });
     document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-mel-load]')) { if (melDB) melLoadFile(); else melFromCloud(false).then(ok => { if (!ok) melLoadFile(); }); } });
     // 2번 칸(Flight Information)이 다시 그려질 때마다 기상 차트 분석도 다시 넣음 (기상·기온 바로 아래)
 
