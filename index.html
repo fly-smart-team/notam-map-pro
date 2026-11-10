@@ -858,6 +858,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
       <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/11 00:30 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
+        <button type="button" data-ms-open title="MEL 검색 — ECAM 메시지·MEL 항목" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🔍 MEL</button>
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물</button>
         <button id="btn-wind" type="button" title="바람 제한치 계산 · 활주로 상태(Braking Action) — FOM 4.5/5.8 · FCRM 1.17 · FCOM RCAM" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🌬 Wind</button>
         <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 ANTI/D-ICING</button>
@@ -3852,10 +3853,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       return { it, op: melDB.ops[no] || null, ko: melKo[no] || (melDB.ko || {})[no] || '' };
     }
     const melCabin = no => ((melDB && melDB.meta && melDB.meta.cabinAta) || ['25-2', '25-3', '25-4', '25-6', '33-2', '33-5', '35-', '38-', '44-']).some(a => no.startsWith(a));
-    function renderMelCard() {
-      const box = $('mel-card'); if (!box) return;
-      const P = parseOfpMel(window.__ofpText);
-      if (!P.items.length) { box.innerHTML = ''; return; }
+    function melKit() {
       const reg = ((window.pdfFlt || (typeof pdfFlt !== 'undefined' ? pdfFlt : null)) || {}).reg || '';
       const RI = (melDB && melDB.meta && melDB.meta.ri) || {};
       // 이 비행 기번(예: HL8004)이 나오는 곳은 숫자 부분을 빨갛게
@@ -3893,17 +3891,25 @@ svg.leaflet-image-layer.leaflet-interactive path {
           : `<div class="mt-2"><button type="button" data-mel-ai="${esc(x.no)}" class="px-2 py-1 rounded-md border border-violet-500/70 bg-violet-950/40 text-violet-100 text-[12px] font-bold">🤖 AI 해설 만들기</button><span data-mel-ai-msg="${esc(x.no)}" class="ml-2 text-[11px] text-slate-400"></span></div>`;
         return `<div class="rounded-lg border ${it && it.o ? 'border-rose-500/70' : 'border-slate-700'} bg-slate-900/70 p-2">
           <div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded ${x.kind === 'MEL' ? 'bg-sky-700' : 'bg-slate-600'} text-white text-[12px] font-bold">${x.kind}</span><span class="mono text-[15px] font-bold text-white">${esc(x.no)}</span>${it ? `<span class="text-[13px] font-bold text-sky-200">${esc(it.t)}${it.cond ? ` · ${esc(it.cond)}` : ''}</span>` : ''}</div>
-          <div class="mono text-[12px] text-amber-200 mt-0.5">OFP: ${esc(x.desc)}</div>
+          ${x.desc ? `<div class="mono text-[12px] text-amber-200 mt-0.5">OFP: ${esc(x.desc)}</div>` : ''}
           ${badges ? `<div class="flex flex-wrap gap-1 mt-1 text-slate-100">${badges}</div>` : ''}
           ${it ? `<div class="mt-2"><div class="text-[13px] font-bold text-slate-200">📄 MEL 원문</div>${pre(it.text)}${appChip(it.app)}</div>` : ''}
           ${opHtml}
           ${gl}
+          ${x.kind === 'MEL' ? msEcamChips(x.no) : ''}
           ${x.kind === 'MEL' && !it && melKo[x.no] ? `<div class="mt-2 text-[13px] leading-snug text-slate-100 rounded-md bg-sky-950/40 border border-sky-800/60 px-2 py-1.5"><span class="mr-1 px-1 py-0.5 rounded bg-sky-700 text-white text-[10px] font-bold align-middle">해설</span>${esc(melKo[x.no])}</div>` : ''}
           ${x.kind === 'MEL' && !melDB ? '<div class="text-[12px] text-slate-400 mt-1">MEL 데이터를 불러오면 원문과 운항 절차가 나옵니다.</div>' : ''}
           ${x.kind === 'MEL' && melDB && !it ? '<div class="text-[12px] text-amber-300 mt-1">이 번호를 MEL 데이터에서 찾지 못했습니다 — 번호·개정판 확인</div>' : ''}
           ${x.kind === 'CDL' ? '<div class="text-[12px] text-slate-400 mt-1">CDL(외형 결함 목록) 항목입니다 — 성능 감소(무게·연료) 여부는 OFP·CDL 원문으로 확인하세요.</div>' : ''}
         </div>`;
       };
+      return { reg, RI, hl, pre, appChip, card };
+    }
+    function renderMelCard() {
+      const box = $('mel-card'); if (!box) return;
+      const P = parseOfpMel(window.__ofpText);
+      if (!P.items.length) { box.innerHTML = ''; return; }
+      const { reg, card } = melKit();
       const nO = P.items.filter(x => { const L = x.kind === 'MEL' && melLookup(x.no); return L && L.it.o; }).length;
       box.innerHTML = `<div class="rounded-xl border-2 ${nO ? 'border-rose-500' : 'border-sky-700'} bg-slate-950/40 p-2.5 flex flex-col gap-2">
         <div class="flex items-center gap-2 flex-wrap"><span class="text-[14px] font-bold ${nO ? 'text-rose-200' : 'text-sky-200'}">🔧 MEL / CDL 운항 참조</span><span class="text-[11px] text-slate-400">${esc(reg)} · ${P.items.length}건${nO ? ` · 운항 절차 ${nO}건` : ''}</span>
@@ -3913,6 +3919,106 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <div class="text-[10.5px] text-slate-500">MEL 원문과 회사 최신 개정판·Tech Log가 기준입니다. MEL 데이터는 이 기기에만 저장되고 서버에 올라가지 않습니다.</div>
       </div>`;
     }
+    // ===== 🔍 MEL 검색 (ECAM 메시지 / MEL 항목) =====
+    const ms = { tab: 'ecam', q: '', view: null, open: {} };
+    let msIdx = null, msIdxFor = null;
+    function msBuild() {
+      if (msIdx && msIdxFor === melDB) return msIdx;
+      const items = melDB ? melDB.items : {}, keys = Object.keys(items).sort();
+      const ecam = (melDB && melDB.ecam) || [];
+      const resolve = r => items[r] ? [r] : keys.filter(k => k.startsWith(r));
+      const byItem = {}, byName = {};
+      ecam.forEach((e, i) => { (byName[e.n] = byName[e.n] || []).push(i); (e.refs || []).forEach(r => resolve(r).forEach(k => { (byItem[k] = byItem[k] || []); if (!byItem[k].includes(e.n)) byItem[k].push(e.n); })); });
+      msIdx = { keys, ecam, byItem, byName, resolve }; msIdxFor = melDB; return msIdx;
+    }
+    function msEcamChips(no) {
+      if (!melDB || !melDB.ecam) return '';
+      const n = (msBuild().byItem[no] || []); if (!n.length) return '';
+      return `<div class="mt-2 text-[12px] text-slate-300">🔗 연결된 ECAM 메시지 <span class="text-slate-500">(누르면 검색 화면)</span><div class="flex flex-wrap gap-1 mt-1">${n.slice(0, 30).map(x => `<button type="button" data-ms-ecam="${esc(x)}" class="mono px-1.5 py-0.5 rounded border border-amber-600/70 bg-amber-950/30 text-amber-100 text-[11.5px]">${esc(x)}</button>`).join('')}${n.length > 30 ? `<span class="text-slate-500">+${n.length - 30}</span>` : ''}</div></div>`;
+    }
+    const msAta = n => ((melDB && melDB.ata) || {})[n] || '';
+    function msDispCls(t) { return /NO DISPATCH/i.test(t) ? ['#7f1d1d', '#fecaca'] : /^(NIL|Not related)/i.test(t) ? ['#064e3b', '#a7f3d0'] : ['#78350f', '#fde68a']; }
+    function msEcamDetail(name) {
+      const X = msBuild(), K = melKit(), reg = K.reg;
+      const ids = (X.byName[name] || []).slice();
+      const fit = e => !e.app || /\bALL\b/.test(e.app) || (reg && e.app.includes(reg));
+      ids.sort((a, b) => (reg && fit(X.ecam[b]) ? 1 : 0) - (reg && fit(X.ecam[a]) ? 1 : 0));
+      const seen = new Set(), itemNos = [];
+      const ents = ids.map(i => {
+        const e = X.ecam[i]; (e.refs || []).forEach(r => X.resolve(r).forEach(k => { if (!seen.has(k)) { seen.add(k); itemNos.push(k); } }));
+        const rows = e.rows.map(r => { const c = msDispCls(r.cd); return `<div class="grid gap-1 mt-1" style="grid-template-columns:1fr 1fr"><div class="text-[12.5px] text-slate-200 rounded bg-slate-950/70 p-1.5 break-words">${K.hl(r.st)}</div><div class="text-[12.5px] font-bold rounded p-1.5 break-words" style="background:${c[0]};color:${c[1]}">${K.hl(r.cd)}</div></div>`; }).join('');
+        return `<div class="rounded-lg border ${reg && fit(e) ? 'border-emerald-600/70' : 'border-slate-700'} bg-slate-900/70 p-2 mt-2">
+          ${K.appChip(e.app)}<div class="grid mt-1 text-[11px] text-slate-400" style="grid-template-columns:1fr 1fr"><div>AIRCRAFT STATUS</div><div>CONDITION OF DISPATCH</div></div>${rows}
+          ${e.fcom && e.fcom.length ? `<div class="mono text-[11px] text-slate-400 mt-1">${e.fcom.map(esc).join(' · ')}</div>` : ''}<div class="text-[10.5px] text-slate-500 mt-1">ECAM ${esc(e.ata)}-${esc(e.id)} · ${esc(e.dt)}</div></div>`;
+      }).join('');
+      const items = itemNos.map(no => K.card({ kind: 'MEL', no })).join('<div class="h-2"></div>');
+      return `<div class="text-[15px] font-bold text-amber-200 mono break-words">${esc(name)}</div><div class="text-[11.5px] text-slate-400">ATA ${esc(X.ecam[ids[0]].ata)} ${esc(msAta(X.ecam[ids[0]].ata))}${ids.length > 1 ? ` · 기체별 ${ids.length}개 판` : ''}</div>${ents}
+        <div class="mt-3 text-[13px] font-bold text-sky-200">📘 연결된 MEL 항목 ${itemNos.length ? itemNos.length + '건' : ''}</div>${items || '<div class="text-[12px] text-slate-400 mt-1">연결된 MEL 항목이 없습니다 (조건란에 항목 번호 없음).</div>'}`;
+    }
+    function msRender() {
+      const body = $('ms-body'); if (!body) return;
+      const X = msBuild(), K = melKit(), q = ms.q.trim().toLowerCase();
+      const m = (melDB && melDB.meta) || {};
+      $('ms-sub').textContent = melDB ? `${m.title || 'MEL'} · ${m.issue || ''}` : 'MEL 데이터 없음';
+      document.querySelectorAll('[data-ms-tab]').forEach(b => { const on = b.dataset.msTab === ms.tab; b.style.background = on ? '#0369a1' : '#1e293b'; b.style.color = on ? '#fff' : '#cbd5e1'; });
+      if (!melDB) { body.innerHTML = '<div class="p-3 text-[13px] text-amber-200">MEL 데이터가 없습니다. 2번 칸의 “📥 MEL 불러오기”로 먼저 불러오세요.</div>'; return; }
+      if (ms.tab === 'ecam' && !X.ecam.length) { body.innerHTML = '<div class="p-3 text-[13px] text-amber-200">이 MEL 데이터에는 ECAM 메시지 목록이 없습니다. 새 MEL 파일(“MEL 바꾸기(파일)”)을 불러오면 검색됩니다. 지금은 “MEL 항목” 탭을 쓰세요.</div>'; return; }
+      if (ms.view) {
+        const back = `<button type="button" data-ms-back class="mb-2 px-2 py-1 rounded-md border border-slate-600 text-[12px] text-slate-200">← 목록으로</button>`;
+        body.innerHTML = back + (ms.view.type === 'ecam' ? msEcamDetail(ms.view.name) : K.card({ kind: 'MEL', no: ms.view.no })); body.scrollTop = 0; return;
+      }
+      const row = (a, b, attr) => `<button type="button" ${attr} class="w-full text-left px-2 py-1.5 rounded-md border border-slate-700 bg-slate-900/60 mb-1 flex items-center gap-2"><span class="mono text-[13px] text-white break-words">${a}</span><span class="text-[11.5px] text-slate-400 ml-auto text-right">${b}</span></button>`;
+      let html = '';
+      if (ms.tab === 'ecam') {
+        const names = Object.keys(X.byName).sort();
+        const ln = n => { const e = X.ecam[X.byName[n][0]]; return { n, ata: e.ata }; };
+        if (q) {
+          const hit = names.filter(n => n.toLowerCase().includes(q) || (X.byName[n].some(i => X.ecam[i].ata === q))).slice(0, 120);
+          html = `<div class="text-[11.5px] text-slate-400 mb-1">ECAM 메시지 ${hit.length}건${hit.length === 120 ? ' (상위 120)' : ''}</div>` + hit.map(n => row(esc(n), `ATA ${ln(n).ata}`, `data-ms-ecam="${esc(n)}"`)).join('');
+        } else {
+          const g = {}; names.forEach(n => { (g[ln(n).ata] = g[ln(n).ata] || []).push(n); });
+          html = Object.keys(g).sort().map(a => `<details data-ms-ata="e${a}" ${ms.open['e' + a] ? 'open' : ''} class="mb-1"><summary class="cursor-pointer select-none px-2 py-1.5 rounded-md bg-slate-800 text-[13px] font-bold text-slate-100">ATA ${a} ${esc(msAta(a))} <span class="text-slate-400 font-normal">· ${g[a].length}</span></summary><div class="mt-1">${ms.open['e' + a] ? g[a].map(n => row(esc(n), '', `data-ms-ecam="${esc(n)}"`)).join('') : ''}</div></details>`).join('');
+        }
+      } else {
+        const keys = X.keys, it = melDB.items;
+        if (q) {
+          const hit = keys.filter(k => k.toLowerCase().includes(q) || (it[k].t || '').toLowerCase().includes(q) || (it[k].cond || '').toLowerCase().includes(q) || (it[k].text || '').toLowerCase().includes(q)).slice(0, 80);
+          html = `<div class="text-[11.5px] text-slate-400 mb-1">MEL 항목 ${hit.length}건${hit.length === 80 ? ' (상위 80)' : ''}</div>` + hit.map(k => row(`${esc(k)} ${esc(it[k].t || '')}${it[k].cond ? ' · ' + esc(it[k].cond) : ''}`, '', `data-ms-item="${esc(k)}"`)).join('');
+        } else {
+          const g = {}; keys.forEach(k => { (g[k.slice(0, 2)] = g[k.slice(0, 2)] || []).push(k); });
+          html = Object.keys(g).sort().map(a => `<details data-ms-ata="i${a}" ${ms.open['i' + a] ? 'open' : ''} class="mb-1"><summary class="cursor-pointer select-none px-2 py-1.5 rounded-md bg-slate-800 text-[13px] font-bold text-slate-100">ATA ${a} ${esc(msAta(a))} <span class="text-slate-400 font-normal">· ${g[a].length}</span></summary><div class="mt-1">${ms.open['i' + a] ? g[a].map(k => row(`${esc(k)} ${esc(it[k].t || '')}${it[k].cond ? ' · ' + esc(it[k].cond) : ''}`, it[k].o ? '<b style="color:#fda4af">(o)</b>' : '', `data-ms-item="${esc(k)}"`)).join('') : ''}</div></details>`).join('');
+        }
+      }
+      body.innerHTML = html;
+    }
+    function msOpen(view, tab) {
+      let ov = $('ms-overlay');
+      if (!ov) {
+        ov = document.createElement('div'); ov.id = 'ms-overlay';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:#020617;display:flex;flex-direction:column';
+        ov.innerHTML = `<div style="padding:10px 12px;border-bottom:1px solid #1e293b;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px"><b style="color:#7dd3fc;font-size:15px">🔍 MEL 검색</b><span id="ms-sub" style="font-size:11px;color:#94a3b8"></span><button type="button" data-ms-close style="margin-left:auto;color:#cbd5e1;font-size:18px;padding:0 6px">✕</button></div>
+          <input id="ms-q" type="search" placeholder="ECAM 메시지 / MEL 번호·제목 검색 (예: PACK, 21-52, 연료)" style="width:100%;padding:9px 10px;border-radius:8px;background:#0f172a;border:1px solid #334155;color:#fff;font-size:15px" autocomplete="off">
+          <div style="display:flex;gap:6px"><button type="button" data-ms-tab="ecam" style="flex:1;padding:7px;border-radius:8px;font-size:13px;font-weight:700">ECAM 메시지</button><button type="button" data-ms-tab="item" style="flex:1;padding:7px;border-radius:8px;font-size:13px;font-weight:700">MEL 항목 (목차순)</button></div></div>
+          <div id="ms-body" style="flex:1;overflow:auto;padding:10px 12px;color:#e2e8f0"></div>`;
+        document.body.appendChild(ov);
+        $('ms-q').addEventListener('input', e => { ms.q = e.target.value; ms.view = null; msRender(); });
+      }
+      ov.style.display = 'flex'; if (tab) ms.tab = tab; if (view !== undefined) ms.view = view;
+      if (view) { ms.q = ''; $('ms-q').value = ''; }
+      msRender();
+    }
+    function msRefresh() { const ov = $('ms-overlay'); if (ov && ov.style.display !== 'none') msRender(); }
+    document.addEventListener('click', e => {
+      const t = e.target.closest && e.target.closest('[data-ms-open],[data-ms-close],[data-ms-tab],[data-ms-ecam],[data-ms-item],[data-ms-back]'); if (!t) return;
+      if (t.dataset.msOpen !== undefined) msOpen(null);
+      else if (t.dataset.msClose !== undefined) $('ms-overlay').style.display = 'none';
+      else if (t.dataset.msTab) { ms.tab = t.dataset.msTab; ms.view = null; msRender(); }
+      else if (t.dataset.msEcam) msOpen({ type: 'ecam', name: t.dataset.msEcam }, 'ecam');
+      else if (t.dataset.msItem) { ms.view = { type: 'item', no: t.dataset.msItem }; msRender(); }
+      else if (t.dataset.msBack !== undefined) { ms.view = null; msRender(); }
+    });
+    document.addEventListener('toggle', e => { const d = e.target; if (d && d.dataset && d.dataset.msAta) { ms.open[d.dataset.msAta] = d.open; if (d.open && !d.querySelector('button')) msRender(); } }, true);
     document.addEventListener('click', async e => {
       const b = e.target.closest && e.target.closest('[data-mel-ai]'); if (!b || b.disabled) return;
       const no = b.dataset.melAi, L = melLookup(no); if (!L || !L.it) return;
@@ -3929,7 +4035,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         if (!res.ok) throw new Error(d.error || `AI 서버 오류 ${res.status}`);
         const it = (d.items || [])[0]; if (!it || !it.summary) throw new Error('AI가 해설을 만들지 못했습니다');
         try { localStorage.setItem(key, it.summary); } catch (_) { }
-        renderMelCard();
+        renderMelCard(); msRefresh();
       } catch (er) { b.disabled = false; const m = String((er && er.message) || ''); say(/fetch|network|load failed/i.test(m) ? '인터넷에 연결되어 있지 않습니다' : m); }
     });
     document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-mel-load]')) { if (melDB) melLoadFile(); else melFromCloud(false).then(ok => { if (!ok) melLoadFile(); }); } });
@@ -8451,6 +8557,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         '🅿': '<span class="ico-p">P</span>',
         '🧊': P('<line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/>'), '❄': P('<line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/>'),
         '🔎': P('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'),
+        '🔍': P('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'),
         '🤖': P('<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>'),
         '🔑': P('<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>'),
         '🔧': P('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/>'),

@@ -84,5 +84,51 @@ for k, v in items.items():
 for e in ops.values():
     e['text'] = e['vs'][0]['text']
     if len(e['vs']) == 1: del e['vs']
+
+# ---- MEL ENTRIES: "ECAM Alert: ○○○" 477개 (AIRCRAFT STATUS | CONDITION OF DISPATCH 표) ----
+ATA_NAMES = {}
+for L in T:
+    m = re.match(r'^\s*ATA (\d{2}) ([A-Z][^.]{3,60})$', L)
+    if m and m.group(1) not in ATA_NAMES: ATA_NAMES[m.group(1)] = m.group(2).strip()
+ecam = []
+eidx = [k for k, l in enumerate(T) if re.match(r'^\s*ECAM Alert:', l)]
+STOP = re.compile(r'^\s*AAR A321 FLEET|^\s*MEL\s{5,}|Continued (from|on) the')
+for a, b in zip(eidx, eidx[1:] + [len(T)]):
+    blk = T[a:b]
+    name = re.sub(r'^\s*ECAM Alert:\s*', '', blk[0]).strip()
+    idm = re.search(r'Ident\.: ME-(\d{2})-(\d+\.\d+) / (\d{2} [A-Z]{3} \d{2})', '\n'.join(blk[:4]))
+    apm = re.search(r'Applicable to:\s*(.+)', '\n'.join(blk[:5]))
+    hdr = next((k for k, l in enumerate(blk) if 'CONDITION OF DISPATCH' in l), None)
+    if hdr is None: continue
+    col = blk[hdr].index('CONDITION OF DISPATCH') - 4
+    rows, st, cd = [], [], []
+    def push():
+        global st, cd
+        if st or cd: rows.append({'st': ' '.join(st).strip(), 'cd': ' '.join(cd).strip()})
+        st, cd = [], []
+    for l in blk[hdr + 1:]:
+        if STOP.search(l): break
+        if not l.strip(): continue
+        if re.match(r'^\s*\.{20,}', l): push(); continue
+        off = len(l) - len(l.lstrip())
+        parts = re.split(r'\s{3,}', l.strip())
+        if len(parts) == 1:
+            m = re.search(r'(?<=\S) (?=Refer to |NO DISPATCH|Apply )', parts[0])
+            if m and not parts[0].startswith(('Refer to','NO DISPATCH','Apply ')): parts = [parts[0][:m.start()], parts[0][m.end():]]
+        if len(parts) >= 2: st.append(parts[0]); cd.append(' '.join(parts[1:]))
+        elif off >= col - 10: cd.append(parts[0])
+        else: st.append(parts[0])
+    push()
+    txt = ' '.join(r['cd'] for r in rows)
+    refs = []
+    for r in re.findall(r'Item\s+(\d{2}[-–]\d{2}(?:[-–]\d{2}){0,2}[A-Z]?(?:\([A-Z]\))?)', txt):
+        r = r.replace('–', '-')
+        if r not in refs: refs.append(r)
+    fcom = []
+    for r in re.findall(r'(FCOM/[A-Z0-9\-/]+)', txt):
+        if r not in fcom: fcom.append(r)
+    ecam.append({'n': name, 'ata': idm.group(1) if idm else '', 'id': idm.group(2) if idm else '', 'dt': idm.group(3) if idm else '',
+                 'app': apm.group(1).strip() if apm else '', 'rows': rows, 'refs': refs, 'fcom': fcom})
+print('ecam', len(ecam), 'ata', len(ATA_NAMES), file=sys.stderr)
 print('items', len(items), 'ops', len(ops), 'multi', sum(1 for e in ops.values() if len(e.get('vs', [])) > 1), file=sys.stderr)
-json.dump({'items': items, 'ops': ops}, open(sys.argv[2], 'w'), ensure_ascii=False)
+json.dump({'items': items, 'ops': ops, 'ecam': ecam, 'ata': ATA_NAMES}, open(sys.argv[2], 'w'), ensure_ascii=False)
