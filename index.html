@@ -739,6 +739,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
       transform: translate(-50%, -125%); font-family: ui-monospace, Menlo, monospace; font-weight: 700;
       white-space: nowrap; border-radius: 7px; padding: 2.5px 6.5px; box-shadow: 0 3px 8px rgba(0,0,0,.6);
     }
+
+    /* 글씨 크기 상향 — 조종석 조명·흔들림에서도 읽히도록 (9~11px → 11~13px) */
+    .text-\[9px\]{font-size:11px!important}.text-\[10px\]{font-size:12px!important}.text-\[10\.5px\]{font-size:12.5px!important}.text-\[11px\]{font-size:13px!important}.text-\[12px\]{font-size:13.5px!important}
+    header button{white-space:nowrap}
+    /* 오프라인 띠 */
+    #offline-bar{display:none;position:sticky;top:0;z-index:60;background:#1e293b;border-bottom:1px solid #f59e0b;color:#fde68a;font-size:13px;font-weight:700;padding:5px 12px;text-align:center}
+    body.is-offline #offline-bar{display:block}
     .fir-badge-alert  { background: linear-gradient(135deg,#dc2626,#991b1b); color:#fff; border:1.5px solid #fca5a5; box-shadow:0 0 12px rgba(239,68,68,.7); }
     .fir-badge-normal { background: linear-gradient(135deg,#d97706,#92400e); color:#fff; border:1.5px solid #fcd34d; }
     .notam-poly-tooltip {
@@ -834,6 +841,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div id="offline-bar">✈ 오프라인 — 저장된 자료·OFP 값으로 표시 중 <span id="offline-since" style="font-weight:400;color:#cbd5e1"></span></div>
   <!-- 기체 위치 · 출도착 팝업 (기번 버튼으로 열기) -->
   <div id="ac-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(2,6,23,.72);padding:16px;overflow:auto">
     <div style="max-width:680px;margin:8vh auto 0" class="rounded-xl border border-slate-700 bg-slate-950 shadow-2xl p-3 flex flex-col gap-2">
@@ -1013,11 +1021,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <section id="sec-brf" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col gap-2">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <h2 class="font-bold text-sm text-slate-100 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> 4. 노탐 브리핑 (OFP 순서 · 출발/도착/교체 · ERA · FIR)</h2>
-          <div id="brf-controls" class="flex items-center gap-2 flex-wrap text-[11px] text-slate-300">
-            <label class="flex items-center gap-1 cursor-pointer"><input id="brf-white" type="checkbox" class="w-3 h-3" /> ⚪ 참고 펼치기</label>
-            <label class="flex items-center gap-1">한글 요약 <select id="ko-mode" class="bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] text-sky-200"><option value="literal">직역 (원문 충실)</option><option value="template">템플릿 (자연스러운 문장)</option></select></label>
-            <button id="brf-reset" type="button" class="px-1.5 py-0.5 rounded border border-slate-700 text-slate-400 text-[10px]">중요 지정 모두 해제</button>
-          </div>
         </div>
         <details id="brf-tools" class="group rounded-lg border border-amber-800/50 bg-amber-950/10">
           <summary class="cursor-pointer select-none list-none flex items-center gap-2 flex-wrap px-2 py-1 text-[11px]"><span class="text-amber-300 font-bold"><span class="group-open:hidden">▸</span><span class="hidden group-open:inline">▾</span> ⏱ ETD·ETA 조정 · 🔄 퀵턴(복편)</span><span id="brf-tools-status" class="text-[10px] text-slate-400 font-mono-code">계획값 사용 중</span></summary>
@@ -1071,10 +1074,20 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <div id="qt-impact" class="w-full"></div>
           </div>
         </details>
+        <details id="brf-settings" class="rounded-lg border border-slate-700 bg-slate-950/40">
+          <summary class="cursor-pointer select-none list-none px-2 py-1 text-[12px] text-slate-300 font-bold">⚙ 보기 설정 <span class="font-normal text-slate-500">(참고 펼치기 · 요약 방식 · ERA 선택 · 안내)</span></summary>
+          <div class="flex flex-col gap-2 p-2 pt-1">
+          <div id="brf-controls" class="flex items-center gap-3 flex-wrap text-[12px] text-slate-300">
+            <label class="flex items-center gap-1 cursor-pointer"><input id="brf-white" type="checkbox" class="w-3 h-3" /> ⚪ 참고 펼치기</label>
+            <label class="flex items-center gap-1">한글 요약 <select id="ko-mode" class="bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] text-sky-200"><option value="literal">직역 (원문 충실)</option><option value="template">템플릿 (자연스러운 문장)</option></select></label>
+            <button id="brf-reset" type="button" class="px-1.5 py-0.5 rounded border border-slate-700 text-slate-400 text-[10px]">중요 지정 모두 해제</button>
+          </div>
+            <div id="brf-era" class="flex items-center gap-1 flex-wrap"></div>
+            <div class="pro-slim-hide text-[10px] text-slate-500">출발·도착·교체(Package 1), ERA(Package 2), FIR(Package 3) 노탐을 OFP 순서대로 한곳에서 봅니다. 위 ETD 조정·퀵턴을 바꾸면 유효 배지와 운항시간대 색이 바로 다시 계산됩니다. 전체 내용이 펼쳐져 있습니다(⚪ 참고는 한 줄로 접힘, 누르면 펼침). 자동 분류는 참고용입니다. ☆를 누르면 중요 노탐으로 지정되고, "중요 노탐 모아보기"에서 출발·도착·교체·ERA·PACKAGE 3별로 모아 볼 수 있습니다. 지정은 이 기기에 90일간 저장됩니다.</div>
+          </div>
+        </details>
         <div id="brf-sum"></div>
         <div id="brf-secf" class="flex items-center gap-1 flex-wrap"></div>
-        <div id="brf-era" class="flex items-center gap-1 flex-wrap"></div>
-        <div class="pro-slim-hide text-[10px] text-slate-500">출발·도착·교체(Package 1), ERA(Package 2), FIR(Package 3) 노탐을 OFP 순서대로 한곳에서 봅니다. 위 ETD 조정·퀵턴을 바꾸면 유효 배지와 운항시간대 색이 바로 다시 계산됩니다. 전체 내용이 펼쳐져 있습니다(⚪ 참고는 한 줄로 접힘, 누르면 펼침). 자동 분류는 참고용입니다. ☆를 누르면 중요 노탐으로 지정되고, "중요 노탐 모아보기"에서 출발·도착·교체·ERA·PACKAGE 3별로 모아 볼 수 있습니다. 지정은 이 기기에 90일간 저장됩니다.</div>
         <div id="twy-bar" class="flex items-center gap-1.5 flex-wrap"></div>
         <div id="brf-list" class="flex flex-col gap-3"></div>
       </section>
@@ -1514,12 +1527,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
     // 원문 아래 "약어 해설" 패널 (어두운 배경 / light=true 는 지도 팝업용 밝은 배경)
     function abbrPanel(text, light) {
       const list = abbrIn(text), phr = phrasesIn(text); if (!list.length && !phr.length) return '';
-      if (light) return `<div style="margin-top:6px;font-size:10px;line-height:1.5;color:#334155"><b>약어 해설</b><br>${phr.map(([m, en, ko]) => `<b>${esc(m)}</b> ${esc(en)} · ${esc(ko)}`).concat(list.map(a => `<b>${esc(a)}</b> ${esc(NOTAM_ABBR[a][0])} · ${esc(NOTAM_ABBR[a][1])}`)).join('<br>')}</div>`;
-      return `<div class="mt-1.5 rounded-lg border border-slate-800 bg-slate-950/70 px-2 py-1.5">
-        <div class="text-[10px] font-bold text-sky-300 mb-0.5">📖 약어 해설</div>
+      const nAb = list.length + phr.length;
+      if (light) return `<details style="margin-top:6px;font-size:11px;line-height:1.5;color:#334155"><summary style="cursor:pointer;font-weight:700">📖 약어 해설 ${nAb}개 (눌러서 보기)</summary>${phr.map(([m, en, ko]) => `<b>${esc(m)}</b> ${esc(en)} · ${esc(ko)}`).concat(list.map(a => `<b>${esc(a)}</b> ${esc(NOTAM_ABBR[a][0])} · ${esc(NOTAM_ABBR[a][1])}`)).join('<br>')}</details>`;
+      return `<details class="mt-1.5 rounded-lg border border-slate-800 bg-slate-950/70 px-2 py-1.5">
+        <summary class="cursor-pointer select-none text-[12px] font-bold text-sky-300">📖 약어 해설 ${nAb}개 <span class="font-normal text-slate-500">(눌러서 보기)</span></summary>
         ${phr.length ? `<div class="flex flex-col gap-0.5 mb-1">${phr.map(([m, en, ko]) => `<div class="text-[11px] leading-snug"><span class="mono font-bold text-emerald-200">${esc(m)}</span> <span class="text-slate-300">${esc(en)}</span> <span class="text-sky-200">· ${esc(ko)}</span></div>`).join('')}</div>` : ''}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5">${list.map(a => `<div class="text-[11px] leading-snug"><span class="mono font-bold text-amber-200">${esc(a)}</span> <span class="text-slate-300">${esc(NOTAM_ABBR[a][0])}</span> <span class="text-sky-200">· ${esc(NOTAM_ABBR[a][1])}</span></div>`).join('')}</div>
-      </div>`;
+      </details>`;
     }
     // ===================== 한글 요약 (① 검증 템플릿 → ② 약어 직역 / 옵션: 개선 템플릿) =====================
     let koMode = (() => { try { return localStorage.getItem('koMode.v1') || 'literal'; } catch (e) { return 'literal'; } })();
@@ -5085,7 +5099,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       $('brf-sum').innerHTML = `<div class="flex items-center gap-2 flex-wrap text-[11px]">
           ${[['R', '영향', 'bg-rose-600 text-white'], ['Y', '확인', 'bg-amber-400 text-slate-950'], ['W', '참고', 'bg-slate-600 text-slate-100']].map(([k, l, c]) => `<button type="button" data-brf-tier="${k}" class="px-2.5 py-1 rounded font-bold ${c} ${brfTier === k ? 'ring-2 ring-white shadow-lg' : brfTier ? 'opacity-35' : ''}">${l} ${cnt(k)}</button>`).join('')}
           ${brfTier ? '<button type="button" data-brf-tier="" class="px-2 py-1 rounded border border-slate-600 text-slate-300">전체 ✕</button>' : ''}
-          ${(() => { const m = allRows.filter(r => r.manual && (!PKG2_SECS.includes(r.n.sec) || eraOn(r.n.secCode))).length; return m || brfManualOnly ? `<button type="button" data-brf-manual class="px-2.5 py-1 rounded font-bold border ${brfManualOnly ? 'bg-fuchsia-600 border-fuchsia-300 text-white' : 'bg-fuchsia-950/50 border-fuchsia-500 text-fuchsia-100'}" title="비행 시간대에 유효한데 자동 분류가 확실하지 않은 노탐 — 원문을 직접 확인하세요">🔎 수동 확인 ${m}</button>` : ''; })()}
+          ${(() => { const m = allRows.filter(r => r.manual && (!PKG2_SECS.includes(r.n.sec) || eraOn(r.n.secCode))).length; return m || brfManualOnly ? `<button type="button" data-brf-manual class="px-2.5 py-1 rounded font-bold border ${brfManualOnly ? 'bg-amber-500 border-amber-300 text-slate-950' : 'bg-amber-950/50 border-dashed border-amber-400 text-amber-100'}" title="비행 시간대에 유효한데 자동 분류가 확실하지 않은 노탐 — 원문을 직접 확인하세요">🔎 수동 확인 ${m}</button>` : ''; })()}
           <span class="text-slate-500">표시 ${rows.length} / 전체 ${allRows.length}건</span>
           <button type="button" data-ai-run class="px-2.5 py-1 rounded-lg border font-bold ${aiPanel ? 'bg-violet-600 border-violet-300 text-white' : 'bg-violet-950/50 border-violet-500 text-violet-100'}">🤖 AI 일괄 요약 ${aiPanel ? '▴' : '▾'}</button><button type="button" data-ai-token class="px-1.5 py-1 rounded border border-slate-700 text-[10px] text-slate-400" title="AI 접근 토큰 변경">🔑</button>${aiMsg ? `<span class="text-[10px] ${/^⚠/.test(aiMsg) ? 'text-amber-300' : 'text-violet-300'}">${esc(aiMsg)}</span>` : ''}
           <button type="button" data-brf-starview class="ml-auto px-2.5 py-1 rounded-lg border font-bold ${brfStarView ? 'bg-amber-500 border-amber-400 text-slate-950' : 'bg-amber-950/40 border-amber-600 text-amber-200'}">${brfStarView ? '← 전체 목록' : `⭐ 중요 노탐 모아보기 (${nStar})`}</button></div>${aiPanelHtml(allRows)}`;
@@ -5101,7 +5115,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <div class="flex items-start gap-2 px-2 py-1">
             <button type="button" data-brf-star="${esc(n.notamId)}" class="shrink-0 w-7 h-7 mt-0.5 rounded-md border text-base leading-none ${r.star ? 'bg-amber-400 border-amber-300 text-slate-950' : 'border-slate-600 text-slate-500'}" title="중요 노탐 지정">${r.star ? '★' : '☆'}</button>
             <div class="min-w-0 flex-1" data-brf-toggle>
-              <div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${T.pill}">${T.label}</span><span class="mono text-[11px] font-bold ${T.txt}">${esc(n.notamId)}</span>${hk ? '<span class="px-1 rounded bg-cyan-900/70 text-cyan-200 text-[10px] font-bold">🧊 HOT</span>' : ''}<span class="text-[10px] text-sky-300 mono whitespace-nowrap">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${r.tb}${r.qt ? `<span class="px-1 rounded text-[10px] font-bold bg-sky-900/70 border border-sky-500/60 text-sky-200">🔄 ${esc(r.qt)}</span>` : ''}<span class="text-[10px] ${T.txt}">${esc(r.why)}</span>${r.manual ? `<span class="px-1 rounded text-[10px] font-bold bg-fuchsia-900/70 border border-fuchsia-500 text-fuchsia-100" title="${esc(r.manual)}">🔎 수동 확인 · ${esc(r.manual)}</span>` : ''}${r.same && r.same.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">같은 내용 +${r.same.length}건</span>` : ''}${r.rel && r.rel.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">관련 노탐 ${r.rel.length}건 묶음</span>` : ''}${n.dupIn && n.dupIn.length ? `<span class="text-[9px] text-slate-500">+${esc(n.dupIn.join('·'))} 중복</span>` : ''}${n.geo || brfCoordList(n.rawText || n.etext || '').length ? `<button type="button" data-brf-map="${esc(n.notamId)}" class="text-[10.5px] font-bold text-sky-200 bg-sky-950/60 border border-sky-600 px-1.5 rounded">📍 지도 이동</button>` : ''}${twyHas(n) ? `<button type="button" data-twy-open="${esc(n.secCode)}" data-twy-id="${esc(n.notamId)}" class="text-[10.5px] font-bold px-1.5 rounded" style="background:#7f1d1d;border:1px solid #f87171;color:#fff">🛬 유도로</button>` : ''}<span data-brf-caret class="ml-auto text-[10px] text-slate-500">${open ? '▾ 접기' : '▸ 펼치기'}</span></div>
+              <div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${T.pill}">${T.label}</span><span class="mono text-[11px] font-bold ${T.txt}">${esc(n.notamId)}</span>${hk ? '<span class="px-1 rounded bg-cyan-900/70 text-cyan-200 text-[10px] font-bold">🧊 HOT</span>' : ''}<span class="text-[10px] text-sky-300 mono whitespace-nowrap">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${r.tb}${r.qt ? `<span class="px-1 rounded text-[10px] font-bold bg-sky-900/70 border border-sky-500/60 text-sky-200">🔄 ${esc(r.qt)}</span>` : ''}<span class="text-[10px] ${T.txt}">${esc(r.why)}</span>${r.manual ? `<span class="px-1 rounded text-[10px] font-bold bg-amber-900/60 border border-dashed border-amber-400 text-amber-100" title="${esc(r.manual)}">🔎 수동 확인 · ${esc(r.manual)}</span>` : ''}${r.same && r.same.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">같은 내용 +${r.same.length}건</span>` : ''}${r.rel && r.rel.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">관련 노탐 ${r.rel.length}건 묶음</span>` : ''}${n.dupIn && n.dupIn.length ? `<span class="text-[9px] text-slate-500">+${esc(n.dupIn.join('·'))} 중복</span>` : ''}${n.geo || brfCoordList(n.rawText || n.etext || '').length ? `<button type="button" data-brf-map="${esc(n.notamId)}" class="text-[10.5px] font-bold text-sky-200 bg-sky-950/60 border border-sky-600 px-1.5 rounded">📍 지도 이동</button>` : ''}${twyHas(n) ? `<button type="button" data-twy-open="${esc(n.secCode)}" data-twy-id="${esc(n.notamId)}" class="text-[10.5px] font-bold px-1.5 rounded" style="background:#7f1d1d;border:1px solid #f87171;color:#fff">🛬 유도로</button>` : ''}<span data-brf-caret class="ml-auto text-[10px] text-slate-500">${open ? '▾ 접기' : '▸ 펼치기'}</span></div>
               <div data-brf-line class="${open ? 'hidden' : ''}">${cd ? `<div class="text-[11px] text-teal-200 leading-snug line-clamp-1">📘 ${esc(cd.s)}</div>` : pre ? `<div class="text-[11px] text-emerald-200 leading-snug line-clamp-1">📗 ${esc(pre.s)}</div>` : ai ? `<div class="text-[11px] text-violet-200 leading-snug line-clamp-1">🤖 ${esc(ai.s)}</div>` : ''}<div class="mono text-[11px] ${cd || pre || ai ? 'text-slate-400' : 'text-slate-300'} leading-snug line-clamp-1" title="원문">${cd || pre || ai ? '<span class="text-[9px] text-slate-500 font-sans">원문 </span>' : ''}${esc(line)}</div></div>
             </div>
           </div>
@@ -5871,7 +5885,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       wxLiveBusy = true; ids.forEach(i => wxLive[i] = Object.assign(wxLive[i] || {}, { status: 'loading' })); renderFlightInfo();
       await Promise.all([...new Set(ids)].map(async i => {
         const [m, om] = await Promise.all([fetchMetar(i), fetchOpenMeteo(i)]);
-        wxLive[i] = { metar: m && m.raw, metarSrc: m && m.src, errs: m && m.errs, om, status: (m && m.raw) || om ? 'ok' : 'fail' };
+        wxLive[i] = { metar: m && m.raw, metarSrc: m && m.src, errs: m && m.errs, om, status: (m && m.raw) || om ? 'ok' : navigator.onLine === false ? 'offline' : 'fail' };
       }));
       wxLiveAt = Date.now(); wxLiveBusy = false; renderFlightInfo();
     }
@@ -6624,7 +6638,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         if (res.status === 404) throw new Error('중계 서버 코드 업데이트 필요 (1.3)');
         if (!res.ok || !j) throw new Error((j && j.error) || `HTTP ${res.status}`);
         icnHist = { reg, at: Date.now(), arr: j.arr || [], dep: j.dep || [], errs: j.errs || [] };
-      } catch (e) { icnHist = { reg, at: Date.now(), err: e.name === 'AbortError' ? '시간 초과' : e.message }; }
+      } catch (e) { icnHist = { reg, at: Date.now(), err: e.name === 'AbortError' ? '시간 초과' : /fetch|network/i.test(e.message) ? '네트워크 연결 없음' : e.message }; }
     }
     function icnHistHtml(airborne) {
       const H = icnHist; if (!H || !H.reg) return '';
@@ -6810,7 +6824,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       try {
         for (const [role] of roles) standLive[role] = await fetchIcnFlight(role === 'DEP' ? 'DEP' : 'ARR', c) || { none: true };
         standLive.at = Date.now();
-      } catch (e) { standLive.err = e.name === 'AbortError' ? '시간 초과' : e.message; }
+      } catch (e) { standLive.err = e.name === 'AbortError' ? '시간 초과' : /fetch|network/i.test(e.message) ? '네트워크 연결 없음' : e.message; }
       standLive.busy = false; renderStands(); try { renderAcLive(); } catch (e) { } try { renderBriefing(); } catch (e) { }
     }
     function maybeFetchStands() {
@@ -7901,7 +7915,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         L.circle(p, { renderer: R, radius: h.r || 170, color: '#ea580c', weight: 2.5, fillColor: '#7c2d12', fillOpacity: .35, interactive: true }).bindPopup(`<b>${esc(h.id)}</b> 핫스폿 (위치 근사 · ${esc(h.at.join(' × '))})${h.note ? '<br>' + esc(h.note) : ''}`).addTo(grp);
         lbl([p[0] + (h.r || 170) / 111000 * 0.75, p[1]], esc(h.id), 'amm-hs');
       });
-      // 날개폭 제한 유도로 — 이 기종(OFP)이 걸리는 구간만 보라색 점선
+      // 날개폭 제한 유도로 — 이 기종(OFP)이 걸리는 구간만 청록색 점선
       const span = acSpan(); if (span) {
         const Dst = { st: {} }; Object.entries(A.st || {}).forEach(([r, p]) => { Dst.st[stNorm(r)] = p; });
         (spec.wing || []).filter(w => w.ref && (w.gt ? span > w.lim : span >= w.lim)).forEach(w => {
@@ -7909,7 +7923,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           if (w.a) { const TA = twyTargets(allW, w.a, Dst), TB = twyTargets(allW, w.b, Dst); let best = null;
             if (TA.length && TB.length) segs.forEach(ch => { const J1 = twyJunction(ch, TA, k), J2 = twyJunction(ch, TB, k); if (J1.d < 200 && J2.d < 200 && (!best || J1.d + J2.d < best.s)) best = { s: J1.d + J2.d, seg: twyCut(ch, J1.cum, J1.t, J2.t) }; });
             segs = best ? [best.seg] : []; }
-          segs.forEach(sg => { L.polyline(sg, { color: '#d946ef', weight: 6, opacity: .9, dashArray: '2 9', lineCap: 'round' }).bindPopup(`<b>날개폭 제한</b> ${esc(w.txt)}<br>이 기종 ${span} m → 사용 불가`).addTo(grp); });
+          segs.forEach(sg => { L.polyline(sg, { color: '#14b8a6', weight: 6, opacity: .9, dashArray: '2 9', lineCap: 'round' }).bindPopup(`<b>날개폭 제한</b> ${esc(w.txt)}<br>이 기종 ${span} m → 사용 불가`).addTo(grp); });
         });
       }
       return { bounds: L.latLngBounds(TW.flatMap(t => t.pts)), mpp };
@@ -7981,14 +7995,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
         const R = twyClauses(n) && !rwyFirst(n) ? twyResolve(D, icao, n) : rwyResolve(D, n), win = brfWindow(n, ctx), act = win ? notamIsActive(n, win[0], win[1]) : true;
         const near = !act && win ? notamIsActive(n, win[0] - 2 * 36e5, win[1] + 2 * 36e5) : false;   // ±2시간 안에 유효 → 지연·조기 출발 시 해당 가능
         (TWY.res || (TWY.res = {}))[n.notamId] = R;
-        const K = TWY_KIND[R.kind] || TWY_KIND.info, color = act ? K[1] : near ? '#a855f7' : '#3b82f6', dash = act ? K[2] : '6 8';
+        const K = TWY_KIND[R.kind] || TWY_KIND.info, color = act ? K[1] : near ? '#93c5fd' : '#3b82f6', dash = act ? K[2] : '6 8';
         const refT = win && ctx.w ? (win[2] === 'ETD' ? ctx.w.etd : ctx.w.eta) : null, refD = refT ? new Date(refT) : null;
         const when = refD ? `${(win[2] === 'ETD' ? etdOverride : (etdOverride || etaOverride)) ? '조정 ' : ''}${win[2] === 'ETD' ? 'ETD' : 'ETA'} ${String(refD.getUTCDate()).padStart(2, '0')}${'JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC'.substr(refD.getUTCMonth() * 3, 3)} ${String(refD.getUTCHours()).padStart(2, '0')}:${String(refD.getUTCMinutes()).padStart(2, '0')}Z` : '';
         const pre = typeof preOf === 'function' ? preOf(n) : null, sum = pre && pre.s ? pre.s : String(n.etext || n.rawText || '').replace(/\s+/g, ' ').slice(0, 160);
         const grp = L.featureGroup();
         R.segs.forEach(s => { L.polyline(s, { color: '#000', weight: R.rwy ? 20 : 13, opacity: .35, interactive: false }).addTo(grp); L.polyline(s, { color, weight: R.rwy ? (amm ? 16 : 12) : (amm ? 11 : 9), opacity: R.rwy ? .8 : .95, dashArray: dash, lineCap: R.rwy ? 'butt' : 'round' }).addTo(grp); });
         (R.lbl || []).forEach(([p, t]) => L.marker(p, { interactive: false, icon: L.divIcon({ className: 'twy-stn', html: t === '✕' ? `<span style="background:${color};font-size:15px;padding:0 5px">✕</span>` : `<span style="background:${color}">${esc(t)}</span>`, iconSize: null }) }).addTo(grp));
-        const pop = `<b>${esc(n.notamId)}</b> · ${esc(K[0])}${act ? '' : near ? ' · <span style="color:#9333ea;font-weight:700">시간대 아님 · ±2h 내 유효 (지연 시 해당)</span>' : ' · <span style="color:#2563eb">비행 시간대 아님</span>'}<br>${esc(R.desc.join(' / '))}<br><span style="font-size:11px">${esc(sum)}</span><br><span style="font-size:12.5px;color:#334155;font-weight:600">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${when ? `<br><span style="font-size:12.5px;font-weight:800;color:#0369a1">✈ ${esc(when)}</span>` : ''}`;
+        const pop = `<b>${esc(n.notamId)}</b> · ${esc(K[0])}${act ? '' : near ? ' · <span style="color:#2563eb;font-weight:700">시간대 아님 · ±2h 내 유효 (지연 시 해당)</span>' : ' · <span style="color:#2563eb">비행 시간대 아님</span>'}<br>${esc(R.desc.join(' / '))}<br><span style="font-size:11px">${esc(sum)}</span><br><span style="font-size:12.5px;color:#334155;font-weight:600">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${when ? `<br><span style="font-size:12.5px;font-weight:800;color:#0369a1">✈ ${esc(when)}</span>` : ''}`;
         R.pts.forEach(p => { L.circle([p[0], p[1]], { radius: 22, color, weight: 3, fillColor: color, fillOpacity: act ? .45 : .2 }).addTo(grp); L.marker([p[0], p[1]], { icon: L.divIcon({ className: 'twy-stn', html: `<span style="background:${color}">${esc(p[2])}</span>`, iconSize: null }) }).addTo(grp); });
         const idx = TWY.items.length;
         grp.bindPopup(pop + `<div style="margin-top:6px"><button type="button" data-twy-hide="${idx}" style="background:#334155;color:#fff;border-radius:6px;padding:3px 10px;font-weight:700;font-size:12px">👁‍🗨 지도에서 숨기기</button></div>`, { maxWidth: 320 }); if (R.segs.length || R.pts.length) grp.addTo(TWY.layers);
@@ -7996,7 +8010,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         TWY.items.push({ n, R, grp, act, near, K, sum, color, when, raw, pre: !!(pre && pre.s) });
       });
       map.fitBounds(allB.isValid() ? allB : [[0, 0], [0, 0]], { padding: [10, 10] });
-      list.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:#94a3b8;margin-bottom:6px"><span><b style="color:#ef4444">━</b> 폐쇄 (활주로는 ✕)</span><span><b style="color:#f97316">┅</b> 활주로 ILS·공시거리</span><span><b style="color:#ef4444">┅</b> 사용 제한</span><span><b style="color:#f59e0b">┅</b> 등화·표지</span><span><b style="color:#3b82f6">┅</b> 비행 시간대 아님</span><span><b style="color:#a855f7">┅</b> ±2h 내 유효(지연 시 해당)</span><span>· 목록을 누르면 확대 · 한 번 더 누르면 숨김</span><span style="margin-left:auto;display:flex;gap:6px"><button type="button" data-twy-all="0" style="background:#334155;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">👁‍🗨 전체 숨기기</button><button type="button" data-twy-all="1" style="background:#334155;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">👁 전체 보이기</button><button type="button" data-twy-all="L" style="background:#78350f;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">등화·표지 숨기기</button></span></div>`
+      list.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:#94a3b8;margin-bottom:6px"><span><b style="color:#ef4444">━</b> 폐쇄 (활주로는 ✕)</span><span><b style="color:#f97316">┅</b> 활주로 ILS·공시거리</span><span><b style="color:#ef4444">┅</b> 사용 제한</span><span><b style="color:#f59e0b">┅</b> 등화·표지</span><span><b style="color:#3b82f6">┅</b> 비행 시간대 아님</span><span><b style="color:#93c5fd">┅</b> ±2h 내 유효(지연 시 해당)</span><span>· 목록을 누르면 확대 · 한 번 더 누르면 숨김</span><span style="margin-left:auto;display:flex;gap:6px"><button type="button" data-twy-all="0" style="background:#334155;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">👁‍🗨 전체 숨기기</button><button type="button" data-twy-all="1" style="background:#334155;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">👁 전체 보이기</button><button type="button" data-twy-all="L" style="background:#78350f;color:#fff;border-radius:6px;padding:2px 8px;font-weight:700">등화·표지 숨기기</button></span></div>`
         + TWY.items.map((x, i) => `<div data-twy-item="${i}" style="cursor:pointer;border:1px solid ${x.R.segs.length || x.R.pts.length ? x.color : '#475569'};border-left-width:6px;border-radius:8px;padding:5px 8px;margin-bottom:5px;background:#111827">
             <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><b class="mono" style="color:#fff">${esc(x.n.notamId)}</b><span style="background:${x.color};color:#fff;border-radius:4px;padding:0 5px;font-size:11px;font-weight:700">${esc(x.K[0])}${x.act ? '' : x.near ? ' · 시간대 아님 (±2h 내 유효 — 지연 시 해당)' : ' · 시간대 아님'}</span><b style="color:#fde68a">${esc(x.R.desc.join(' / '))}</b><span data-twy-hid style="display:none;color:#94a3b8;font-size:11px">(숨김)</span>${x.R.partial ? '<span style="color:#fbbf24;font-size:11px">⚠ 일부 구간 — 위치는 원문 확인</span>' : ''}${x.R.miss.length ? `<span style="color:#fca5a5;font-size:11px">지도에 없음: ${esc(x.R.miss.join(', '))}</span>` : ''}</div>
             <div style="font-size:12px;color:#cbd5e1;margin-top:2px">${esc(x.sum)}</div>${x.raw && x.pre ? `<div style="font-size:11px;color:#94a3b8;margin-top:1px;font-family:ui-monospace,monospace"><span style="font-family:sans-serif;font-size:9.5px;color:#64748b">원문 </span>${esc(x.raw)}</div>` : ''}
@@ -8004,7 +8018,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         + (() => {
             if (!spec || !(spec.notes || spec.wing)) return '';
             const sp = acSpan(), hit = sp ? (spec.wing || []).filter(w => w.gt ? sp > w.lim : sp >= w.lim) : [];
-            const wl = sp ? `<div style="margin:4px 0;padding:5px 8px;border-radius:8px;border:1px solid ${hit.length ? '#d946ef' : '#16a34a'};background:${hit.length ? '#3b0764' : '#052e16'};font-size:12px">✈ ${esc(acSpanName())} 날개폭 ${sp} m — ${hit.length ? '<b>사용 불가:</b> ' + hit.map(w => esc(w.txt)).join(' · ') + ' <span style="color:#f0abfc">(지도에 보라색 점선)</span>' : '날개폭 제한 유도로 없음'}</div>` : '';
+            const wl = sp ? `<div style="margin:4px 0;padding:5px 8px;border-radius:8px;border:1px solid ${hit.length ? '#14b8a6' : '#16a34a'};background:${hit.length ? '#042f2e' : '#052e16'};font-size:12px">✈ ${esc(acSpanName())} 날개폭 ${sp} m — ${hit.length ? '<b>사용 불가:</b> ' + hit.map(w => esc(w.txt)).join(' · ') + ' <span style="color:#99f6e4">(지도에 청록색 점선)</span>' : '날개폭 제한 유도로 없음'}</div>` : '';
             return `<details open style="margin-top:6px;border:1px solid #334155;border-radius:8px;padding:5px 8px;background:#0b1220"><summary style="cursor:pointer;color:#7dd3fc;font-weight:700;font-size:12.5px">📋 공항 운영 참고 (${esc(spec.notesSrc || 'Jeppesen')})</summary>${wl}<ul style="margin:4px 0 0;padding-left:16px;font-size:12px;color:#cbd5e1">${(spec.notes || []).map(t => `<li style="margin:2px 0">${esc(t)}</li>`).join('')}</ul></details>`;
           })()
         + `<div style="font-size:10.5px;color:#64748b;margin-top:6px">유도로 중심선은 OpenStreetMap 자료이며 노탐 문장을 규칙으로 읽어 표시한 참고용입니다. 지상 이동은 Jeppesen 차트·관제 지시를 따르세요.</div>`;
@@ -8265,8 +8279,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
           showToast('새 버전을 받았습니다. 앱을 다시 열면 적용됩니다.');
         }
       });
-      window.addEventListener('offline', () => set('✈ 오프라인 모드 (저장본)', 'border-emerald-700 text-emerald-300'));
-      window.addEventListener('online', () => set('✓ 오프라인 저장됨', 'border-emerald-700 text-emerald-300'));
+      const bar = () => {
+        const off = navigator.onLine === false, since = document.getElementById('offline-since');
+        document.body.classList.toggle('is-offline', off);
+        try { if (!off) localStorage.setItem('notamPro.lastOnline', String(Date.now())); else if (since) { const t = +localStorage.getItem('notamPro.lastOnline'); since.textContent = t ? '· 마지막 연결 ' + new Date(t).toISOString().slice(5, 16).replace('T', ' ') + 'Z' : ''; } } catch (e) { }
+      };
+      bar();
+      window.addEventListener('offline', () => { set('✈ 오프라인 모드 (저장본)', 'border-emerald-700 text-emerald-300'); bar(); });
+      window.addEventListener('online', () => { set('✓ 오프라인 저장됨', 'border-emerald-700 text-emerald-300'); bar(); });
       // 저장 데이터(중요 노탐·설정)를 지우지 않도록 브라우저에 요청
       if (navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(() => { });
     })();
