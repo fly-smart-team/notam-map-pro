@@ -6631,12 +6631,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const eh = lt ? `${lt.h % 12 || 12}:${String(lt.m).padStart(2, '0')} ${lt.h < 12 ? 'a.m.' : 'p.m.'}` : `${B}:${B} a.m.(/p.m.)`;
       const ko = [`손님 여러분, 저는 기장입니다.`,
         `우리 비행기는 앞으로 약 ${A.mins || B}분 후에 ${A.ko || B}에 착륙 예정입니다.`,
-        `현재 공항의 날씨는 ${wxKo}, 기온은 섭씨 ${c == null ? B : c}도입니다.`,
+        `현재 공항의 날씨는 ${wxKo}, 기온은 섭씨 ${c == null ? B : c < 0 ? '영하 ' + (-c) : c}도입니다.`,
         `지금 이곳의 시각은 ${lt ? `${lt.mo}월 ${lt.d}일 ${lt.wk}, ${kh}` : `${B}월 ${B}일 ${B}요일, ${kh}`}입니다.`,
         `스타얼라이언스 아시아나항공을 이용해 주셔서 대단히 고맙습니다.`];
       const en = [`Ladies and gentlemen, this is the captain speaking.`,
         `We expect to land at our destination, ${A.en ? A.en + ' International Airport' : B}, in about ${A.mins || B} minutes.`,
-        `The current temperature at ${A.en || B} is ${c == null ? B : c} degrees Celsius, or ${f == null ? B : f} degrees Fahrenheit, and it is ${wxEn}.`,
+        `The current temperature at ${A.en || B} is ${c == null ? B : c < 0 ? 'minus ' + (-c) : c} degrees Celsius, or ${f == null ? B : f < 0 ? 'minus ' + (-f) : f} degrees Fahrenheit, and it is ${wxEn}.`,
         `The current local time is ${eh}, on ${lt ? `${lt.ewk}, ${lt.emo} ${lt.d}` : `(day-of-the-week), (month) (date)`}.`,
         `Thank you for flying with Asiana Airlines, a member of Star Alliance.`];
       return { ko, en, lt };
@@ -6648,11 +6648,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const sw = ov.querySelector('[data-arr-wxsel]'), sd = ov.querySelector('[data-arr-wind]');
       if (!sw.options.length) { sw.innerHTML = `<option value="">(선택 안 함 — 빈칸)</option>` + ARR_WX.filter(x => x[0] !== 'wind').map(x => `<option value="${x[0]}">${ARR_SHORT[x[0]]}</option>`).join(''); }
       sw.value = arr.wx; sd.value = arr.windy ? '1' : '0';
+      const st = ov.querySelector('[data-arr-temp]');
+      if (!st.options.length) { let h = ''; for (let t = 45; t >= -20; t--) h += `<option value="${t}">${t > 0 ? '+' : ''}${t}°C</option>`; st.innerHTML = h; }
+      st.value = String(arr.tempC); ov.querySelector('[data-arr-f]').textContent = `= ${Math.round(+arr.tempC * 9 / 5 + 32)}°F`;
       ov.querySelector('[data-arr-wxnote]').textContent = arr.auto ? (arr.wx === arr.auto && !!arr.windy === arr.autoWindy ? '← METAR 값 (기본)' : '← 직접 선택함') : '';
       ov.querySelector('[data-arr-src]').textContent = arr.src ? `날씨·기온 출처: ${arr.src}` : '날씨·기온 자료 없음 — 직접 고르세요';
     }
     function openArrival() {
-      const A = arrAuto(); arr = { dest: A.dest, eta: A.eta, ko: A.ko, en: A.en, mins: A.mins, wx: A.wx.find(k => k !== 'wind') || '', windy: A.wx.includes('wind'), tempC: A.tempC, src: A.src, auto: A.wx.find(k => k !== 'wind') || '', autoWindy: A.wx.includes('wind') };
+      const A = arrAuto(); arr = { dest: A.dest, eta: A.eta, ko: A.ko, en: A.en, mins: A.mins, wx: A.wx.find(k => k !== 'wind') || '', windy: A.wx.includes('wind'), tempC: String(A.tempC === '' || isNaN(+A.tempC) ? 20 : Math.max(-20, Math.min(45, Math.round(+A.tempC)))), src: A.src, auto: A.wx.find(k => k !== 'wind') || '', autoWindy: A.wx.includes('wind') };
       let ov = $('arr-overlay');
       if (!ov) {
         ov = document.createElement('div'); ov.id = 'arr-overlay'; ov.className = 'fixed inset-0 z-[10000] bg-slate-950 flex flex-col';
@@ -6660,7 +6663,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <div class="flex-1 overflow-auto p-3 sm:p-5"><div class="mx-auto max-w-3xl flex flex-col gap-3">
             <div class="rounded-xl border border-slate-700 bg-slate-900 p-3 flex flex-col gap-2 text-[13px] text-slate-200">
               <div class="flex items-center gap-2 flex-wrap"><label>착륙까지 <input data-arr-in="mins" type="number" inputmode="numeric" min="1" class="w-16 bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-center mono"> 분</label><button type="button" data-arr="now" class="px-2 py-1 rounded-md border border-slate-600 text-slate-200">지금 시각 기준으로 계산</button><span data-arr-eta class="text-[12px] text-slate-400"></span></div>
-              <div class="flex items-center gap-2 flex-wrap"><label>공항 <input data-arr-in="ko" class="w-56 bg-slate-950 border border-slate-600 rounded px-1.5 py-1"></label><label>English <input data-arr-in="en" class="w-48 bg-slate-950 border border-slate-600 rounded px-1.5 py-1"></label><label>기온 °C <input data-arr-in="tempC" type="number" inputmode="numeric" class="w-16 bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-center mono"></label></div>
+              <div class="flex items-center gap-2 flex-wrap"><label>공항 <input data-arr-in="ko" class="w-56 bg-slate-950 border border-slate-600 rounded px-1.5 py-1"></label><label>English <input data-arr-in="en" class="w-48 bg-slate-950 border border-slate-600 rounded px-1.5 py-1"></label><label>기온 <select data-arr-temp class="bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-[14px] mono"></select></label><span data-arr-f class="text-[12px] text-slate-400 mono"></span></div>
               <div class="flex items-center gap-2 flex-wrap"><label>날씨 <select data-arr-wxsel class="bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-[14px]"></select></label><label>바람 <select data-arr-wind class="bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-[14px]"><option value="0">보통</option><option value="1">강한 바람</option></select></label><span data-arr-wxnote class="text-[12px] text-teal-300"></span></div>
               <div data-arr-src class="text-[11px] text-slate-500"></div></div>
             <div data-arr-doc class="rounded-xl bg-white p-4 shadow-xl"></div>
@@ -6675,7 +6678,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           else if (b.dataset.arr === 'copy') { const C = arrCompose(); const t = C.ko.join('\n') + '\n\n' + C.en.join('\n'); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => showToast('복사했습니다'), () => showToast('복사하지 못했습니다')); }
         });
         ov.addEventListener('input', e => { const i = e.target.closest('[data-arr-in]'); if (i) { arr[i.dataset.arrIn] = i.value; arrRender(); } });
-        ov.addEventListener('change', e => { if (e.target.matches('[data-arr-wxsel]')) { arr.wx = e.target.value; arrRender(); } else if (e.target.matches('[data-arr-wind]')) { arr.windy = e.target.value === '1'; arrRender(); } });
+        ov.addEventListener('change', e => { if (e.target.matches('[data-arr-temp]')) { arr.tempC = e.target.value; arrRender(); } else if (e.target.matches('[data-arr-wxsel]')) { arr.wx = e.target.value; arrRender(); } else if (e.target.matches('[data-arr-wind]')) { arr.windy = e.target.value === '1'; arrRender(); } });
         setInterval(() => { if (ov.style.display !== 'none' && arr && !ov.contains(document.activeElement && document.activeElement.tagName === 'INPUT' ? document.activeElement : null)) arrRender(); }, 20000);
       }
       ov.style.display = 'flex'; arrSync(); arrRender();
