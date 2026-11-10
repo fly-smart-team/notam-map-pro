@@ -6617,8 +6617,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (tempC == null && live.om) { try { tempC = live.om.current ? live.om.current.temperature_2m : omTempAt(live.om, eta); } catch (e) { } }
       const nm = getAirportNameInfo(dest) || {}, en = String(nm.en || AIRPORT_EN[dest] || dest || '').replace(/\s*(International\s+)?Airport$/i, '').trim();
       let ko = String(nm.ko || dest || '').trim(); if (!/공항$/.test(ko)) ko += ' 국제공항';
-      let mins = 30;
-      if (w && Date.now() > w.etd && Date.now() < w.eta) mins = Math.max(5, Math.round((w.eta - Date.now()) / 3e5) * 5);
+      const mins = 40;
       return { dest, eta, ko, en, mins, wx: arrWeatherKeys(el), tempC: tempC == null ? '' : String(Math.round(tempC)), src, hasEta: eta != null };
     }
     function arrCompose() {
@@ -6648,6 +6647,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const sw = ov.querySelector('[data-arr-wxsel]'), sd = ov.querySelector('[data-arr-wind]');
       if (!sw.options.length) { sw.innerHTML = `<option value="">(선택 안 함 — 빈칸)</option>` + ARR_WX.filter(x => x[0] !== 'wind').map(x => `<option value="${x[0]}">${ARR_SHORT[x[0]]}</option>`).join(''); }
       sw.value = arr.wx; sd.value = arr.windy ? '1' : '0';
+      const sm = ov.querySelector('[data-arr-mins]');
+      if (!sm.options.length) { let h = ''; for (let m = 50; m >= 25; m--) h += `<option value="${m}">${m}</option>`; sm.innerHTML = h; }
+      sm.value = String(arr.mins);
       const st = ov.querySelector('[data-arr-temp]');
       if (!st.options.length) { let h = ''; for (let t = 45; t >= -20; t--) h += `<option value="${t}">${t > 0 ? '+' : ''}${t}°C</option>`; st.innerHTML = h; }
       st.value = String(arr.tempC); ov.querySelector('[data-arr-f]').textContent = `= ${Math.round(+arr.tempC * 9 / 5 + 32)}°F`;
@@ -6662,7 +6664,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         ov.innerHTML = `<div class="flex items-center gap-2 flex-wrap px-3 py-2 border-b border-slate-700 bg-slate-900"><span class="font-bold text-white">📢 도착 방송 (Captain Announcement 1-3)</span><span class="ml-auto flex gap-1.5"><button type="button" data-arr="copy" class="px-2.5 py-1.5 rounded-lg bg-sky-700 text-[12px] font-bold text-white">📋 복사</button><button type="button" data-arr="close" class="px-2.5 py-1.5 rounded-lg bg-rose-700 text-[12px] font-bold text-white">닫기 ✕</button></span></div>
           <div class="flex-1 overflow-auto p-3 sm:p-5"><div class="mx-auto max-w-3xl flex flex-col gap-3">
             <div class="rounded-xl border border-slate-700 bg-slate-900 p-3 flex flex-col gap-2 text-[13px] text-slate-200">
-              <div class="flex items-center gap-2 flex-wrap"><label>착륙까지 <input data-arr-in="mins" type="number" inputmode="numeric" min="1" class="w-16 bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-center mono"> 분</label><button type="button" data-arr="now" class="px-2 py-1 rounded-md border border-slate-600 text-slate-200">지금 시각 기준으로 계산</button><span data-arr-eta class="text-[12px] text-slate-400"></span></div>
+              <div class="flex items-center gap-2 flex-wrap"><label>착륙까지 <select data-arr-mins class="bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-[14px] mono"></select> 분 전</label><button type="button" data-arr="now" class="px-2 py-1 rounded-md border border-slate-600 text-slate-200">지금 시각 기준으로 계산</button><span data-arr-eta class="text-[12px] text-slate-400"></span></div>
               <div class="flex items-center gap-2 flex-wrap"><label>공항 <input data-arr-in="ko" class="w-56 bg-slate-950 border border-slate-600 rounded px-1.5 py-1"></label><label>English <input data-arr-in="en" class="w-48 bg-slate-950 border border-slate-600 rounded px-1.5 py-1"></label><label>기온 <select data-arr-temp class="bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-[14px] mono"></select></label><span data-arr-f class="text-[12px] text-slate-400 mono"></span></div>
               <div class="flex items-center gap-2 flex-wrap"><label>날씨 <select data-arr-wxsel class="bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-[14px]"></select></label><label>바람 <select data-arr-wind class="bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-[14px]"><option value="0">보통</option><option value="1">강한 바람</option></select></label><span data-arr-wxnote class="text-[12px] text-teal-300"></span></div>
               <div data-arr-src class="text-[11px] text-slate-500"></div></div>
@@ -6674,11 +6676,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
           if (sy) { jbSpeak(sy.dataset.arrT, sy.dataset.arrSay); return; }
           if (!b) return;
           if (b.dataset.arr === 'close') { ov.style.display = 'none'; try { speechSynthesis.cancel(); } catch (_) { } }
-          else if (b.dataset.arr === 'now') { if (arr.eta == null) { showToast('ETA 정보가 없습니다'); return; } arr.mins = Math.max(1, Math.round((arr.eta - Date.now()) / 6e4)); arrSync(); arrRender(); showToast(`ETA까지 ${arr.mins}분`); }
+          else if (b.dataset.arr === 'now') { if (arr.eta == null) { showToast('ETA 정보가 없습니다'); return; } const raw = Math.round((arr.eta - Date.now()) / 6e4); arr.mins = Math.max(25, Math.min(50, raw)); arrSync(); arrRender(); showToast(`ETA까지 ${raw}분 → ${arr.mins}분으로 설정${raw !== arr.mins ? ' (25~50분 범위)' : ''}`); }
           else if (b.dataset.arr === 'copy') { const C = arrCompose(); const t = C.ko.join('\n') + '\n\n' + C.en.join('\n'); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => showToast('복사했습니다'), () => showToast('복사하지 못했습니다')); }
         });
         ov.addEventListener('input', e => { const i = e.target.closest('[data-arr-in]'); if (i) { arr[i.dataset.arrIn] = i.value; arrRender(); } });
-        ov.addEventListener('change', e => { if (e.target.matches('[data-arr-temp]')) { arr.tempC = e.target.value; arrRender(); } else if (e.target.matches('[data-arr-wxsel]')) { arr.wx = e.target.value; arrRender(); } else if (e.target.matches('[data-arr-wind]')) { arr.windy = e.target.value === '1'; arrRender(); } });
+        ov.addEventListener('change', e => { if (e.target.matches('[data-arr-mins]')) { arr.mins = e.target.value; arrRender(); } else if (e.target.matches('[data-arr-temp]')) { arr.tempC = e.target.value; arrRender(); } else if (e.target.matches('[data-arr-wxsel]')) { arr.wx = e.target.value; arrRender(); } else if (e.target.matches('[data-arr-wind]')) { arr.windy = e.target.value === '1'; arrRender(); } });
         setInterval(() => { if (ov.style.display !== 'none' && arr && !ov.contains(document.activeElement && document.activeElement.tagName === 'INPUT' ? document.activeElement : null)) arrRender(); }, 20000);
       }
       ov.style.display = 'flex'; arrSync(); arrRender();
