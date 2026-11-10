@@ -844,7 +844,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/10 18:15 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/10 18:40 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물</button>
         <button id="btn-wind" type="button" title="바람 제한치 계산 · 활주로 상태(Braking Action) — FOM 4.5/5.8 · FCRM 1.17 · FCOM RCAM" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🌬 Wind</button>
@@ -7649,16 +7649,33 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const [x0, y0, x1, y1] = bbox, tiles = [];
       for (let x = x0; x < x1 - 1e-9; x += 0.02) for (let y = y0; y < y1 - 1e-9; y += 0.02) tiles.push([x, y, Math.min(x + 0.02, x1), Math.min(y + 0.02, y1)]);
       const ways = {}, raw = {}, nodes = {}, pts = {}, rels = {}; let done = 0;
+      let fail = 0;
+      // 조각 하나 받기: 점이 너무 많으면(400, 도심 공항) 4등분해서 다시, 일시 오류(429·5xx)는 잠시 후 재시도, 그래도 안 되면 그 조각만 건너뜀
+      const get = async (t, depth) => {
+        for (let k = 0; k < 3; k++) {
+          const r = await fetch(`https://api.openstreetmap.org/api/0.6/map.json?bbox=${t.map(v => v.toFixed(5)).join(',')}`);
+          if (r.ok) return [await r.json()];
+          if (r.status === 400 && depth < 3) {
+            const [a0, b0, a1, b1] = t, am = (a0 + a1) / 2, bm = (b0 + b1) / 2, out = [];
+            for (const q of [[a0, b0, am, bm], [am, b0, a1, bm], [a0, bm, am, b1], [am, bm, a1, b1]]) out.push(...await get(q, depth + 1));
+            return out;
+          }
+          if (r.status === 429 || r.status >= 500) { await new Promise(z => setTimeout(z, 1500 * (k + 1))); continue; }
+          break;
+        }
+        fail++; return [];
+      };
       const one = async t => {
-        const r = await fetch(`https://api.openstreetmap.org/api/0.6/map.json?bbox=${t.map(v => v.toFixed(4)).join(',')}`); if (!r.ok) throw new Error('OSM ' + r.status);
-        const j = await r.json();
+        for (const j of await get(t, 0)) eat(j);
+        onProg && onProg(++done, tiles.length);
+      };
+      const eat = j => {
         j.elements.forEach(e => { if (e.type === 'node') { nodes[e.id] = [e.lat, e.lon]; if (e.tags && e.tags.aeroway === 'parking_position' && e.tags.ref) pts[e.id] = { ref: e.tags.ref, p: [e.lat, e.lon] }; } });
         j.elements.forEach(e => {
           if (e.type === 'way') raw[e.id] = e.nodes;
           if (e.type === 'way' && e.tags && (e.tags.aeroway || e.tags.building)) ways[e.id] = { t: e.tags, n: e.nodes };
           if (e.type === 'relation' && e.tags && (e.tags.aeroway || e.tags.building)) rels[e.id] = { t: e.tags, m: e.members };
         });
-        onProg && onProg(++done, tiles.length);
       };
       for (let i = 0; i < tiles.length; i += 4) await Promise.all(tiles.slice(i, i + 4).map(one));
       const N = id => nodes[id], W = Object.values(ways), aero = W.find(w => w.t.aeroway === 'aerodrome'), poly = aero ? aero.n.map(N).filter(Boolean) : null;
@@ -7696,6 +7713,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       Object.values(pts).forEach(p => { if (!out.st[p.ref]) out.st[p.ref] = p.p; });
       Object.keys(out.st).forEach(r => out.st[r] = [+out.st[r][0].toFixed(5), +out.st[r][1].toFixed(5)]);
       if (!out.twy.length) throw new Error('유도로 자료 없음');
+      if (fail) try { showToast(`지도 일부(${fail}조각)를 받지 못했습니다 — "↻ 새로 받기"로 다시 시도`); } catch (e) { }
       try { localStorage.setItem(AMM_KEY(icao), JSON.stringify(out)); } catch (e) { }
       return out;
     }
