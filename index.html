@@ -3843,10 +3843,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const notes = [...new Set([...T.matchAll(/(?:CHECKED ABOVE MEL[^\n]*|\*\s*MEL\s*:[^\n]*)/g)].map(x => x[0].trim()))];
       return { items: out, notes };
     }
+    // 해설(한국어 요약)은 OFP를 올릴 때마다 mel-ko.json 에 추가 — 원문이 아니라 요약만 들어 있어 토큰 없이 읽음
+    let melKo = {};
+    fetch('mel-ko.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).then(j => { melKo = j || {}; try { renderMelCard(); } catch (e) { } }).catch(() => { });
     function melLookup(no) {
       if (!melDB) return null;
       const it = melDB.items[no] || melDB.items[no.replace(/\([A-Z]\)$/, '')]; if (!it) return null;
-      return { it, op: melDB.ops[no] || null, ko: (melDB.ko || {})[no] || '' };
+      return { it, op: melDB.ops[no] || null, ko: melKo[no] || (melDB.ko || {})[no] || '' };
     }
     const melCabin = no => ((melDB && melDB.meta && melDB.meta.cabinAta) || ['25-2', '25-3', '25-4', '25-6', '33-2', '33-5', '35-', '38-', '44-']).some(a => no.startsWith(a));
     function renderMelCard() {
@@ -3895,6 +3898,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           ${it ? `<div class="mt-2"><div class="text-[13px] font-bold text-slate-200">📄 MEL 원문</div>${pre(it.text)}${appChip(it.app)}</div>` : ''}
           ${opHtml}
           ${gl}
+          ${x.kind === 'MEL' && !it && melKo[x.no] ? `<div class="mt-2 text-[13px] leading-snug text-slate-100 rounded-md bg-sky-950/40 border border-sky-800/60 px-2 py-1.5"><span class="mr-1 px-1 py-0.5 rounded bg-sky-700 text-white text-[10px] font-bold align-middle">해설</span>${esc(melKo[x.no])}</div>` : ''}
           ${x.kind === 'MEL' && !melDB ? '<div class="text-[12px] text-slate-400 mt-1">MEL 데이터를 불러오면 원문과 운항 절차가 나옵니다.</div>' : ''}
           ${x.kind === 'MEL' && melDB && !it ? '<div class="text-[12px] text-amber-300 mt-1">이 번호를 MEL 데이터에서 찾지 못했습니다 — 번호·개정판 확인</div>' : ''}
           ${x.kind === 'CDL' ? '<div class="text-[12px] text-slate-400 mt-1">CDL(외형 결함 목록) 항목입니다 — 성능 감소(무게·연료) 여부는 OFP·CDL 원문으로 확인하세요.</div>' : ''}
