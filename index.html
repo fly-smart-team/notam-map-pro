@@ -743,6 +743,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
     /* 글씨 크기 상향 — 조종석 조명·흔들림에서도 읽히도록 (9~11px → 11~13px) */
     .text-\[9px\]{font-size:11px!important}.text-\[10px\]{font-size:12px!important}.text-\[10\.5px\]{font-size:12.5px!important}.text-\[11px\]{font-size:13px!important}.text-\[12px\]{font-size:13.5px!important}
     header button{white-space:nowrap}
+    .ico { width: 1.05em; height: 1.05em; display: inline-block; vertical-align: -0.16em; flex-shrink: 0; }
+    .ico-dot { width: .62em; height: .62em; border-radius: 50%; display: inline-block; vertical-align: .05em; margin: 0 .12em; }
+    .ico-p { display: inline-grid; place-items: center; width: 1.15em; height: 1.15em; border-radius: 3px; background: #22d3ee; color: #04202a; font: 800 .78em/1 sans-serif; }
     /* 오프라인 띠 */
     #offline-bar{display:none;position:sticky;top:0;z-index:60;background:#1e293b;border-bottom:1px solid #f59e0b;color:#fde68a;font-size:13px;font-weight:700;padding:5px 12px;text-align:center}
     body.is-offline #offline-bar{display:block}
@@ -7077,8 +7080,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
           </div>
           ${endpoint('ALTN', altnCode, null, null, true, 'text-purple-300', true)}` : ''}
         </div>
-        <div id="efb-perf"></div>
-        <div id="mel-card"></div>
         <div class="flex flex-col gap-1.5">
           <div class="flex items-center justify-between gap-2 flex-wrap"><span class="text-[11px] font-bold text-slate-300">🌤️ 기상 · 기온</span><span class="flex items-center gap-2 text-[10px] text-slate-500">${wxLiveAt ? '실시간 ' + new Date(wxLiveAt).toISOString().slice(11, 16) + 'Z 조회' : ''}<button type="button" data-wx-refresh class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-sky-300 font-bold">🔄 실시간 조회</button></span></div>
           <div class="grid ${altnCode ? 'grid-cols-3' : 'grid-cols-2'} gap-2">
@@ -7088,13 +7089,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
           </div>
           ${renderWxRaw([info.dep, info.dest, altnCode])}
         </div>
-        <div id="fms-wind"></div>
-        <div id="wx-ai"></div>
         <div class="pro-slim-hide grid grid-cols-3 gap-2">
           ${tile('순항고도', tocFl ? flTxt(tocFl) : '--', steps.length > 1 ? 'STEP ' + steps.map(flTxt).join(' → ') : '')}
           ${tile('예약 현황', pax ? `${pax.f + pax.c + pax.y}명` : '--', pax ? `F ${pax.f}/${pax.fc} · C ${pax.c}/${pax.cc} · Y ${pax.y}/${pax.yc}` : (pdfFlt ? 'OFP에 예약 정보 없음' : ''), 'text-emerald-300')}
           ${tile('RAMP OUT', fuelTxt(p.ramp), '')}
         </div>
+        <button type="button" data-jb-open class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg">📝 JOINT BRIEF 생성</button>
+        <div id="efb-perf"></div>
+        <div id="mel-card"></div>
+        <div id="fms-wind"></div>
+        <div id="wx-ai"></div>
       </div>`;
       try { renderAcLive(); } catch (e) { }
       try { renderStands(); maybeFetchStands(); } catch (e) { console.warn(e); }
@@ -8259,6 +8263,78 @@ svg.leaflet-image-layer.leaflet-interactive path {
     $('ko-mode').value = koMode;
     $('ko-mode').addEventListener('change', e => { koMode = e.target.value; try { localStorage.setItem('koMode.v1', koMode); } catch (er) { } try { renderBriefing(); renderPackage1Notams(); } catch (er) { } });
 
+    // ===================== 이모지 → 선 아이콘 (지도 기호는 그대로) =====================
+    (function () {
+      const P = d => `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+      const dot = c => `<span class="ico-dot" style="background:${c}"></span>`;
+      const plane = '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>';
+      const M = {
+        '🔄': P('<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M8 16H3v5"/>'),
+        '🛬': P('<path d="M2 22h20"/><path d="M3.8 5.6 6 4.5l3 5.4 5.6 1.5 4.8 1.3c1 .3 1.6 1.3 1.3 2.3-.3.9-1.2 1.4-2.1 1.1L4.6 12.6 2.6 7.4z"/>'),
+        '🛫': P('<path d="M2 22h20"/><path d="M6.4 18.5 4 16.7l1.3-1.2 3 1 4.6-3.6-6.5-4.4L8.2 7l8.4 2.3 3.4-2.6c.9-.7 2.2-.5 2.9.4.6.8.4 2-.4 2.6z"/>'),
+        '✈️': P(plane), '✈': P(plane),
+        '📍': P('<path d="M20 10c0 5-8 12-8 12s-8-7-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>'),
+        '🎯': P('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>'),
+        '🧭': P('<circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2.1 6.3-6.3 2.1 2.1-6.3z"/>'),
+        '⏳': P('<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.2a2 2 0 0 0-.6-1.4L12 12l-4.4 4.4a2 2 0 0 0-.6 1.4V22"/><path d="M7 2v4.2a2 2 0 0 0 .6 1.4L12 12l4.4-4.4a2 2 0 0 0 .6-1.4V2"/>'),
+        '⏱': P('<path d="M10 2h4"/><path d="M12 14l3-3"/><circle cx="12" cy="14" r="8"/>'), '⏰': P('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/>'),
+        '🕒': P('<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'),
+        '⭐': P('<path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21.1 7 14.2 2 9.3l6.9-1z"/>'),
+        '📋': P('<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>'),
+        '📡': P('<path d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9"/><path d="M7.8 4.7a6.1 6.1 0 0 0 0 8.6"/><path d="M16.2 13.3a6.1 6.1 0 0 0 0-8.6"/><path d="M19.1 1.9a10 10 0 0 1 0 14.1"/><circle cx="12" cy="9" r="2"/><path d="m8 22 4-11 4 11"/>'),
+        '📻': P('<path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2a6 6 0 0 1 0-8.4"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/>'),
+        '🔀': P('<path d="M3 18h7a6 6 0 0 0 6-6V5"/><path d="M12 9l4-4 4 4"/>'),
+        '🛟': P('<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.9 4.9 4.3 4.3"/><path d="m14.8 9.2 4.3-4.3"/><path d="m14.8 14.8 4.3 4.3"/><path d="m9.2 14.8-4.3 4.3"/>'),
+        '🗺️': P('<path d="M14.1 5.6a2 2 0 0 0 1.8 0l3.7-1.8A1 1 0 0 1 21 4.6v12.8a1 1 0 0 1-.6.9l-4.5 2.3a2 2 0 0 1-1.8 0l-4.2-2.1a2 2 0 0 0-1.8 0l-3.7 1.8A1 1 0 0 1 3 19.4V6.6a1 1 0 0 1 .6-.9l4.5-2.3a2 2 0 0 1 1.8 0z"/><path d="M15 5.8v15"/><path d="M9 3.2v15"/>'),
+        '📝': P('<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4z"/>'),
+        '📄': P('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>'),
+        '📖': P('<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'),
+        '📢': P('<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>'),
+        '🚧': P('<rect x="2" y="6" width="20" height="8" rx="1"/><path d="M17 14v7"/><path d="M7 14v7"/><path d="M17 3v3"/><path d="M7 3v3"/><path d="M10 14 2.3 6.3"/><path d="m14 6 7.7 7.7"/><path d="m8 6 8 8"/>'),
+        '📉': P('<path d="m22 17-8.5-8.5-5 5L2 7"/><path d="M16 17h6v-6"/>'),
+        '🌤️': P('<path d="M12 2v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="M20 12h2"/><path d="m19.1 4.9-1.4 1.4"/><path d="M15.9 13.1A4 4 0 1 0 9 9.5"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6z"/>'),
+        '🔋': P('<rect width="16" height="10" x="2" y="7" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/><path d="M10 11v2"/>'),
+        '✅': P('<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>').replace('class="ico"', 'class="ico" style="color:#34D399"'),
+        '❌': P('<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>').replace('class="ico"', 'class="ico" style="color:#F43F5E"'),
+        '⚠️': P('<path d="m21.7 18-8-14a2 2 0 0 0-3.5 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>').replace('class="ico"', 'class="ico" style="color:#F59E0B"'),
+        '🅿': '<span class="ico-p">P</span>',
+        '🧊': P('<line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/>'), '❄': P('<line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/>'),
+        '🔎': P('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'),
+        '🤖': P('<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>'),
+        '🔑': P('<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>'),
+        '🔧': P('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/>'),
+        '📥': P('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'),
+        '✳': P('<path d="M12 3v18"/><path d="m4.2 7.5 15.6 9"/><path d="m4.2 16.5 15.6-9"/>'),
+        '⚙': P('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
+        '🌬': P('<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/>'),
+        '🌦': P('<path d="M12 2v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="M20 12h2"/><path d="m19.1 4.9-1.4 1.4"/><path d="M15.9 13.1A4 4 0 1 0 9 9.5"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6z"/>'),
+        '👁‍🗨': P('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/><path d="m3 3 18 18"/>'), '👁': P('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>'),
+        '🔊': P('<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>'),
+        '⛔': P('<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>'), '🚫': P('<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>'),
+        '📘': P('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'), '📗': P('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'),
+        '💧': P('<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>'),
+        '📐': P('<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/>'),
+        '✏': P('<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4z"/>'), '🟦': '<span class="ico-dot" style="background:#3B82F6;border-radius:2px"></span>', '🟥': '<span class="ico-dot" style="background:#F43F5E;border-radius:2px"></span>', '🟧': '<span class="ico-dot" style="background:#FB923C;border-radius:2px"></span>', '🟨': '<span class="ico-dot" style="background:#F59E0B;border-radius:2px"></span>',
+        '🟢': dot('#34D399'), '🔴': dot('#F43F5E'), '🟡': dot('#F59E0B'), '⚪': dot('#8A9AB2'), '🟠': dot('#FB923C'),
+      };
+      const keys = Object.keys(M).sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      const RX = new RegExp('(' + keys.join('|') + ')\\uFE0F?', 'g');
+      const SKIP = 'SCRIPT,STYLE,TEXTAREA,INPUT,OPTION,SELECT,IFRAME';
+      function fix(root) {
+        if (!root || root.nodeType !== 1) return;
+        if (root.closest && root.closest('.leaflet-marker-icon, #jb-doc, #hm-frame, [data-no-ico]')) return;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => {
+          const p = n.parentElement; if (!p || SKIP.includes(p.tagName) || p.closest('.leaflet-marker-icon, #jb-doc, [data-no-ico]')) return NodeFilter.FILTER_REJECT;
+          RX.lastIndex = 0; return RX.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP; } });
+        const list = []; let n; while ((n = w.nextNode())) list.push(n);
+        list.forEach(t => { const span = document.createElement('span'); span.innerHTML = esc(t.nodeValue).replace(RX, (m, k) => M[k] || m); t.replaceWith(...span.childNodes); });
+        root.querySelectorAll && root.querySelectorAll('option').forEach(o => { if (RX.test(o.textContent)) o.textContent = o.textContent.replace(RX, '').trim(); RX.lastIndex = 0; });
+      }
+      fix(document.body);
+      let pend = new Set(), raf = 0;
+      new MutationObserver(ms => { ms.forEach(m => m.addedNodes.forEach(x => { if (x.nodeType === 1) pend.add(x); else if (x.nodeType === 3 && x.parentElement) pend.add(x.parentElement); })); if (!raf) raf = requestAnimationFrame(() => { raf = 0; const a = [...pend]; pend.clear(); a.forEach(fix); }); })
+        .observe(document.body, { childList: true, subtree: true });
+    })();
     // ===== 오프라인 앱 (서비스 워커 · 영구 저장 요청 · 업데이트 알림) =====
     (function () {
       const badge = document.createElement('span');
