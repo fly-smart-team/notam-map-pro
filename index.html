@@ -6611,10 +6611,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
     function arrAuto() {
       const dest = info.dest, w = flightWindow(), eta = w ? w.eta : null, live = wxLive[dest] || {}, taf = pdfTaf[dest];
-      let el = null, tempC = null, src = '';
-      if (live.metar) { try { el = tafElems(live.metar.split(/\s+/).slice(2)); } catch (e) { } tempC = metarTemp(live.metar); src = 'METAR ' + (live.metar.match(/\d{6}Z/) || [''])[0]; }
-      if (!el && taf && eta != null) { try { el = tafAt(taf, eta).st; src = 'TAF (ETA 기준)'; } catch (e) { } }
-      if (tempC == null && live.om) { try { tempC = live.om.current ? live.om.current.temperature_2m : omTempAt(live.om, eta); } catch (e) { } }
+      // 기본값은 도착 시각(ETA) 예보 기준: 날씨 = OFP의 TAF, 기온 = 예보 기온(Open-Meteo). 없을 때만 현재 METAR로 대신함
+      let el = null, tempC = null, src = [];
+      if (taf && eta != null) { try { el = tafAt(taf, eta).st; src.push('날씨: TAF(ETA 기준)'); } catch (e) { } }
+      if (live.om && eta != null) { try { const t = omTempAt(live.om, eta); if (t != null) { tempC = t; src.push('기온: 예보(ETA 기준)'); } } catch (e) { } }
+      if (!el && live.metar) { try { el = tafElems(live.metar.split(/\s+/).slice(2)); src.push('날씨: 현재 METAR (TAF 없음)'); } catch (e) { } }
+      if (tempC == null && live.metar) { const t = metarTemp(live.metar); if (t != null) { tempC = t; src.push('기온: 현재 METAR (예보 없음)'); } }
+      src = src.join(' · ');
       const nm = getAirportNameInfo(dest) || {}, en = String(nm.en || AIRPORT_EN[dest] || dest || '').replace(/\s*(International\s+)?Airport$/i, '').trim();
       let ko = String(nm.ko || dest || '').trim(); if (!/공항$/.test(ko)) ko += ' 국제공항';
       const mins = 40;
@@ -6653,8 +6656,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
       const st = ov.querySelector('[data-arr-temp]');
       if (!st.options.length) { let h = ''; for (let t = 45; t >= -20; t--) h += `<option value="${t}">${t > 0 ? '+' : ''}${t}°C</option>`; st.innerHTML = h; }
       st.value = String(arr.tempC); ov.querySelector('[data-arr-f]').textContent = `= ${Math.round(+arr.tempC * 9 / 5 + 32)}°F`;
-      ov.querySelector('[data-arr-wxnote]').textContent = arr.auto ? (arr.wx === arr.auto && !!arr.windy === arr.autoWindy ? '← METAR 값 (기본)' : '← 직접 선택함') : '';
-      ov.querySelector('[data-arr-src]').textContent = arr.src ? `날씨·기온 출처: ${arr.src}` : '날씨·기온 자료 없음 — 직접 고르세요';
+      ov.querySelector('[data-arr-wxnote]').textContent = arr.auto ? (arr.wx === arr.auto && !!arr.windy === arr.autoWindy ? '← 예보 값 (기본)' : '← 직접 선택함') : '';
+      ov.querySelector('[data-arr-src]').textContent = arr.src ? `기본값 출처 — ${arr.src}` : '날씨·기온 자료 없음 — 직접 고르세요';
     }
     function openArrival() {
       const A = arrAuto(); arr = { dest: A.dest, eta: A.eta, ko: A.ko, en: A.en, mins: A.mins, wx: A.wx.find(k => k !== 'wind') || '', windy: A.wx.includes('wind'), tempC: String(A.tempC === '' || isNaN(+A.tempC) ? 20 : Math.max(-20, Math.min(45, Math.round(+A.tempC)))), src: A.src, auto: A.wx.find(k => k !== 'wind') || '', autoWindy: A.wx.includes('wind') };
