@@ -6651,7 +6651,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       if (!sw.options.length) { sw.innerHTML = `<option value="">(선택 안 함 — 빈칸)</option>` + ARR_WX.filter(x => x[0] !== 'wind').map(x => `<option value="${x[0]}">${ARR_SHORT[x[0]]}</option>`).join(''); }
       sw.value = arr.wx; sd.value = arr.windy ? '1' : '0';
       const sm = ov.querySelector('[data-arr-mins]');
-      if (!sm.options.length) { let h = ''; for (let m = 50; m >= 25; m--) h += `<option value="${m}">${m}</option>`; sm.innerHTML = h; }
+      if (!sm.options.length) { let h = ''; for (let m = 50; m >= 25; m -= 5) h += `<option value="${m}">${m}</option>`; sm.innerHTML = h; }
       sm.value = String(arr.mins);
       const st = ov.querySelector('[data-arr-temp]');
       if (!st.options.length) { let h = ''; for (let t = 45; t >= -20; t--) h += `<option value="${t}">${t > 0 ? '+' : ''}${t}°C</option>`; st.innerHTML = h; }
@@ -6679,7 +6679,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           if (sy) { jbSpeak(sy.dataset.arrT, sy.dataset.arrSay); return; }
           if (!b) return;
           if (b.dataset.arr === 'close') { ov.style.display = 'none'; try { speechSynthesis.cancel(); } catch (_) { } }
-          else if (b.dataset.arr === 'now') { if (arr.eta == null) { showToast('ETA 정보가 없습니다'); return; } const raw = Math.round((arr.eta - Date.now()) / 6e4); arr.mins = Math.max(25, Math.min(50, raw)); arrSync(); arrRender(); showToast(`ETA까지 ${raw}분 → ${arr.mins}분으로 설정${raw !== arr.mins ? ' (25~50분 범위)' : ''}`); }
+          else if (b.dataset.arr === 'now') { if (arr.eta == null) { showToast('ETA 정보가 없습니다'); return; } const raw = Math.round((arr.eta - Date.now()) / 6e4); arr.mins = Math.max(25, Math.min(50, Math.round(raw / 5) * 5)); arrSync(); arrRender(); showToast(`ETA까지 ${raw}분 → ${arr.mins}분으로 설정${raw !== arr.mins ? ' (25~50분 범위)' : ''}`); }
           else if (b.dataset.arr === 'copy') { const C = arrCompose(); const t = C.ko.join('\n') + '\n\n' + C.en.join('\n'); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => showToast('복사했습니다'), () => showToast('복사하지 못했습니다')); }
         });
         ov.addEventListener('input', e => { const i = e.target.closest('[data-arr-in]'); if (i) { arr[i.dataset.arrIn] = i.value; arrRender(); } });
