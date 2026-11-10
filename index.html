@@ -914,7 +914,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <section id="sec-flt" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
         <h2 class="font-bold text-sm text-slate-100 flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span> 2. Flight Information
-          <button type="button" data-jb-open class="ml-2 px-2 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px]">📝 Joint Brief</button>
+          <button type="button" data-jb-open class="ml-2 px-2 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px]">📝 Joint Brief</button><button type="button" data-arr-open class="ml-1 px-2 py-0.5 rounded-md bg-teal-600 hover:bg-teal-500 text-white font-bold text-[11px]">📢 도착 방송</button>
         </h2>
 
         <!-- 출발 / 목적 / 교체 공항 이름 (한글 · English) -->
@@ -6588,6 +6588,100 @@ svg.leaflet-image-layer.leaflet-interactive path {
       $('jb-doc').innerHTML = jbFull(); jbQTBtn();
       ov.classList.remove('hidden'); document.body.style.overflow = 'hidden';
     }
+
+    // ===================== 도착 방송 (Captain Announcement 1-3. ARRIVAL) =====================
+    // 문서의 빈칸 중 자동으로 채울 수 있는 것: 착륙까지 분 · 공항 이름 · 날씨(METAR/TAF) · 기온(°C/°F) · 현지 월/일/요일/시각
+    const ARR_WX = [['clear', '맑으며', 'mostly clear'], ['pcld', '다소 흐리며', 'partly cloudy'], ['cld', '흐리며', 'cloudy'], ['rain', '비가 내리며', 'raining'], ['drz', '이슬비가 내리며', 'drizzling'],
+      ['shwr', '소나기가 내리며', 'having showers'], ['snow', '눈이 오고 있으며', 'snowing'], ['fog', '안개가 끼어 있으며', 'foggy'], ['hazy', '황사(박무)가 있으며', 'hazy or smoggy'], ['wind', '바람이 불고 있으며', 'windy']];
+    const ARR_SHORT = { clear: '맑음', pcld: '다소 흐림', cld: '흐림', rain: '비', drz: '이슬비', shwr: '소나기', snow: '눈', fog: '안개', hazy: '황사·박무', wind: '강한 바람' };
+    let arr = null;
+    function arrWeatherKeys(el) {
+      if (!el) return [];
+      const wx = (el.wx || []).join(' '), k = [];
+      const sky = (el.clouds || []).map(c => c.slice(0, 3));
+      if (/SN|SG|PL|GR|GS/.test(wx)) k.push('snow');
+      else if (/SH/.test(wx)) k.push('shwr');
+      else if (/DZ/.test(wx) && !/RA/.test(wx)) k.push('drz');
+      else if (/RA|TS/.test(wx)) k.push('rain');
+      if (/\bFG\b|(^|\s)[-+]?FG/.test(wx)) k.push('fog');
+      else if (/HZ|BR|DU|FU|SA|VA/.test(wx)) k.push('hazy');
+      if (!k.length) k.push(el.cavok || !sky.length || sky.every(c => /FEW|SKC|NSC|CLR|NCD/.test(c)) ? 'clear' : sky.some(c => /BKN|OVC|VV/.test(c)) ? 'cld' : 'pcld');
+      const w = el.wind; if (w && ((w.spd >= (w.unit === 'MPS' ? 10 : 20)) || (w.gust >= (w.unit === 'MPS' ? 13 : 25)))) k.push('wind');
+      return k;
+    }
+    function arrAuto() {
+      const dest = info.dest, w = flightWindow(), eta = w ? w.eta : null, live = wxLive[dest] || {}, taf = pdfTaf[dest];
+      let el = null, tempC = null, src = '';
+      if (live.metar) { try { el = tafElems(live.metar.split(/\s+/).slice(2)); } catch (e) { } tempC = metarTemp(live.metar); src = 'METAR ' + (live.metar.match(/\d{6}Z/) || [''])[0]; }
+      if (!el && taf && eta != null) { try { el = tafAt(taf, eta).st; src = 'TAF (ETA 기준)'; } catch (e) { } }
+      if (tempC == null && live.om) { try { tempC = live.om.current ? live.om.current.temperature_2m : omTempAt(live.om, eta); } catch (e) { } }
+      const nm = getAirportNameInfo(dest) || {}, en = String(nm.en || AIRPORT_EN[dest] || dest || '').replace(/\s*(International\s+)?Airport$/i, '').trim();
+      let ko = String(nm.ko || dest || '').trim(); if (!/공항$/.test(ko)) ko += ' 국제공항';
+      let mins = 30;
+      if (w && Date.now() > w.etd && Date.now() < w.eta) mins = Math.max(5, Math.round((w.eta - Date.now()) / 3e5) * 5);
+      return { dest, eta, ko, en, mins, wx: arrWeatherKeys(el), tempC: tempC == null ? '' : String(Math.round(tempC)), src, hasEta: eta != null };
+    }
+    function arrCompose() {
+      const A = arr, B = '＿＿';
+      const at = A.eta != null ? A.eta - (+A.mins || 0) * 6e4 : null;
+      let lt = null; if (at != null) { const tz = airportTz(A.dest); if (tz) { try { const f = (loc, o) => new Intl.DateTimeFormat(loc, Object.assign({ timeZone: tz }, o)).format(new Date(at)); const hm = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(at)).map(p => [p.type, p.value])); lt = { mo: +f('en-US', { month: 'numeric' }), d: +f('en-US', { day: 'numeric' }), wk: f('ko-KR', { weekday: 'long' }), ewk: f('en-US', { weekday: 'long' }), emo: f('en-US', { month: 'long' }), h: +hm.hour % 24, m: +hm.minute }; } catch (e) { } } }
+      const sel = ARR_WX.filter(x => A.wxSel.includes(x[0])), wxKo = sel.length ? sel.map(x => x[1]).join(' ') : B, wxEn = sel.length ? sel.map(x => x[2]).join(' and ') : B;
+      const c = A.tempC === '' || isNaN(+A.tempC) ? null : +A.tempC, f = c == null ? null : Math.round(c * 9 / 5 + 32);
+      const kh = lt ? (lt.h < 12 ? '오전' : '오후') + ' ' + (lt.h % 12 || 12) + '시 ' + lt.m + '분' : `오전(/오후) ${B}시 ${B}분`;
+      const eh = lt ? `${lt.h % 12 || 12}:${String(lt.m).padStart(2, '0')} ${lt.h < 12 ? 'a.m.' : 'p.m.'}` : `${B}:${B} a.m.(/p.m.)`;
+      const ko = [`손님 여러분, 저는 기장입니다.`,
+        `우리 비행기는 앞으로 약 ${A.mins || B}분 후에 ${A.ko || B}에 착륙 예정입니다.`,
+        `현재 공항의 날씨는 ${wxKo}, 기온은 섭씨 ${c == null ? B : c}도입니다.`,
+        `지금 이곳의 시각은 ${lt ? `${lt.mo}월 ${lt.d}일 ${lt.wk}, ${kh}` : `${B}월 ${B}일 ${B}요일, ${kh}`}입니다.`,
+        `스타얼라이언스 아시아나항공을 이용해 주셔서 대단히 고맙습니다.`];
+      const en = [`Ladies and gentlemen, this is the captain speaking.`,
+        `We expect to land at our destination, ${A.en ? A.en + ' International Airport' : B}, in about ${A.mins || B} minutes.`,
+        `The current temperature at ${A.en || B} is ${c == null ? B : c} degrees Celsius, or ${f == null ? B : f} degrees Fahrenheit, and it is ${wxEn}.`,
+        `The current local time is ${eh}, on ${lt ? `${lt.ewk}, ${lt.emo} ${lt.d}` : `(day-of-the-week), (month) (date)`}.`,
+        `Thank you for flying with Asiana Airlines, a member of Star Alliance.`];
+      return { ko, en, lt };
+    }
+    function arrRender() {
+      const ov = $('arr-overlay'); if (!ov || !arr) return;
+      const C = arrCompose(), line = (t, lang) => `<div class="flex gap-2 items-start py-1.5 border-t border-dashed border-slate-200 first:border-0"><button type="button" data-arr-say="${lang}" data-arr-t="${esc(t)}" class="shrink-0 w-8 h-7 rounded-md border border-sky-300 bg-sky-100 text-[14px]" style="color:#0369a1">🔊</button><div style="color:${lang === 'en-US' ? '#0c4a6e' : '#111827'};font-weight:${lang === 'en-US' ? 600 : 500};font-size:16px;line-height:1.45">${esc(t)}</div></div>`;
+      ov.querySelector('[data-arr-doc]').innerHTML = `<div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:4px">한국어</div>${C.ko.map(t => line(t, 'ko-KR')).join('')}<div style="font-size:12px;font-weight:700;color:#64748b;margin:12px 0 4px">English</div>${C.en.map(t => line(t, 'en-US')).join('')}`;
+      ov.querySelector('[data-arr-wx]').innerHTML = ARR_WX.map(x => `<button type="button" data-arr-wxk="${x[0]}" class="px-2 py-1 rounded-md border text-[13px] ${arr.wxSel.includes(x[0]) ? 'bg-teal-600 border-teal-300 text-white font-bold' : 'bg-slate-900 border-slate-700 text-slate-300'}">${ARR_SHORT[x[0]]}</button>`).join('');
+      ov.querySelector('[data-arr-src]').textContent = arr.src ? `날씨·기온 출처: ${arr.src}` : '날씨·기온 자료 없음 — 직접 고르세요';
+    }
+    function openArrival() {
+      const A = arrAuto(); arr = { dest: A.dest, eta: A.eta, ko: A.ko, en: A.en, mins: A.mins, wxSel: A.wx, tempC: A.tempC, src: A.src };
+      let ov = $('arr-overlay');
+      if (!ov) {
+        ov = document.createElement('div'); ov.id = 'arr-overlay'; ov.className = 'fixed inset-0 z-[10000] bg-slate-950 flex flex-col';
+        ov.innerHTML = `<div class="flex items-center gap-2 flex-wrap px-3 py-2 border-b border-slate-700 bg-slate-900"><span class="font-bold text-white">📢 도착 방송 (Captain Announcement 1-3)</span><span class="ml-auto flex gap-1.5"><button type="button" data-arr="copy" class="px-2.5 py-1.5 rounded-lg bg-sky-700 text-[12px] font-bold text-white">📋 복사</button><button type="button" data-arr="close" class="px-2.5 py-1.5 rounded-lg bg-rose-700 text-[12px] font-bold text-white">닫기 ✕</button></span></div>
+          <div class="flex-1 overflow-auto p-3 sm:p-5"><div class="mx-auto max-w-3xl flex flex-col gap-3">
+            <div class="rounded-xl border border-slate-700 bg-slate-900 p-3 flex flex-col gap-2 text-[13px] text-slate-200">
+              <div class="flex items-center gap-2 flex-wrap"><label>착륙까지 <input data-arr-in="mins" type="number" inputmode="numeric" min="1" class="w-16 bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-center mono"> 분</label><button type="button" data-arr="now" class="px-2 py-1 rounded-md border border-slate-600 text-slate-200">지금 시각 기준으로 계산</button><span data-arr-eta class="text-[12px] text-slate-400"></span></div>
+              <div class="flex items-center gap-2 flex-wrap"><label>공항 <input data-arr-in="ko" class="w-56 bg-slate-950 border border-slate-600 rounded px-1.5 py-1"></label><label>English <input data-arr-in="en" class="w-48 bg-slate-950 border border-slate-600 rounded px-1.5 py-1"></label><label>기온 °C <input data-arr-in="tempC" type="number" inputmode="numeric" class="w-16 bg-slate-950 border border-slate-600 rounded px-1.5 py-1 text-center mono"></label></div>
+              <div><div class="text-[12px] text-slate-400 mb-1">날씨 (여러 개 선택 가능)</div><div data-arr-wx class="flex flex-wrap gap-1.5"></div></div>
+              <div data-arr-src class="text-[11px] text-slate-500"></div></div>
+            <div data-arr-doc class="rounded-xl bg-white p-4 shadow-xl"></div>
+            <div class="text-[11px] text-slate-500">빈칸은 자동으로 채운 값입니다 — 방송 전에 실제 날씨·시각과 맞는지 확인하세요. 현지 시각은 “ETA − 착륙까지 분”으로 계산합니다.</div></div></div>`;
+        document.body.appendChild(ov);
+        ov.addEventListener('click', e => {
+          const b = e.target.closest('[data-arr]'), sy = e.target.closest('[data-arr-say]'), wk = e.target.closest('[data-arr-wxk]');
+          if (sy) { jbSpeak(sy.dataset.arrT, sy.dataset.arrSay); return; }
+          if (wk) { const k = wk.dataset.arrWxk; arr.wxSel = arr.wxSel.includes(k) ? arr.wxSel.filter(x => x !== k) : [...arr.wxSel, k]; arrRender(); return; }
+          if (!b) return;
+          if (b.dataset.arr === 'close') { ov.style.display = 'none'; try { speechSynthesis.cancel(); } catch (_) { } }
+          else if (b.dataset.arr === 'now') { if (arr.eta == null) { showToast('ETA 정보가 없습니다'); return; } arr.mins = Math.max(1, Math.round((arr.eta - Date.now()) / 6e4)); arrSync(); arrRender(); showToast(`ETA까지 ${arr.mins}분`); }
+          else if (b.dataset.arr === 'copy') { const C = arrCompose(); const t = C.ko.join('\n') + '\n\n' + C.en.join('\n'); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => showToast('복사했습니다'), () => showToast('복사하지 못했습니다')); }
+        });
+        ov.addEventListener('input', e => { const i = e.target.closest('[data-arr-in]'); if (!i) return; arr[i.dataset.arrIn] = i.value; arrRender(); });
+      }
+      ov.style.display = 'flex'; arrSync(); arrRender();
+    }
+    function arrSync() {
+      const ov = $('arr-overlay'); if (!ov || !arr) return;
+      ov.querySelectorAll('[data-arr-in]').forEach(i => { i.value = arr[i.dataset.arrIn] ?? ''; });
+      const w = flightWindow(); ov.querySelector('[data-arr-eta]').textContent = w ? `ETA ${new Date(w.eta).toISOString().slice(11, 16)}Z` : 'ETA 정보 없음';
+    }
+    document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-arr-open]')) openArrival(); });
     document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-jb-open]')) openJointBrief(); });
     // ===================== 내 기체(기번) 실시간 위치 · 도착 예상 (무료 ADS-B: adsb.fi / adsb.lol / airplanes.live) =====================
     let acLive = { status: 'idle' }, acTimer = null;
@@ -7139,7 +7233,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           ${tile('예약 현황', pax ? `${pax.f + pax.c + pax.y}명` : '--', pax ? `F ${pax.f}/${pax.fc} · C ${pax.c}/${pax.cc} · Y ${pax.y}/${pax.yc}` : (pdfFlt ? 'OFP에 예약 정보 없음' : ''), 'text-emerald-300')}
           ${tile('RAMP OUT', fuelTxt(p.ramp), '')}
         </div>
-        <button type="button" data-jb-open class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg">📝 JOINT BRIEF 생성</button>
+        <div class="grid grid-cols-[2fr_1fr] gap-2"><button type="button" data-jb-open class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg">📝 JOINT BRIEF 생성</button><button type="button" data-arr-open class="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm shadow-lg">📢 도착 방송</button></div>
         <div id="efb-perf"></div>
         <div id="mel-card"></div>
         <div id="fms-wind"></div>
