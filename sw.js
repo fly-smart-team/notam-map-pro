@@ -1,7 +1,7 @@
 // NOTAM Pro (개인용 AI 버전) — 오프라인 캐시 서비스 워커
 // 전략: 온라인이면 최신 페이지를 먼저 받아 바로 보여주고(4초 안에 응답 없으면 저장본), 오프라인이면 저장본
 // 배포 버전(notammap)과 같은 도메인을 쓰므로 캐시 이름을 따로 씀
-const CACHE = 'notam-pro-v53';
+const CACHE = 'notam-pro-v54';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './coad-ko.json', './notam-ko.json', './wx-brief.json'];
 const EXTRA = ['./hot/FAA-HOT-2026-27.pdf', './hot/hot-data.json', './twy/index.json', './mel-ko.json', './twy/RCTP.txt', './twy/RKSI.txt', './docs/ZBAA-deicing.html', './docs/ZBAA-deice-pads.jpg', './docs/ZBAA-deice-stop.jpg', './docs/wind-limits.html'];   // 제빙액 HOT 표 (오프라인용, 실패해도 무시)
 
@@ -73,11 +73,20 @@ self.addEventListener('fetch', e => {
     return;
   }
   // 데이터 파일(coad-ko.json 등): 온라인이면 최신, 오프라인이면 저장본
+  // 저장 이름은 폴더를 포함한 경로(예: ./hot/hot-data.json) — 예전 방식(파일명만)으로 저장된 것도 찾아 줌
   if (url.pathname.endsWith('.json')) {
+    const scope = new URL(self.registration.scope).pathname, rel = './' + (url.pathname.startsWith(scope) ? url.pathname.slice(scope.length) : url.pathname.replace(/^\//, '')), base = './' + url.pathname.split('/').pop();
     e.respondWith(fetch(req, { cache: 'no-cache' }).then(res => {
-      if (res.ok) { const cp = res.clone(); caches.open(CACHE).then(c => c.put('./' + url.pathname.split('/').pop(), cp)); }
+      if (res.ok) { const cp = res.clone(); caches.open(CACHE).then(c => c.put(rel, cp)); }
       return res;
-    }).catch(() => caches.match('./' + url.pathname.split('/').pop()).then(hit => hit || new Response('{}', { headers: { 'Content-Type': 'application/json' } }))));
+    }).catch(async () => {
+      const c = await caches.open(CACHE);
+      const hit = (await c.match(rel)) || (await c.match(base));
+      if (hit) return hit;
+      // 폴더 안 데이터(HOT 표·유도로 목록)는 빈 {}를 주면 화면이 깨지므로 '없음'으로 응답
+      if (/\/(hot|twy)\//.test(url.pathname)) return new Response('', { status: 504 });
+      return new Response('{}', { headers: { 'Content-Type': 'application/json' } });
+    }));
     return;
   }
   e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {

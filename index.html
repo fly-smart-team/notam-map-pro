@@ -894,7 +894,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/11 23:15 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/12 08:25 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🔍 MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="px-2.5 py-1.5 rounded-lg border text-[12px] font-bold hover:opacity-90" style="border-color:#a78bfa;background:rgba(76,29,149,.35);color:#ddd6fe">🥶 Cold Temp</button>
@@ -4471,7 +4471,16 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
     const HC_INT = { VL: '매우 약함', L: '약함', M: '보통', H: '강함' };
     const HC_COLNM = { fzfg: '어는 안개·어는 안개비·얼음 결정', snfg: '눈+어는 안개', sn: '눈(공통)', vlsn: '매우 약한 눈', lsn: '약한 눈', msn: '보통 눈', fzdz: '어는 이슬비', lfzr: '약한 어는 비', snra: '보통 눈 섞인 비', rcsw: '차가운 날개 위의 비', other: '기타' };
     const hm2 = m => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
-    async function hcLoad() { if (!hcData) { const r = await fetch('hot/hot-data.json', { cache: 'no-cache' }); if (!r.ok) throw new Error('HOT 데이터를 받지 못했습니다'); hcData = await r.json(); } return hcData; }
+    async function hcLoad() {
+      if (!hcData) {
+        let j = null;
+        try { const r = await fetch('hot/hot-data.json', { cache: 'no-cache' }); if (r.ok) j = await r.json(); } catch (e) { }
+        if (!j || !j.fluids) { try { const c = await caches.match('hot/hot-data.json') || await caches.match('./hot/hot-data.json'); if (c) j = await c.json(); } catch (e) { } }   // 오프라인: 저장본
+        if (!j || !j.fluids) throw new Error('HOT 데이터를 불러오지 못했습니다 — 온라인에서 한 번 열어 저장해 주세요');
+        hcData = j;
+      }
+      return hcData;
+    }
     // 태양 고도(°) — 주간/야간 판단용 (NOAA 근사식)
     function sunElev(lat, lon, ms) {
       const d = new Date(ms), rad = Math.PI / 180, jd = ms / 864e5 + 2440587.5, n = jd - 2451545;
