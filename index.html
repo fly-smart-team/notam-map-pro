@@ -894,7 +894,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/11 19:20 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/11 19:40 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🔍 MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="px-2.5 py-1.5 rounded-lg border text-[12px] font-bold hover:opacity-90" style="border-color:#a78bfa;background:rgba(76,29,149,.35);color:#ddd6fe">🥶 Cold Temp</button>
@@ -6958,7 +6958,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       window.ctcCalc = { lookup, global, evalRow, TBL };
 
       // ----- UI -----
-      const U = { unit: 'ft', rows: [], ready: false };
+      const U = { unit: 'ft', rows: [], ready: false, sel: 0, res: [] };
       const ssv = (k, v) => { try { localStorage.setItem('ctc.' + k, v); } catch (e) {} };
       const gsv = k => { try { return localStorage.getItem('ctc.' + k); } catch (e) { return null; } };
       const num = v => { const t = String(v == null ? '' : v).trim().replace(',', '.'); if (t === '') return null; const n = Number(t); return isNaN(n) ? null : n; };
@@ -6986,22 +6986,61 @@ input,select,textarea,button{font-size:max(1em,14px)}
           opt: $('ctc-opt').value, x: sgnVal('ctc-x'), vnav: $('ctc-vnav').checked
         };
       }
+      function renderTable(g) {
+        const box = $('ctc-tbl'); if (!box) return;
+        if (U.sel >= U.rows.length) U.sel = 0;
+        const u = U.unit, T = TBL[u], r = U.res[U.sel], L = r && r.look && r.look.parts.length ? r.look : null;
+        const chips = U.rows.map((row, i) => {
+          const nm = (KINDS.find(k => k[0] === row.kind) || [0, ''])[1].split(' ')[0] + (row.alt != null ? ' ' + row.alt : '');
+          const on = i === U.sel;
+          return `<button type="button" data-ctc-sel="${i}" style="${S.btn};${on ? 'background:#7f1d1d;border-color:#ef4444;color:#fff' : ''}">${E(nm)}</button>`;
+        }).join('');
+        const usedCols = L ? L.parts.map(p => p.col) : [];
+        const RED = '#ef4444', cell = 'padding:7px 4px;text-align:center;font-size:14px;border:1px solid #3a4756;white-space:nowrap';
+        let t = `<table id="ctc-tab" style="border-collapse:collapse;min-width:${T.cols.length * 50 + 70}px;width:100%"><tr><th style="${cell};background:#1b232d;color:#a9b8c9;font-size:12px">Airport<br>Temp ℃</th>${T.cols.map(c => {
+          const uc = usedCols.includes(c);
+          return `<th style="${cell};background:${uc ? '#7f1d1d' : '#1b232d'};color:${uc ? '#fff' : '#cbd5e1'};${uc ? `border:2px solid ${RED}` : ''}">${c}</th>`;
+        }).join('')}</tr>`;
+        Object.keys(T.rows).sort((a, b) => b - a).forEach(rk => {
+          const ur = L && String(L.rowKey) === rk;
+          t += `<tr><th style="${cell};background:${ur ? '#7f1d1d' : '#1b232d'};color:${ur ? '#fff' : '#cbd5e1'};${ur ? `border:2px solid ${RED}` : ''}">${rk === '0' ? '0°' : rk + '°'}</th>`;
+          T.rows[rk].forEach((v, ci) => {
+            const c = T.cols[ci], uc = usedCols.includes(c), hit = ur && uc;
+            let st = cell;
+            if (hit) st += `;background:${RED};color:#fff;font-weight:800;font-size:16px;border:2px solid #fff`;
+            else if (ur) st += `;background:rgba(239,68,68,.16);color:#fff;border-top:2px solid ${RED};border-bottom:2px solid ${RED}`;
+            else if (uc) st += `;background:rgba(239,68,68,.16);color:#fff;border-left:2px solid ${RED};border-right:2px solid ${RED}`;
+            else st += ';color:#cbd5e1';
+            t += `<td style="${st}">${v}</td>`;
+          });
+          t += '</tr>';
+        });
+        t += '</table>';
+        let cap;
+        if (L) {
+          cap = `<div style="color:#fecaca;font-size:14px;line-height:1.55;margin:8px 0"><b>${E((KINDS.find(k => k[0] === U.rows[U.sel].kind) || [0, ''])[1])}</b> · 차트 ${U.rows[U.sel].alt} − 표고 ${readG().elev} = 높이 <b>${r.h} ${u}</b><br>온도 행 <b>${L.rowKey === 0 ? '0°' : L.rowKey + '°'}</b> (OAT ${readG().oat}℃ → 다음의 더 낮은 온도)<br>높이 열 ${L.parts.map(p => `<b>${p.col}</b> → <b>${p.val}</b>`).join(' + ')}${L.parts.length > 1 ? ' (표의 값을 더함)' : ''} = <b style="color:#fff;font-size:17px">${L.corr} ${u}</b> → 보정 후 <b style="color:#fff;font-size:17px">${r.corrected}</b></div>`;
+        } else cap = `<div style="color:#94a3b8;font-size:13px;margin:8px 0">${r ? E(r.text) : '입력 후 구간을 선택하면 사용한 칸이 빨강으로 표시됩니다.'}</div>`;
+        box.innerHTML = `<div style="${S.card};border-color:#ef4444"><div style="display:flex;align-items:center;margin-bottom:8px"><b style="font-size:15px;color:#fca5a5">📋 규정 표 (FOM 4-51, ${u === 'ft' ? 'feet' : 'meters'}) — 빨강 = 사용한 값</b></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">${chips}</div>${cap}<div style="overflow-x:auto;-webkit-overflow-scrolling:touch" id="ctc-tabscroll">${t}</div></div>`;
+        const sc = $('ctc-tabscroll');
+        if (sc && L) { const th = sc.querySelectorAll('tr')[0].children; const idx = T.cols.indexOf(usedCols[usedCols.length - 1]) + 1; if (th[idx]) sc.scrollLeft = Math.max(0, th[idx].offsetLeft - sc.clientWidth / 2); }
+      }
       function renderResults() {
         const g = readG(), G = global(g), u = U.unit;
         const ms = G.msgs.map(([t, m]) => `<div style="color:${COL[t]};font-size:14px;line-height:1.45;margin-bottom:4px">${t === 'bad' ? '⛔' : t === 'warn' ? '⚠️' : t === 'ok' ? '✅' : 'ℹ️'} ${E(m)}</div>`).join('');
         $('ctc-sum').innerHTML = ms || '';
         let rowsU = 0;
         U.rows.forEach((row, i) => {
-          const r = evalRow(g, G, row), el = $('ctc-res-' + i); if (!el) return;
+          const r = evalRow(g, G, row), el = $('ctc-res-' + i); U.res[i] = r; if (!el) return;
           const col = COL[r.st] || '#e2e8f0';
           let h = '';
           if (r.corrected != null && row.alt != null) {
             const detail = r.look && r.look.parts.length
               ? `<div style="font-size:12.5px;color:#a9b8c9;margin-top:4px">표 ${r.look.rowKey}℃ 행 · ${r.look.parts.map(p => p.col + '→' + p.val).join(' + ')} = <b style="color:#e2e8f0">${r.corr}</b> ${u}${r.look.parts.length > 1 ? ` <span style="color:#94a3b8">(대안: 다음 높은 열 ${r.look.alt.col} 단일 = ${r.look.alt.val})</span>` : ''}${r.look.overTemp ? ' <span style="color:#fbbf24">(-50℃ 초과)</span>' : ''}</div>` : '';
-            h = `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:baseline"><span style="font-size:13px;color:#a9b8c9">높이 ${r.h == null ? '-' : r.h + ' ' + u}</span><span style="font-size:13px;color:#a9b8c9">보정 +<b style="color:#fff;font-size:15px">${r.corr}</b></span><span style="margin-left:auto;font-size:12px;color:#a9b8c9">보정 후 지시고도</span><b style="font-size:24px;color:${col};font-family:ui-monospace,monospace">${r.corrected}</b><span style="font-size:12px;color:#a9b8c9">${u}</span></div>${detail}<div style="font-size:13px;color:${col};margin-top:4px">${r.st === 'ok' ? '✅' : r.st === 'atc' ? '🟡' : 'ℹ️'} ${E(r.text)}</div>`;
+            h = `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:baseline"><span style="font-size:13px;color:#a9b8c9">높이 ${r.h == null ? '-' : r.h + ' ' + u}</span><span style="font-size:13px;color:#a9b8c9">보정 +<b style="color:#fff;font-size:15px">${r.corr}</b></span><span style="margin-left:auto;font-size:12px;color:#a9b8c9">보정 후 지시고도</span><b style="font-size:24px;color:${col};font-family:ui-monospace,monospace">${r.corrected}</b><span style="font-size:12px;color:#a9b8c9">${u}</span></div>${detail}<div style="font-size:13px;color:${col};margin-top:4px">${r.st === 'ok' ? '✅' : r.st === 'atc' ? '🟡' : 'ℹ️'} ${E(r.text)}</div>${r.look && r.look.parts.length ? `<button type="button" data-ctc-sel="${i}" style="${S.btn};margin-top:8px;border-color:#ef4444;color:#fecaca">📋 규정 표에서 빨강으로 확인</button>` : ''}`;
           } else h = `<div style="font-size:13px;color:#94a3b8">${E(r.text)}</div>`;
           el.innerHTML = h; rowsU++;
         });
+        renderTable(g);
       }
       function renderRows() {
         const box = $('ctc-rows'), u = U.unit;
@@ -7040,6 +7079,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
           <div id="ctc-sum" style="margin-bottom:8px"></div>
           <div style="display:flex;align-items:center;margin:4px 2px 8px"><b style="font-size:15px;color:#c4b5fd">접근 구간 (IAF ~ Missed Approach)</b><button type="button" data-ctc-add style="${S.btn};margin-left:auto">＋ 구간 추가</button></div>
           <div id="ctc-rows"></div>
+          <div id="ctc-tbl"></div>
           <details style="${S.card}"><summary style="cursor:pointer;font-size:14px;font-weight:700;color:#e2e8f0">참고 — 구간별 ROC (FOM 4-48)</summary>
             <div style="margin-top:8px;font-size:13.5px;line-height:1.7;color:#cbd5e1">Procedure Turn / Arc / Initial Approach: <b>1,000 ft</b><br>Intermediate (IAF~FAF): <b>500 ft</b><br>FAF~MAP: <b>250 ft</b><br>Circling Cat A·B·C: <b>500 ft</b> above airport<br>Circling Cat D: <b>600 ft</b> above airport<br><span style="color:#94a3b8">(Circling MDA는 300 ft ROC 기준)</span><br><span style="color:#94a3b8">고도계 오차: 표고 위 1,000 ft당 ISA보다 1℃ 낮을 때마다 4 ft</span></div></details>
           <details style="${S.card}"><summary style="cursor:pointer;font-size:14px;font-weight:700;color:#e2e8f0">계산 방법 · 규정 요약</summary>
@@ -7060,11 +7100,12 @@ input,select,textarea,button{font-size:max(1em,14px)}
           renderResults();
         });
         ov.addEventListener('click', e => {
-          const t = e.target.closest('[data-ctc-close],[data-ctc-add],[data-ctc-del],[data-ctc-unit]'); if (!t) return;
+          const t = e.target.closest('[data-ctc-close],[data-ctc-add],[data-ctc-del],[data-ctc-unit],[data-ctc-sel]'); if (!t) return;
           if (t.dataset.ctcClose !== undefined) ov.style.display = 'none';
           else if (t.dataset.ctcAdd !== undefined) { U.rows.push(newRow('etc')); renderRows(); renderResults(); }
           else if (t.dataset.ctcDel !== undefined) { U.rows.splice(+t.dataset.ctcDel, 1); renderRows(); renderResults(); }
           else if (t.dataset.ctcUnit) setUnit(t.dataset.ctcUnit);
+          else if (t.dataset.ctcSel !== undefined) { U.sel = +t.dataset.ctcSel; renderTable(readG()); if (t.closest('[id^=ctc-res-]')) $('ctc-tbl').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
         });
         U.rows = defaultRows(); U.ready = true;
         renderRows(); syncOptUI(); setUnit(gsv('unit') === 'm' ? 'm' : 'ft', true);
