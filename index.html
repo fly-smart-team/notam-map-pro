@@ -6533,7 +6533,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       // Enroute = 경로 설명 (주요 도시만), Enroute Weather = 이륙 후·착륙 전 시간 기준 기상
       const RB = jbRouteBrief();
       h.push(qt ? `<h1>QUICK TURN BRIEFING</h1><p class="jb-sub">${esc(jbFlightNo(cs))} · ${esc(info.dep || '')} → ${esc(info.dest || '')} · ${esc(info.flightDate || '')} · 퀵턴 OFP 기준 (노탐 분석에는 반영 안 됨)</p>`
-        : `<h1>JOINT BRIEFING</h1><p class="jb-sub">${esc(jbFlightNo(cs))} · ${esc(info.dep || '')} → ${esc(info.dest || '')} · ${esc(info.flightDate || '')} · 작성 ${new Date().toISOString().slice(0, 16).replace('T', ' ')}Z</p>` + jbGreetHtml());
+        : `<h1>JOINT BRIEFING</h1><p class="jb-sub">${esc(jbFlightNo(cs))} · ${esc(info.dep || '')} → ${esc(info.dest || '')} · ${esc(info.flightDate || '')} · 작성 ${new Date().toISOString().slice(0, 16).replace('T', ' ')}Z</p>`);
       h.push(`<h2>1. Flight Information: CREW</h2><ul>
         ${li(`<b>가. Flight Number / Flight Leg :</b> ${esc(cs || '--')} / ${esc(aptKoEn(info.dep))} → ${esc(aptKoEn(info.dest))}`)}
         ${li(`<b>나. Type of Aircraft / Reg. Number :</b> ${esc(type ? (AC_NAMES[type] || type) : '--')} / ${esc(p.reg || '--')}`)}
@@ -6683,10 +6683,18 @@ input,select,textarea,button{font-size:max(1em,14px)}
           #jb-doc .jb-pa{margin:2px 0 0 4px;font-size:15px;color:#b91c1c;font-weight:800}
           #jb-doc .jb-say{display:inline-flex;align-items:center;justify-content:center;width:30px;height:26px;margin-right:6px;border-radius:7px;border:1px solid #7dd3fc;background:#e0f2fe;font-size:14px;vertical-align:middle;cursor:pointer;user-select:none}
           #jb-doc .jb-say:active{background:#38bdf8}
+          #jb-greet-panel{position:absolute;right:8px;top:54px;width:min(430px,94vw);max-height:calc(100% - 70px);overflow:auto;z-index:5;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.45);padding:8px 10px;color:#111}
+          #jb-greet-panel .jb-greet{margin:0;padding:0;border:0;background:none}
+          #jb-greet-panel table{border-collapse:collapse;width:100%;margin-top:4px}#jb-greet-panel td{vertical-align:top;padding:5px 6px;border-top:1px solid #e0e7ff}
+          #jb-greet-panel .jb-en-h{font-size:12px;font-weight:800;color:#0369a1}
+          #jb-greet-panel .jb-gl{white-space:nowrap;font-weight:700;font-size:13px;color:#312e81;width:1%}#jb-greet-panel .jb-gp{font-size:16px;font-weight:700;color:#111827}
+          #jb-greet-panel .jb-gr{font-size:12px;color:#4b5563;font-style:italic}#jb-greet-panel .jb-gk{font-size:12px;color:#6d28d9}
+          #jb-greet-panel .jb-say{display:inline-flex;align-items:center;justify-content:center;width:30px;height:26px;margin-right:6px;border-radius:7px;border:1px solid #7dd3fc;background:#e0f2fe;font-size:14px;vertical-align:middle;cursor:pointer}
         </style>
           <div class="flex items-center gap-2 flex-wrap px-3 py-2 border-b border-slate-700 bg-slate-900">
             <span class="font-bold text-white">📝 Joint Brief</span><span class="text-[11px] text-slate-400">문서를 바로 눌러 수정할 수 있습니다</span>
             <span class="ml-auto flex gap-1.5 flex-wrap">
+              <button type="button" data-jb="greet" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-[12px] text-slate-200">🌏 언어 확인</button>
               <button type="button" data-jb="rate" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-[12px] text-slate-200">🔊 속도 <b data-jb-rate>${jbRate < 0.8 ? '느리게' : '보통'}</b></button>
               <button type="button" data-jb="qt" class="px-2.5 py-1.5 rounded-lg bg-indigo-700 text-[12px] font-bold text-white">↩ 퀵턴 OFP 추가</button>
               <button type="button" data-jb="regen" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-[12px] text-slate-200">↻ 다시 생성</button>
@@ -6696,6 +6704,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
               <button type="button" data-jb="close" class="px-2.5 py-1.5 rounded-lg bg-rose-700 text-[12px] font-bold text-white">닫기 ✕</button>
             </span>
           </div>
+          <div id="jb-greet-panel" class="hidden"></div>
           <div class="flex-1 overflow-auto p-3 sm:p-6"><div id="jb-doc" contenteditable="true" spellcheck="false" class="mx-auto max-w-4xl bg-white rounded-lg shadow-2xl p-6 sm:p-10 outline-none"></div></div>`;
         document.body.appendChild(ov);
         ov.addEventListener('click', e => {
@@ -6704,8 +6713,9 @@ input,select,textarea,button{font-size:max(1em,14px)}
           const b = e.target.closest('[data-jb]'); if (!b) return;
           const k = b.dataset.jb, docEl = $('jb-doc'), doc = k === 'regen' ? docEl : jbClean(docEl);
           if (k === 'qt') { jbQTClick(); return; }
+          if (k === 'greet') { const pn = $('jb-greet-panel'); if (pn.classList.contains('hidden')) { pn.innerHTML = jbGreetHtml(); pn.classList.remove('hidden'); const hh = (pn.parentElement.querySelector(':scope > div.border-b') || {}).offsetHeight || 54; pn.style.top = (hh + 8) + 'px'; pn.style.maxHeight = `calc(100% - ${hh + 16}px)`; } else { pn.classList.add('hidden'); try { speechSynthesis.cancel(); } catch (er) { } } return; }
           if (k === 'rate') { jbRate = jbRate < 0.8 ? 0.9 : 0.7; try { localStorage.setItem('notamPro.jbRate', jbRate); } catch (er) { } b.querySelector('[data-jb-rate]').textContent = jbRate < 0.8 ? '느리게' : '보통'; return; }
-          if (k === 'close') { try { speechSynthesis.cancel(); } catch (er) { } ov.classList.add('hidden'); document.body.style.overflow = ''; }
+          if (k === 'close') { try { speechSynthesis.cancel(); } catch (er) { } $('jb-greet-panel').classList.add('hidden'); ov.classList.add('hidden'); document.body.style.overflow = ''; }
           else if (k === 'regen') { if (confirm('수정한 내용이 사라지고 OFP 기준으로 다시 생성됩니다. 계속할까요?')) docEl.innerHTML = jbFull(); }
           else if (k === 'copy') {
             const html = `<html><head><meta charset="utf-8"><style>${JB_DOC_CSS}</style></head><body>${doc.innerHTML}</body></html>`;
