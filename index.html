@@ -894,7 +894,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/11 20:15 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/11 20:40 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🔍 MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="px-2.5 py-1.5 rounded-lg border text-[12px] font-bold hover:opacity-90" style="border-color:#a78bfa;background:rgba(76,29,149,.35);color:#ddd6fe">🥶 Cold Temp</button>
@@ -6456,8 +6456,8 @@ input,select,textarea,button{font-size:max(1em,14px)}
       L.push('belt', ['Seat belt 사인은 기내 표준 신호에 맞춰 실시하겠습니다.', 'The seat belt sign will follow the standard cabin signals.']);
       L.push('mod', ['Moderate 이상은 차임 2회 실시하고 기장 PA를 하겠습니다. 사정상 PA를 못 하는 경우에는 사무장님께서 실시해 주시기 바랍니다.', 'Moderate or greater: two chimes and a captain\'s PA. If I cannot make the PA, the purser, please make it.']);
       // 보안
-      const am = String(window.__ofpText || '').match(/ALERT\s*([1-5])\s*-\s*ALL STATIONS/i), lv = am ? am[1] : B;
-      L.push('alert', [`금일 보안 등급은 Alert ${lv}입니다.${am ? ' <span class="jb-note">(회사 공지 기준 · 지점 예외 확인)</span>' : ''}`, `Today's security level is Alert ${lv}.`]);
+      const sa = secAlertNow(), am = !!sa, lv = sa ? sa.level : B, sm = sa ? secMeasTxt(sa.level) : '';
+      L.push('alert', [`금일 보안 등급은 Alert ${lv}입니다.${am ? ` <span class="jb-note">(${sa.coad || '회사 공지'} · ${sa.how})</span>` : ''}${sm ? ` <b>평소(4)보다 높습니다 — ${sm}</b>` : ''}`, `Today's security level is Alert ${lv}.${sm ? ' It is higher than usual (Alert 4) — please follow the company security counter-measures.' : ''}`]);
       L.push('susp', ['비행 중 의심스러운 승객 또는 물품 발견 시 기장에게 보고해 주시기 바랍니다.', 'Report any suspicious passenger or item to the captain.']);
       // 비상 연락
       L.push('emer', ['객실 내 비상 상황 발생 시에는 인터폰 Emergency Alert Signal을 통해 조종실로 연락 주시기 바랍니다.', 'For any cabin emergency, call the cockpit with the interphone emergency alert signal.']);
@@ -6562,7 +6562,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       </ul>`);
       if (qt) {
         h.push(`<h2>3. Security · Crew Coordination</h2><ul>
-          ${li(`<b>가. Alert Level :</b> ( ${((String(window.__ofpText || '').match(/ALERT\s*([1-5])\s*-\s*ALL STATIONS/i) || [])[1]) || blank} ) — 5(평시), 4(관심), 3(주의), 2(경계), 1(심각)${en('alert')}`)}
+          ${li(`<b>가. Alert Level :</b> ( ${(secAlertNow() || {}).level || blank} ) — 5(평시), 4(관심), 3(주의), 2(경계), 1(심각)${(() => { const a = secAlertNow(); return a && a.level <= 3 ? ` <b>※ 평소(4)보다 높음 — ${esc(secMeasTxt(a.level))}</b>` : ''; })()}${en('alert')}`)}
           ${li(`<b>나. Taxi Time &amp; Ready Signal :</b> ${blank}${en('taxi')}`)}
           ${li(`<b>다. CABIN LOG :</b> 특이사항 여부 ${(() => { try { const ci = parseOfpMel(window.__ofpText).items.filter(x => x.kind === 'MEL' && melCabin(x.no)); return ci.length ? '<ul>' + ci.map(x => { const L = melLookup(x.no); return li(`MEL ${esc(x.no)} ${esc(x.desc)}${L && L.ko ? ' — ' + esc(L.ko) : ''}`); }).join('') + '</ul>' : blank; } catch (e) { return blank; } })()}`)}
           ${li(`<b>라. Timing of In-flight services (in consultation with the Purser) :</b> ${blank}`)}
@@ -6570,7 +6570,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
         return h.join('\n');
       }
       h.push(`<h2>3. Security</h2><ul>
-        ${li(`<b>가. Alert Level :</b> ( ${((String(window.__ofpText || '').match(/ALERT\s*([1-5])\s*-\s*ALL STATIONS/i) || [])[1]) || blank} ) — 5(평시), 4(관심), 3(주의), 2(경계), 1(심각)${en('alert')}`)}
+        ${li(`<b>가. Alert Level :</b> ( ${(secAlertNow() || {}).level || blank} ) — 5(평시), 4(관심), 3(주의), 2(경계), 1(심각)${(() => { const a = secAlertNow(); return a && a.level <= 3 ? ` <b>※ 평소(4)보다 높음 — ${esc(secMeasTxt(a.level))}</b>` : ''; })()}${en('alert')}`)}
         ${li('<b>나. Emphasize that all crew are security staff :</b><ul>' + li('전 승무원은 보안 요원임을 주지하고 의심스러운 승객이나 물품 발견 시 기장에게 보고 (필요한 경우 해당 공항 관계기관에 신고)') + '</ul>' + en('susp'))}
         ${li('<b>다. Cockpit Entry Procedure (Two-Crew Rule) :</b><ul>' + li('조종실 출입 전 조종실과 인터폰 통화, 청정구역 승객 여부 확인 후 커튼 사용하여 노크 및 키패드 Normal Access Code를 입력한다. 이때 출입상황을 Monitor할 수 있는 객실승무원 1명이 Cockpit Door 입구에 있어야 한다.') + li('조종실을 나갈 때는 인터폰 사용해서, 청정구역 내 승객 여부 확인 후 커튼 닫은 상태에서 출입문을 개방한다.') + li('조종실을 이석하는 운항승무원은 Jump Seat 사용 객실승무원에게 다음 사항 브리핑 실시 (단, 해당 객실승무원이 아래 사항을 숙지하고 있음을 확인 시 생략 가능, FOM 12.2.16.3)<ol style="list-style:decimal;padding-left:1.4em">' + li('Safety Belt/Harness, 구명동의, 산소마스크, 비상구 등 비상장비 사용법') + li('조종실 인터폰을 이용한 Cabin 연락 방법') + li('조종실 출입문 작동 방법') + li('운항승무원의 주의를 산만하게 하거나 항공기 운항에 지장을 주는 행위 금지') + '</ol>') + '</ul>')}
       </ul>`);
@@ -7742,6 +7742,66 @@ input,select,textarea,button{font-size:max(1em,14px)}
     });
     document.addEventListener('toggle', e => { const d = e.target; if (d && d.dataset && d.dataset.wxmDet !== undefined) { WXM.open = d.open; wxmSave(); } }, true);
     window.wxmEval = wxmEval; window.wxmAltMin = wxmAltMin;
+    // ===== 보안 등급 (OFP 회사 공지 "ALERT LEVELS BY STATION") — 출발 지점 기준, 4 미만(3·2·1)이면 Flight Info 상단에 크게 표시 =====
+    const SEC_NAME = { 5: 'LOW', 4: 'MODERATE', 3: 'SUBSTANTIAL', 2: 'SEVERE', 1: 'CRITICAL' }, SEC_KO = { 5: '평시', 4: '관심', 3: '주의', 2: '경계', 1: '심각' };
+    const SEC_MEAS = {   // 대한항공 회사 공지(COAD)의 등급별 조치 요약 (OFP 원문: COUNTER-MEASURES)
+      5: ['평시 보안 업무 유지 (ASR 및 관련 국가 규정)'], 4: ['평시 보안 업무 유지 (ASR 및 관련 국가 규정)'],
+      3: ['승무원 대상 보안 브리핑 실시', '비행 중 30분마다 객실 점검'],
+      2: ['항공기 접근 통제 강화 · 항공기 보안 점검 강화', '고위험 노선에 남성 객실승무원 배정', '고위험 비행: 화장실·일반 도구로 열 수 있는 구획 점검 후 봉인', '식음료 카트·기내 물품·면세품 육안 점검'],
+      1: ['이·착륙 전후 30분(국내선 20분) 승객 좌석 이탈 금지', '국제선 남성 객실승무원 배정', '조종실 인근 화장실 사용 금지', '위협 비행: 화장실·개방 가능 구획 점검 후 봉인', '식음료 카트·기내 물품·면세품 육안 점검, 카트당 트레이 25% 이상 검색']
+    };
+    // text: OFP 전체 텍스트, ids: 출발 지점 코드(ICAO·IATA) 배열 → { level, how, coad, from, to, others } | null
+    function secAlertParse(text, ids) {
+      const t = String(text || ''); const i = t.search(/ALERT\s+LEVELS?\s+BY\s+STATION/i);
+      const ID = (ids || []).map(x => String(x).toUpperCase()).filter(Boolean);
+      if (i < 0) { const m = t.match(/ALERT\s*([1-5])\s*-\s*ALL STATIONS/i); return m ? { level: +m[1], how: '전 지점 공지 · 지점 예외 확인', coad: '', from: null, to: null, others: [] } : null; }
+      const flatAll = t.slice(Math.max(0, i - 900), i + 1500).replace(/\s+/g, ' ');
+      const j = flatAll.search(/ALERT LEVELS? BY STATION/i); let blk = flatAll.slice(j + 20);
+      const e = blk.search(/\b4\.\s*APPLICATION|APPLICATION\s*:/i); if (e > 0) blk = blk.slice(0, e);
+      const STOP = new Set(['AND', 'ALL', 'THE', 'FOR', 'ARE', 'NIL', 'EXCEPT', 'STATIONS', 'STATION', 'ONLY']);
+      const entries = []; const re = /ALERT\s*([1-5])\s*-\s*(.+?)(?=\s\d\)\s*ALERT|\s\d\)|$)/gi; let m;
+      while ((m = re.exec(blk))) {
+        const spec = m[2].trim(), all = /ALL STATIONS?/i.test(spec), ex = spec.match(/EXCEPT\s*([^)]*)/i);
+        const exc = ex ? (ex[1].match(/\b[A-Z]{3,4}\b/g) || []).filter(x => !STOP.has(x)) : [];
+        const list = all ? [] : (spec.match(/\b[A-Z]{3,4}\b/g) || []).filter(x => !STOP.has(x));
+        entries.push({ level: +m[1], spec, all, exc, list });
+      }
+      if (!entries.length) return null;
+      const ex1 = entries.filter(x => x.list.some(c => ID.includes(c))), ex2 = entries.filter(x => x.all && !x.exc.some(c => ID.includes(c)));
+      const pick = a => a.reduce((b, x) => (!b || x.level < b.level ? x : b), null);
+      const hit = pick(ex1) || pick(ex2); if (!hit) return null;
+      const coad = (flatAll.slice(0, j).match(/SECY\s*(COAD\s*\d+\/\d+)/i) || [])[1] || '', pm = flatAll.match(/EFFECTIVE PERIOD\s*:\s*FROM\s*(\d{2})([A-Z]{3})(\d{2})\s*(\d{2}):(\d{2})\s*\(KST\)\s*TO\s*(\d{2})([A-Z]{3})(\d{2})\s*(\d{2}):(\d{2})\s*\(KST\)/i);
+      const mon = s => 'JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC'.indexOf(s.toUpperCase()) / 3;
+      const ms = (d, M, y, h, n) => Date.UTC(2000 + +y, mon(M), +d, +h - 9, +n);
+      return { level: hit.level, how: ex1.includes(hit) ? '출발 지점 지정' : '전 지점 공지' + (hit.exc.length ? ` (제외: ${hit.exc.join(', ')})` : ''), coad: coad.replace(/\s+/g, ' '),
+        from: pm ? ms(pm[1], pm[2], pm[3], pm[4], pm[5]) : null, to: pm ? ms(pm[6], pm[7], pm[8], pm[9], pm[10]) : null,
+        others: entries.filter(x => x !== hit).map(x => ({ level: x.level, spec: x.spec })) };
+    }
+    function secAlertNow() {
+      try {
+        const text = window.__ofpText; if (!text) return null;
+        const ids = [info.dep]; const mm = String(text).matchAll(/\[(?:DEP|DEST|ALTN|ERA)\]\s*([A-Z]{4})\/\s*([A-Z]{3})\//g);
+        for (const x of mm) if (x[1] === info.dep) ids.push(x[2]);
+        const h = String(text).match(/\bK[EAL]{1,2}\s*\d{2,4}\s*\/\s*([A-Z]{3})\s*\/\s*([A-Z]{3})/); if (h && ids.length < 2) ids.push(h[1]);
+        const r = secAlertParse(text, ids); if (!r) return null;
+        const w = flightWindow(); r.outside = !!(w && r.from != null && (w.etd < r.from || w.etd > r.to)); r.dep = info.dep; r.ids = ids;
+        return r;
+      } catch (e) { return null; }
+    }
+    function secBannerHtml() {
+      const r = secAlertNow(); if (!r) return '';
+      const L = r.level, nm = `ALERT ${L} · ${SEC_NAME[L]} (${SEC_KO[L]})`, src = [r.dep + ' 출발', r.how, r.coad].filter(Boolean).join(' · ');
+      const per = r.outside ? `<div style="margin-top:4px;color:#fde68a;font-size:13px;font-weight:700">⚠ 공지 유효기간(${new Date(r.from + 9 * 36e5).toISOString().slice(5, 10)} ~ ${new Date(r.to + 9 * 36e5).toISOString().slice(5, 10)} KST) 밖 비행 — 최신 공지 확인</div>` : '';
+      if (L >= 4) return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#94a3b8"><span style="padding:2px 8px;border-radius:999px;border:1px solid #475569;color:#cbd5e1;font-weight:700">🛡️ 보안 ${nm}</span><span>${esc(src)}</span>${r.outside ? '<span style="color:#fde68a;font-weight:700">⚠ 공지 유효기간 밖</span>' : ''}</div>`;
+      const C = { 3: ['#7c2d12', '#f97316', '#ffedd5'], 2: ['#7f1d1d', '#ef4444', '#fee2e2'], 1: ['#581c87', '#d946ef', '#fae8ff'] }[L];
+      const meas = (SEC_MEAS[L] || []).map(x => `<li style="margin:2px 0">${esc(x)}</li>`).join('');
+      return `<div role="alert" style="border:3px solid ${C[1]};background:${C[0]};border-radius:14px;padding:12px 14px">
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:34px;line-height:1">🛡️</span><div><div style="font-size:24px;font-weight:900;color:${C[2]};line-height:1.15">보안 ${esc(nm)}</div><div style="font-size:14px;font-weight:700;color:${C[2]};opacity:.92">평소(Alert 4)보다 높음 · ${esc(src)}</div></div></div>
+        <ul style="margin:8px 0 0;padding-left:20px;font-size:14px;color:${C[2]}">${meas}</ul>${per}
+        <div style="font-size:11px;color:${C[2]};opacity:.75;margin-top:6px">OFP 회사 공지 기준 요약 — 상세 조치는 원문 확인 · 해당 등급이 적용되는 출발 지점 확인</div></div>`;
+    }
+    function secMeasTxt(L) { return L <= 3 ? (SEC_MEAS[L] || []).join(' · ') : ''; }
+    window.secAlertParse = secAlertParse;
     function renderFlightInfo() {
       try { aptRefRender(); } catch (e) { }
       const box = $('flt-info'); if (!box) return;
@@ -7786,6 +7846,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       const altnNm = getAirportNameInfo(altnCode);
       const adjusted = !!etdOverride || !!etaOverride;
       box.innerHTML = `<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3 flex flex-col gap-3">
+        ${secBannerHtml()}
         <div class="flex items-center flex-wrap gap-x-2.5 gap-y-1">
           <span class="text-lg font-bold mono text-white">${esc(cs || '--')}</span>
           <span class="text-sm font-bold text-sky-300">${esc(type ? (AC_NAMES[type] || type) : '--')}</span>
