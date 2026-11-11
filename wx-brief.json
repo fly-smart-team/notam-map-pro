@@ -1,6 +1,6 @@
 {
  "note": "OFP 기상 차트 분석 (Claude 작성). 키 = 콜사인|출발|도착|운항일(UTC). 비행 전날 OFP를 주면 추가",
- "version": "2026-11-10 07:14Z",
+ "version": "2026-11-11 14:55Z",
  "items": {
   "KAL476|VVTS|RKSI|2026-10-26": {
    "flight": "KE476 호찌민(VVTS) → 인천(RKSI)",
@@ -1334,6 +1334,111 @@
      "what": "경로를 따라 자른 바람·기온·VWS(초록 6~9) 단면. 분홍 선이 계획 고도입니다.",
      "see": "아래 VWS 층 FL150~FL300(SALMI~DOTOL, 북쪽으로 갈수록 높아져 DALSU~DOTOL에서 FL300 근처), 위 VWS 층 약 FL400~FL510(MUGUS~REMOS). 대류권계면은 FL400 이상.",
      "apply": "FL300 구간(DALSU~DOTOL)은 층 꼭대기 → FL340 조기 상승 권장. FL340이 두 층 사이 최적, FL380 이상 회피."
+    }
+   ]
+  },
+  "AAR736|VVTS|RKSI|2026-11-11": {
+   "flight": "OZ736 호치민(VVTS) → 인천(RKSI) · HL8398 A321neo",
+   "etd": "17:10Z",
+   "eta": "21:57Z",
+   "trip": "4시간 47분",
+   "made": "2026-11-11 14:55Z",
+   "source": "OFP 13~18쪽 — UKMET 고도별 바람·기온(FL300·FL340·FL390), WAFC Washington SIGWX, WNI 난기류(ASC), 경로 단면도 · 운항관리 TURB 안내 · TAF",
+   "key": [
+    "출발·상승(17:10Z~): 호치민 TAF 08010KT 9999 SCT020, TSRA TEMPO는 11/12Z까지라 출발 때는 해당 없음. 다만 SIGWX OCNL CB 구역(꼭대기 FL510)이 호치민~ASUKU를 덮고 운항관리도 'NOBID~LENKO OCNL CB 꼭대기 FL400' → 이 구간(이륙 30~66분 후, 17:40Z~18:16Z)은 CB 꼭대기가 순항 고도(FL330)보다 높음. 올라가서 피할 수 없으므로 기상 레이더로 옆으로 회피(OFP SR 6 @NOBID)",
+    "IKELA(이륙 1:23 후, 18:33Z)에서 FL350 스텝 상승. 이후 TONGA~WP900까지 SR 1~3으로 안정 — 이번 비행의 서비스 적기",
+    "가장 흔들릴 구간: ATOTI(3:28 후, 20:38Z)~인천. ASC 노랑(MOD~SEV)이 ATOTI~KAMIT 경로를 덮고(빨강 SEV는 중국 내륙·일본 동쪽으로 경로 밖), 운항관리 'NIRAT~RKSI LGT-MOD', SR은 ATOTI 4 → SAMUL 4 → ATASO 6 → GUNKU~TOD 8",
+    "고도별: FL350(TESIM~KAMIT)은 SR 0~2로 가장 조용 — 강하·관제 허가가 허용하는 한 FL350 유지가 유리. 계획은 SAMUL(4:10 후)에서 FL330으로 내려가는데 단면도상 FL330 부근(SAMUL~GUNKU)이 아래 VWS 층(FL220~FL345) 안이라 흔들림 증가 → 이 스텝 강하를 늦출 수 있으면 흔들림이 줄 가능성. FL370 이상은 제트기류(FL370 축이 한반도 북쪽)와 위 VWS 층(FL400~FL490)에 가까워 이득 없음",
+    "바람: FL350 서풍 계열 — 남중국해 250°/25~50KT, 대만 이북 270°/60~85KT, 한반도 남부 280°/98~117KT(측풍 위주, 맞바람 -6~-24KT). 제트기류 남쪽 가장자리를 따라 지나므로 풍속이 북쪽으로 갈수록 급증",
+    "기온: 경로 FL340 -40~-44°C로 표준(ISA)보다 약 10°C 높음(ISA+10 안팎, FL350 기준) — 순항 FL350 최대 고도·버핏 여유 확인",
+    "도착 인천 TAF: ETA 21:57Z 시점 18006KT 3500 BR SCT030(1117/1119 BECMG 3500 BR), TN08°C @21Z. 새벽(현지 06:57) 박무로 시정이 더 나빠질 수 있어 강하 전 METAR 확인. 교체 김포 22:14Z 4000 BR BKN030. 기상요건(시정 800m) 충족"
+   ],
+   "overall": [
+    {
+     "t": "이륙·상승 (17:10Z~17:33Z, 호치민~TOC)",
+     "s": "호치민은 바람 080°/10KT, 시정 양호, SCT020. TSRA TEMPO는 출발 전 종료. 다만 SIGWX OCNL CB 구역(꼭대기 FL510)이 호치민 북쪽~ASUKU에 걸려 있어 SID·상승 중 레이더를 켜고 셀을 확인합니다."
+    },
+    {
+     "t": "베트남 연안 (NOBID~LENKO, 이륙 30~66분 후, 17:40Z~18:16Z)",
+     "s": "운항관리 안내 'OCNL CB 꼭대기 FL400'. 순항 FL330보다 구름 꼭대기가 높아 고도로 피할 수 없고, 레이더로 좌우 회피해야 합니다. OFP SR 6(NOBID)~2. 심야(현지 00:40~01:16)라 대류는 약해질 수 있으나 예보를 믿지 말고 레이더를 확인합니다. 좌석벨트 사인 유지 권장."
+    },
+    {
+     "t": "남중국해~대만 (IKELA~TONGA, 이륙 1:23~2:25 후, 18:33Z~19:35Z)",
+     "s": "IKELA에서 FL350으로 올라간 뒤 SR 2~3으로 안정. 바람은 250°/25~36KT 정도로 약합니다. 객실 서비스에 가장 좋은 구간."
+    },
+    {
+     "t": "대만~동중국해 (TONGA~LIPLO, 이륙 2:25~3:11 후, 19:35Z~20:21Z)",
+     "s": "SR 2~3, 난기류·CB 표시 없음. 270°/35~40KT. 안정적."
+    },
+    {
+     "t": "제주 남쪽 접근 (BOLUT~ATOTI, 이륙 3:18~3:28 후, 20:28Z~20:38Z)",
+     "s": "WP900 부근부터 ASC가 하늘색(MOD)에서 노랑(MOD~SEV)으로 바뀌고 ATOTI에서 SR 4. 서비스는 이 시점(이륙 약 3시간 20분 후) 전후로 정리를 시작하되, 이후 TESIM~KAMIT는 SR 0~2로 다시 조용합니다."
+    },
+    {
+     "t": "한반도 남부 (TESIM~KAMIT, 이륙 3:41~4:03 후, 20:51Z~21:13Z)",
+     "s": "FL350, SR 0~2. 경로가 ASC 노랑 띠 안이지만 OFP는 조용하게 계산. 280°/98~117KT 강풍(제트기류 남쪽 가장자리)이라 풍향·풍속 변화에 따른 청천난류(CAT) 가능성이 있어 좌석벨트 사인 권장. 운항관리 'NIRAT~RKSI LGT-MOD'."
+    },
+    {
+     "t": "강하·도착 (SAMUL~RKSI, 이륙 4:10~4:47 후, 21:20Z~21:57Z)",
+     "s": "계획은 SAMUL에서 FL330 강하. 이 고도(SAMUL~GUNKU)가 VWS 층 안이라 SR 4→6→8(GUNKU~TOD 최대 8). 보통 정도 흔들림 가능, 좌석벨트 사인 필수. 도착 인천은 18006KT 3500 BR SCT030(새벽 박무), 시정 악화 가능성이 있으니 강하 전 METAR·ATIS 확인."
+    }
+   ],
+   "crew": {
+    "wxKo": "출발 호치민은 날씨가 좋고, 도착 인천은 약한 바람과 옅은 안개(박무)로 시정이 조금 낮을 수 있습니다.",
+    "wxEn": "Good weather at departure in Ho Chi Minh. At Incheon, light winds and some mist may slightly reduce visibility on arrival.",
+    "enrouteKo": "총 비행 시간은 4시간 47분입니다. 이륙 약 30분~1시간 10분 후 베트남 연안에서 구름 사이를 지나며 흔들릴 수 있습니다. 그 뒤 대만~동중국해는 안정적이고, 착륙 약 40분 전부터 도착까지 한반도 상공에서 보통 정도의 흔들림이 예상됩니다.",
+    "enrouteEn": "Total flight time is 4 hours 47 minutes. Some bumps are possible from about 30 minutes to 1 hour 10 minutes after takeoff along the Vietnam coast near clouds. It should then be smooth over Taiwan and the East China Sea. Moderate turbulence is expected from about 40 minutes before landing over the Korean Peninsula.",
+    "turbKo": "총 비행 시간 4시간 47분. 이륙 약 30분~1시간 10분 후는 베트남 연안 구름 때문에 흔들릴 수 있어 객실·갤리를 고정해 주시기 바랍니다. 객실 서비스는 이륙 약 1시간 30분 후(착륙 약 3시간 15분 전)부터 시작해 주시고, 이륙 약 3시간 20분 후(착륙 약 1시간 25분 전)까지는 마쳐 주세요. 그 뒤 착륙 약 40분 전부터는 흔들림이 있을 수 있으니 좌석에 앉아 벨트를 매 주시기 바랍니다. 이륙 약 3시간 40분~4시간(착륙 약 1시간~45분 전)은 비교적 조용해 추가 정리에 쓰실 수 있습니다.",
+    "turbEn": "Total flight time 4 hours 47 minutes. From about 30 minutes to 1 hour 10 minutes after takeoff, bumps are possible near clouds along the Vietnam coast, so please keep the cabin and galley secured. Please start the service from about 1 hour 30 minutes after takeoff (about 3 hours 15 minutes before landing) and finish by about 3 hours 20 minutes after takeoff (about 1 hour 25 minutes before landing). Moderate turbulence is possible from about 40 minutes before landing, so please be seated with seat belts fastened. The period from about 3 hours 40 minutes to 4 hours after takeoff (about 1 hour to 45 minutes before landing) is relatively smooth and can be used for final tidy-up."
+   },
+   "charts": [
+    {
+     "page": 13,
+     "title": "고도별 바람·기온 FL300 (300hPa)",
+     "valid": "11/11 21:00Z",
+     "what": "UKMET 예보 모델의 바람(바브)과 기온(°C) 차트입니다. 상승 구간과 강하 층(FL300)입니다. 깃 하나 10KT, 삼각형 50KT.",
+     "see": "남중국해는 바람이 약하고(20KT 미만, 기온 -28~-31°C), 대만 이북부터 서풍이 강해져 한반도 부근 80KT 이상. 기온 -37~-43°C.",
+     "apply": "인천 접근 FL300 부근은 강풍과 VWS가 겹쳐 강하 중 흔들림."
+    },
+    {
+     "page": 14,
+     "title": "고도별 바람·기온 FL340 (250hPa)",
+     "valid": "11/11 21:00Z",
+     "what": "UKMET 예보 모델의 바람과 기온 차트입니다. 순항 고도(FL330~FL350)와 같은 층입니다.",
+     "see": "남중국해·대만 부근 바람 약~중(25~50KT), 기온 -39~-44°C. 한반도 남부 서풍 100KT 안팎(OFP 280°/98~117KT). 기온은 표준보다 약 10°C 높음.",
+     "apply": "ATOTI~인천에서 풍속이 급증하는 제트기류 가장자리 — 청천난류에 주의."
+    },
+    {
+     "page": 15,
+     "title": "고도별 바람·기온 FL390 (200hPa)",
+     "valid": "11/11 21:00Z",
+     "what": "UKMET 순항 고도보다 위층 참고용 차트입니다.",
+     "see": "한반도~동중국해 서풍 100KT 이상으로 FL340보다 더 강하고, 기온 -53~-58°C.",
+     "apply": "FL370 이상 상승은 제트기류 축에 가까워져 이득이 없습니다."
+    },
+    {
+     "page": 16,
+     "title": "SIGWX 중요 기상 (FL250~FL630)",
+     "valid": "11/11 18:00Z",
+     "what": "세계공역예보센터(Washington) 고층 중요 기상 차트. 파란 선 = 제트기류, 빨간 점선 = 청천난류(CAT), 분홍 점선 = 대류권계면, 초록 물결선 = CB.",
+     "see": "호치민~ASUKU가 OCNL CB 구역(꼭대기 FL510) 안에 있고, 제트기류 FL370 축은 한반도 북쪽을 지납니다. 경로상 CAT 구역은 없습니다. 대류권계면 약 FL500.",
+     "apply": "NOBID~LENKO 상승·초기 순항 중 레이더 회피. 한반도 접근은 제트기류 남쪽 가장자리."
+    },
+    {
+     "page": 17,
+     "title": "ASC 난기류 (FL180~FL450)",
+     "valid": "11/11 20:00Z",
+     "what": "WNI 난기류 예측. 하늘색 = MOD, 노랑 = MOD~SEV, 빨강 = SEV.",
+     "see": "베트남~대만~동중국해는 난기류 표시가 거의 없고, WP900~ATOTI에서 하늘색, ATOTI~KAMIT 경로가 노랑 띠 안에 있습니다. 빨강(SEV)은 중국 내륙과 일본 동쪽으로 경로 밖.",
+     "apply": "ATOTI 이후가 이번 비행의 핵심 흔들림 구간입니다."
+    },
+    {
+     "page": 18,
+     "title": "경로 단면도 (UKMET, VWS·대류권계면)",
+     "valid": "11/11 21:00Z",
+     "what": "경로를 따라 자른 바람·기온·VWS(초록 6~9) 단면. 분홍 선이 계획 고도입니다.",
+     "see": "SAMUL~GUNKU에서 아래 VWS 층이 FL220~FL345까지 올라와 계획 FL330이 걸립니다. 위 VWS 층은 약 FL400~FL490. 그 사이 FL350 전후가 가장 조용합니다. 대류권계면은 FL480 이상.",
+     "apply": "FL350 유지가 가장 낫고, SAMUL 이후 FL330 강하는 VWS 층 통과 — 좌석벨트 사인. FL370 이상은 이득 없음."
     }
    ]
   }
