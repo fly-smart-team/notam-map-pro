@@ -3893,9 +3893,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded ${x.kind === 'MEL' ? 'bg-sky-700' : 'bg-slate-600'} text-white text-[12px] font-bold">${x.kind}</span><span class="mono text-[15px] font-bold text-white">${esc(x.no)}</span>${it ? `<span class="text-[13px] font-bold text-sky-200">${esc(it.t)}${it.cond ? ` · ${esc(it.cond)}` : ''}</span>` : ''}</div>
           ${x.desc ? `<div class="mono text-[12px] text-amber-200 mt-0.5">OFP: ${esc(x.desc)}</div>` : ''}
           ${badges ? `<div class="flex flex-wrap gap-1 mt-1 text-slate-100">${badges}</div>` : ''}
+          ${gl}
           ${it ? `<div class="mt-2"><div class="text-[13px] font-bold text-slate-200">📄 MEL 원문</div>${pre(it.text)}${appChip(it.app)}</div>` : ''}
           ${opHtml}
-          ${gl}
           ${x.kind === 'MEL' ? msEcamChips(x.no) : ''}
           ${x.kind === 'MEL' && !it && melKo[x.no] ? `<div class="mt-2 text-[13px] leading-snug text-slate-100 rounded-md bg-sky-950/40 border border-sky-800/60 px-2 py-1.5"><span class="mr-1 px-1 py-0.5 rounded bg-sky-700 text-white text-[10px] font-bold align-middle">해설</span>${esc(melKo[x.no])}</div>` : ''}
           ${x.kind === 'MEL' && !melDB ? '<div class="text-[12px] text-slate-400 mt-1">MEL 데이터를 불러오면 원문과 운항 절차가 나옵니다.</div>' : ''}
