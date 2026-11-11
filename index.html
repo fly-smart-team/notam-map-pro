@@ -894,7 +894,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/11 20:15 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/11 20:25 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🔍 MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="px-2.5 py-1.5 rounded-lg border text-[12px] font-bold hover:opacity-90" style="border-color:#a78bfa;background:rgba(76,29,149,.35);color:#ddd6fe">🥶 Cold Temp</button>
@@ -3901,16 +3901,17 @@ input,select,textarea,button{font-size:max(1em,14px)}
       const pre = t => `<pre class="mono text-[12px] leading-relaxed whitespace-pre-wrap break-words text-slate-100 bg-slate-950/80 rounded p-2 mt-1">${hl(t)}</pre>`;
       const appChip = app => { const all = !app || /\bALL\b/.test(app), hit = !all && reg && app.includes(reg);
         return `<div class="text-[12px] mt-1 flex flex-wrap items-center gap-1.5"><span class="text-slate-400">적용 기체</span><span class="mono text-slate-300 break-words">${all ? 'ALL' : hl(app)}</span>${reg ? (all || hit ? `<span class="px-1.5 py-0.5 rounded bg-emerald-800 text-emerald-100 text-[11px] font-bold">✓ ${esc(reg)} 적용</span>` : `<span class="px-1.5 py-0.5 rounded bg-slate-700 text-slate-200 text-[11px] font-bold">${esc(reg)} 해당 없음</span>`) : ''}</div>`; };
+      const melTbl = it => { const c = 'border:1.5px solid #94a3b8;padding:4px 6px;text-align:center;', H = c + 'color:#e2e8f0;font-size:12.5px;', V = c + 'color:#fff;font-weight:800;font-size:15px;';
+        const RIm = RI[it.ri] ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px">Repair interval ${esc(it.ri)}: ${esc(RI[it.ri])}</div>` : '';
+        return `<table style="width:100%;border-collapse:collapse;margin-top:4px;table-layout:fixed"><tr><td style="${H}">Repair interval</td><td style="${H}">Nbr installed</td><td style="${H}">Nbr required</td><td style="${H}">Placard</td></tr><tr><td style="${V}">${esc(it.ri || '–')}</td><td style="${V}">${esc(it.inst || '–')}</td><td style="${V}">${esc(it.req || '–')}</td><td style="${V}${/^yes$/i.test(it.plac || '') ? 'color:#fcd34d;' : ''}">${esc(it.plac || '–')}</td></tr></table>${RIm}`; };
       const aiMel = (no, it, opTxt) => `${no}|${(it.text || '').length}|${(opTxt || '').length}`;
       const card = x => {
         const L = x.kind === 'MEL' ? melLookup(x.no) : null, it = L && L.it;
         const appOk = !it || !reg || /\bALL\b/.test(it.app || '') || (it.app || '').includes(reg);
         const badges = it ? [
-          `<span class="px-1.5 py-0.5 rounded bg-slate-700 text-[12px]">수리 기한 <b>${esc(it.ri || '-')}</b>${RI[it.ri] ? ` · ${esc(RI[it.ri])}` : ''}</span>`,
-          `<span class="px-1.5 py-0.5 rounded bg-slate-700 text-[12px]">설치 ${esc(it.inst || '-')} / 필요 ${esc(it.req || '-')}</span>`,
-          it.o ? '<span class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[12px] font-bold">(o) 운항 절차 있음</span>' : '<span class="px-1.5 py-0.5 rounded bg-emerald-800 text-emerald-100 text-[12px]">운항 절차 없음</span>',
-          it.m ? '<span class="px-1.5 py-0.5 rounded bg-amber-700 text-white text-[12px]">(m) 정비 절차</span>' : '',
-          melCabin(x.no) ? '<span class="px-1.5 py-0.5 rounded bg-violet-700 text-white text-[12px]">객실 관련</span>' : ''].join(' ') : '';
+          it.o ? '<span class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[12px] font-bold">(o) Operational procedure</span>' : '<span class="px-1.5 py-0.5 rounded bg-emerald-800 text-emerald-100 text-[12px]">No (o) procedure</span>',
+          it.m ? '<span class="px-1.5 py-0.5 rounded bg-amber-700 text-white text-[12px]">(m) Maintenance procedure</span>' : '',
+          melCabin(x.no) ? '<span class="px-1.5 py-0.5 rounded bg-violet-700 text-white text-[12px]">Cabin related</span>' : ''].join(' ') : '';
         // 운항 절차: 이 기번에 해당하는 판을 먼저, 나머지는 접어서
         let opHtml = '', opAll = '';
         if (L && L.op) {
@@ -3933,7 +3934,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
           ${x.desc ? `<div class="mono text-[12px] text-amber-200 mt-0.5">OFP: ${esc(x.desc)}</div>` : ''}
           ${badges ? `<div class="flex flex-wrap gap-1 mt-1 text-slate-100">${badges}</div>` : ''}
           ${gl}
-          ${it ? `<div class="mt-2"><div class="text-[13px] font-bold text-slate-200">📄 MEL 원문</div>${pre(it.text)}${appChip(it.app)}</div>` : ''}
+          ${it ? `<div class="mt-2"><div class="text-[13px] font-bold text-slate-200">📄 MEL Original</div>${melTbl(it)}${pre(it.text)}${appChip(it.app)}</div>` : ''}
           ${opHtml}
           ${x.kind === 'MEL' ? msEcamChips(x.no) : ''}
           ${x.kind === 'MEL' && !it && melKo[x.no] ? `<div class="mt-2 text-[13px] leading-snug text-slate-100 rounded-md bg-sky-950/40 border border-sky-800/60 px-2 py-1.5"><span class="mr-1 px-1 py-0.5 rounded bg-sky-700 text-white text-[10px] font-bold align-middle">해설</span>${esc(melKo[x.no])}</div>` : ''}
