@@ -894,7 +894,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/12 08:25 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/12 09:20 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🔍 MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="px-2.5 py-1.5 rounded-lg border text-[12px] font-bold hover:opacity-90" style="border-color:#a78bfa;background:rgba(76,29,149,.35);color:#ddd6fe">🥶 Cold Temp</button>
@@ -7631,23 +7631,32 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
       const L = [[info.dep, '출발'], [info.dest, '목적'], ...String(info.altn || '').split(/[\s,/]+/).filter(Boolean).map(a => [a, '교체'])].filter(x => x[0]);
       el.innerHTML = aptRefHtml(L);
     }
-    // ===== 목적지·교체공항 기상요건 (FOM 5.7.1 · 5-30/31) — 최저치는 FOM 4.1.3 (직접 입력, 기본 200 ft / 550 m·VIS 800 m) =====
-    const WXM_KEY = 'notamPro.wxmin.v1';
+    // ===== 목적지·교체공항 기상요건 (FOM 5.7.1 · 5-30/31) — 최저치는 FOM 4.1.3 (공항별로 직접 입력·기억), 기상값은 TAF/METAR 기본값을 직접 고칠 수 있음 =====
+    const WXM_KEY = 'notamPro.wxmin.v2';
     const WXM = (() => {
-      const d = { ceil: 200, vis: 800, rvr: 550, cfg: 'one', nalt: 1, aCeil: null, aVis: null, open: true };
-      try { return Object.assign(d, JSON.parse(localStorage.getItem(WXM_KEY) || '{}')); } catch (e) { return d; }
+      const d = { dest: {}, alt: {}, nalt: 1, open: true, def: { da: 200, vis: 800, rvr: 550 } };
+      try { const v1 = JSON.parse(localStorage.getItem('notamPro.wxmin.v1') || 'null'); if (v1) { d.def = { da: v1.ceil != null ? v1.ceil : 200, vis: v1.vis != null ? v1.vis : 800, rvr: v1.rvr != null ? v1.rvr : 550 }; d.nalt = v1.nalt || 1; d.open = v1.open !== false; } } catch (e) { }
+      try { const j = JSON.parse(localStorage.getItem(WXM_KEY) || 'null'); if (j) Object.assign(d, j); } catch (e) { }
+      return d;
     })();
+    const WXO = {};   // 이번 OFP에서 직접 고친 기상값(저장 안 함): `${공항}|${시작시각}` → { ceil, vis }
     const wxmSave = () => { try { localStorage.setItem(WXM_KEY, JSON.stringify(WXM)); } catch (e) { } };
     const WXM_CFG = [
-      ['one', '항법시설 1개 (비정밀 / CAT I) → 운고 +400 ft · 시정 +1,600 m'],
-      ['two', '항법시설 2개 (서로 다른 활주로 직진입) → +200 ft · +800 m'],
-      ['cat2', 'CAT II ILS 1개 → 300 ft · 1,200 m'],
-      ['cat3', 'CAT III ILS → 200 ft · 800 m']
+      ['one', '① 항법시설 1개 (비정밀·CAT I·서클링) → DA(H)/MDA(H) +400 ft · 시정 +1,600 m'],
+      ['two', '② 서로 다른 활주로 2개 (각각 직진입) → 높은 값 +200 ft · +800 m'],
+      ['cat2', '③ CAT II ILS 1개 → 300 ft · 1,200 m'],
+      ['cat3', '④ CAT III ILS → 200 ft · 800 m']
     ];
-    // FOM 4.1.3.9 교체공항 최저치 (OpSpec C055)
-    function wxmAltMin(S) {
-      const m = { one: [S.ceil + 400, S.vis + 1600], two: [S.ceil + 200, S.vis + 800], cat2: [300, 1200], cat3: [200, 800] }[S.cfg] || [S.ceil + 400, S.vis + 1600];
-      return { ceil: S.aCeil != null ? S.aCeil : m[0], vis: S.aVis != null ? S.aVis : m[1], autoCeil: m[0], autoVis: m[1] };
+    const wxmNum = v => { const n = Number(String(v).replace(',', '.')); return isNaN(n) ? 0 : n; };
+    const wxmDest = c => Object.assign({}, WXM.def, WXM.dest[c] || {});
+    const wxmAlt = c => Object.assign({ cfg: 'one', da: WXM.def.da, vis: WXM.def.vis, da2: 200, vis2: 800 }, WXM.alt[c] || {});
+    // FOM 4.1.3.9 교체공항 최저치 (OpSpec C055) — 교체공항 자신의 접근 minima에서 계산. land = 그 공항에 '착륙'할 때의 최저치(METAR 확인용)
+    function wxmAltMin(A) {
+      const da = wxmNum(A.da), vs = wxmNum(A.vis), da2 = wxmNum(A.da2), vs2 = wxmNum(A.vis2);
+      if (A.cfg === 'cat2') return { ceil: 300, vis: 1200, f: 'CAT II ILS 고정값', land: { ceil: 300, vis: 1200 } };
+      if (A.cfg === 'cat3') return { ceil: 200, vis: 800, f: 'CAT III ILS 고정값', land: { ceil: 200, vis: 800 } };
+      if (A.cfg === 'two') { const h = Math.max(da, da2), v = Math.max(vs, vs2); return { ceil: h + 200, vis: v + 800, f: `높은 값 ${h} + 200 ft · ${v} + 800 m`, land: { ceil: h, vis: v } }; }
+      return { ceil: da + 400, vis: vs + 1600, f: `${da} + 400 ft · ${vs} + 1,600 m`, land: { ceil: da, vis: vs } };
     }
     function wxmMetric(el) {
       const cl = (el.clouds || []).filter(c => /^(BKN|OVC|VV)/.test(c)).map(c => +c.slice(c.startsWith('VV') ? 2 : 3, c.startsWith('VV') ? 5 : 6) * 100).filter(n => !isNaN(n));
@@ -7663,11 +7672,12 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
       const first = tafAt(taf, T0);
       if (!first.valid) return { lvl: null, why: 'TAF 유효시간 밖', worst: null };
       let lvl = 0, worst = null, why = [];
+      const base = { ceil: Infinity, vis: 99999 }, bs = m => { base.ceil = Math.min(base.ceil, m.ceil); base.vis = Math.min(base.vis, m.vis); };   // 기본값용: 구간 안 최악(가장 낮은 운고·시정)
       const take = (c, m, label) => {
         if (!worst || c > lvl || (c === lvl && (m.ceil < worst.m.ceil || m.vis < worst.m.vis))) { lvl = c; worst = { m, label }; }
       };
-      for (let t = T0; t <= T1; t += 10 * 6e4) { const r = tafAt(taf, t); take(wxmCmp(wxmMetric(r.st), min), wxmMetric(r.st), `예보 ${wxmZ(t)}`); }
-      if (T1 > T0) { const r = tafAt(taf, T1); take(wxmCmp(wxmMetric(r.st), min), wxmMetric(r.st), `예보 ${wxmZ(T1)}`); }
+      for (let t = T0; t <= T1; t += 10 * 6e4) { const r = tafAt(taf, t); bs(wxmMetric(r.st)); take(wxmCmp(wxmMetric(r.st), min), wxmMetric(r.st), `예보 ${wxmZ(t)}`); }
+      if (T1 > T0) { const r = tafAt(taf, T1); bs(wxmMetric(r.st)); take(wxmCmp(wxmMetric(r.st), min), wxmMetric(r.st), `예보 ${wxmZ(T1)}`); }
       const gs = tafGroups(taf, T0);
       gs.slice(1).forEach(g => {
         if (g.a == null) return;
@@ -7681,98 +7691,148 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
           if (c >= 1) { why.push(`BECMG ${wxmZ(g.a)}-${wxmZ(b)} 변화 중 ${wxmFmt(m)}`); if (lvl < 1) { lvl = 1; worst = { m, label: g.label }; } }
         }
       });
-      return { lvl, why, worst };
+      return { lvl, why, worst, base };
+    }
+    // 한 공항의 [T0,T1] 기상 — 기본값은 TAF(구간 최악, 목적지는 ETA 시점), TAF가 없으면 현재 METAR. 직접 고친 값이 있으면 그 값으로 판정
+    function wxmWx(code, T0, T1, min) {
+      const key = code + '|' + T0, ov = WXO[key] || {};
+      const E = wxmEval(pdfTaf[code], T0, T1, min);
+      let def = null, src = '';
+      if (E.lvl != null && E.base) { def = E.base; src = T1 > T0 ? 'TAF 최악값' : 'TAF'; }
+      else { const l = (typeof wxLive !== 'undefined' && wxLive[code]) || {}; if (l.metar) { def = wxmMetric(tafElems(l.metar.split(/\s+/).slice(2))); src = 'METAR(현재)'; } }
+      const edited = ov.ceil !== undefined || ov.vis !== undefined;
+      const use = (def || edited) ? { ceil: ov.ceil !== undefined ? ov.ceil : (def ? def.ceil : Infinity), vis: ov.vis !== undefined ? ov.vis : (def ? def.vis : 9999) } : null;
+      let lvl = null, worstM = null, why = E.why;
+      if (edited) { lvl = wxmCmp(use, min); worstM = use; why = []; }
+      else if (E.lvl != null) { lvl = E.lvl; worstM = E.worst && E.worst.m ? E.worst.m : def; }
+      else if (def) { lvl = wxmCmp(def, min); worstM = def; why = []; }
+      return { key, def, edited, use, lvl, worstM, src: edited ? '직접 입력' : (src || '예보 없음'), why: Array.isArray(why) ? why : [], whyTxt: typeof E.why === 'string' ? E.why : '', fromTaf: E.lvl != null && !edited };
     }
     function wxmCompute() {
-      const S = WXM, p = pdfFlt || {}, w = flightWindow(), eta = w ? w.eta : null;
-      const dest = info.dest, altn = p.altn || info.altn || '';
-      const eet = p.tripMin != null ? p.tripMin : info.eetMinutes;
-      const short = eet != null ? eet <= 120 : null;
-      const land = { ceil: S.ceil, vis: S.vis }, am = wxmAltMin(S), altMin = { ceil: am.ceil, vis: am.vis };
-      const aEta = eta != null ? eta + (p.altnMin || 0) * 6e4 : null;
-      const D = wxmEval(pdfTaf[dest], eta, eta, land);
-      const A = altn ? wxmEval(pdfTaf[altn], aEta != null ? aEta - 36e5 : null, aEta != null ? aEta + 36e5 : null, altMin) : null;
+      const p = pdfFlt || {}, w = flightWindow(), eta = w ? w.eta : null, dest = info.dest || '';
+      const altList = [...new Set(String(p.altn || info.altn || '').split(/[\s,/]+/).filter(x => /^[A-Z]{4}$/.test(x)))];
+      const eet = p.tripMin != null ? p.tripMin : info.eetMinutes, short = eet != null ? eet <= 120 : null;
+      const nalt = Math.max(WXM.nalt || 1, altList.length);
+      const Dm = wxmDest(dest), land = { ceil: wxmNum(Dm.da), vis: wxmNum(Dm.vis) };
+      const aEta = eta != null ? eta + (p.altnMin || 0) * 6e4 : null, a0 = aEta != null ? aEta - 36e5 : null, a1 = aEta != null ? aEta + 36e5 : null;
       const metarLv = (c, min) => { const l = (typeof wxLive !== 'undefined' && wxLive[c]) || {}; if (!l.metar) return null; const m = wxmMetric(tafElems(l.metar.split(/\s+/).slice(2))); return { lv: wxmCmp(m, min), m }; };
-      const aMet = altn ? metarLv(altn, land) : null, dMet = metarLv(dest, land);
-      const L = []; let worst = 0;
-      const add = (t, txt) => { L.push([t, txt]); worst = Math.max(worst, { ok: 0, info: 0, warn: 1, bad: 2 }[t]); };
-      if (short != null) L.push(['info', `비행시간 ${Math.floor(eet / 60)}:${String(eet % 60).padStart(2, '0')} → ${short ? '2시간 이하' : '2시간 초과'} 구분 (5-30)`]);
       const icnGmp = /^(RKSI|RKSS)$/.test(dest);
       // 목적지
-      if (D.lvl == null && !(dMet)) { add('warn', `목적지 ${dest} 도착 시각(${eta != null ? wxmZ(eta) : '--'}) 예보를 확인할 수 없음 (${D.why}) → 교체공항 1개 이상 추가 지정 (5-31)`); }
+      const D = Object.assign({ code: dest, eta, min: land }, wxmWx(dest, eta, eta, land)), dMet = metarLv(dest, land), dl = [];
+      const dF = D.worstM ? wxmFmt(D.worstM) : '';
+      if (D.lvl == null && !dMet) dl.push(['warn', `ETA ${eta != null ? wxmZ(eta) : '--'} 예보를 확인할 수 없음${D.whyTxt ? ' (' + D.whyTxt + ')' : ''} → 위 칸에 직접 입력하거나 교체공항 1개 이상 추가 지정 (5-31)`]);
       else if (D.lvl === 2) {
-        if (icnGmp) add(S.nalt >= 2 ? 'warn' : 'bad', `목적지 ${dest} ETA ${wxmZ(eta)} 예보 ${wxmFmt(D.worst.m)} — 착륙최저치 미만. ICN·GMP 예외: 교체공항 2개 이상이면 허가·출발 가능 (현재 ${S.nalt}개)${S.nalt >= 2 ? '' : ' → 2개 이상 필요'}`);
-        else add('bad', `목적지 ${dest} ETA ${wxmZ(eta)} 예보 ${wxmFmt(D.worst.m)} — 착륙최저치 미만 → 원칙적으로 허가·출발 불가 (비행 개시는 PIC와 운항관리사 합의, 5-30)`);
-      } else if (D.lvl === 1) add('warn', `목적지 ${dest} ETA ${wxmZ(eta)}: Marginal — ${D.why.length ? D.why.join(' / ') : wxmFmt(D.worst.m) + ' (최저치와 같음)'} → 교체공항 1개 이상 추가 지정 (5-31)`);
-      else if (D.lvl === 0) add('ok', `목적지 ${dest} ETA ${wxmZ(eta)} 예보 ${wxmFmt(D.worst.m)} — 착륙최저치 ${land.ceil} ft / ${land.vis} m 이상`);
-      if (dMet && dMet.lv === 2) add(short ? 'bad' : 'warn', `목적지 현재 METAR ${wxmFmt(dMet.m)} — 착륙최저치 미만${short ? ' (2시간 이하: 기상보고도 요건 대상)' : ''}`);
-      // 교체공항
-      if (altn) {
-        if (A.lvl == null) add('warn', `교체 ${altn} 도착(${aEta != null ? wxmZ(aEta) : '--'}) ±1시간 예보를 확인할 수 없음 (${A.why})`);
-        else if (A.lvl === 2) add('bad', `교체 ${altn} ${wxmZ(aEta - 36e5)}~${wxmZ(aEta + 36e5)} 예보 ${wxmFmt(A.worst.m)} — 교체공항 최저치 ${altMin.ceil} ft / ${altMin.vis} m 미만 → 다른 교체공항 필요`);
-        else if (A.lvl === 1) add('warn', `교체 ${altn} ${wxmZ(aEta - 36e5)}~${wxmZ(aEta + 36e5)}: Marginal — ${A.why.length ? A.why.join(' / ') : wxmFmt(A.worst.m) + ' (최저치와 같음)'} → 교체공항 1개 이상 추가 지정 (5-31)`);
-        else add('ok', `교체 ${altn} ${wxmZ(aEta - 36e5)}~${wxmZ(aEta + 36e5)} 최악 예보 ${wxmFmt(A.worst.m)} — 교체최저치 ${altMin.ceil} ft / ${altMin.vis} m 이상`);
-        if (aMet && aMet.lv === 2 && short) add('warn', `교체 ${altn} 현재 METAR ${wxmFmt(aMet.m)} — 착륙최저치 미만 (2시간 이하: 교체공항 추가 지정 요건, 5-31)`);
-      }
-      // 추가 교체공항 요건 (5-31)
-      const needAdd = (D.lvl === 1 || (A && A.lvl === 1)) || (short === true && aMet && aMet.lv === 2) || (short === false && D.lvl === 2) || (D.lvl == null && !dMet);
+        if (icnGmp) dl.push([nalt >= 2 ? 'warn' : 'bad', `ETA ${wxmZ(eta)} ${D.src} ${dF} — 착륙최저치 ${land.ceil} ft / ${land.vis} m 미만. ICN·GMP 예외: 교체공항 2개 이상이면 허가·출발 가능 (현재 ${nalt}개)${nalt >= 2 ? '' : ' → 2개 이상 필요'}`]);
+        else dl.push(['bad', `ETA ${wxmZ(eta)} ${D.src} ${dF} — 착륙최저치 ${land.ceil} ft / ${land.vis} m 미만 → 원칙적으로 허가·출발 불가 (비행 개시는 PIC와 운항관리사 합의, 5-30)`]);
+      } else if (D.lvl === 1) dl.push(['warn', `ETA ${wxmZ(eta)} Marginal — ${D.why.length ? D.why.join(' / ') : dF + ' (최저치와 같음)'} → 교체공항 1개 이상 추가 지정 (5-31)`]);
+      else if (D.lvl === 0) dl.push(['ok', `ETA ${wxmZ(eta)} ${D.src} ${dF} — 착륙최저치 ${land.ceil} ft / ${land.vis} m 이상 충족`]);
+      if (dMet && dMet.lv === 2) dl.push([short ? 'bad' : 'warn', `현재 METAR ${wxmFmt(dMet.m)} — 착륙최저치 미만${short ? ' (2시간 이하: 기상보고도 요건 대상)' : ''}`]);
+      // 교체공항 (각각 자기 접근 minima)
+      const As = altList.map(code => {
+        const A = wxmAlt(code), am = wxmAltMin(A), W = wxmWx(code, a0, a1, am), al = [], aMet = metarLv(code, am.land);
+        const fm = W.worstM ? wxmFmt(W.worstM) : '', win = `${wxmZ(a0)}~${wxmZ(a1)}`;
+        if (W.lvl == null) al.push(['warn', `도착(${aEta != null ? wxmZ(aEta) : '--'}) ±1시간 예보를 확인할 수 없음${W.whyTxt ? ' (' + W.whyTxt + ')' : ''} → 위 칸에 직접 입력`]);
+        else if (W.lvl === 2) al.push(['bad', `${win} ${W.src} ${fm} — 교체최저치 ${am.ceil} ft / ${am.vis} m 미만 → 다른 교체공항 필요`]);
+        else if (W.lvl === 1) al.push(['warn', `${win} Marginal — ${W.why.length ? W.why.join(' / ') : fm + ' (최저치와 같음)'} → 교체공항 1개 이상 추가 지정 (5-31)`]);
+        else al.push(['ok', `${win} ${W.src} ${fm} — 교체최저치 ${am.ceil} ft / ${am.vis} m 이상 충족${W.worstM && W.worstM.ceil !== Infinity ? ` (운고 여유 +${W.worstM.ceil - am.ceil} ft)` : ''}`]);
+        if (aMet && aMet.lv === 2 && short) al.push(['warn', `현재 METAR ${wxmFmt(aMet.m)} — 착륙최저치 미만 (2시간 이하: 교체공항 추가 지정 요건, 5-31)`]);
+        return Object.assign({ code, A, am, a0, a1, al, aMet }, W);
+      });
+      // 비행시간에 따른 요건 요약 / 추가 교체공항 (5-31)
+      const L = [];
+      if (short != null) L.push(['info', `비행시간 ${Math.floor(eet / 60)}:${String(eet % 60).padStart(2, '0')} → ${short ? '2시간 이하' : '2시간 초과'} 구분 (5-30)`]);
+      const anyA = f => As.some(f);
+      const needAdd = D.lvl === 1 || anyA(a => a.lvl === 1) || (short === true && anyA(a => a.aMet && a.aMet.lv === 2)) || (short === false && D.lvl === 2) || (D.lvl == null && !dMet);
       if (needAdd) {
-        if (S.nalt >= 2) add('ok', `추가 교체공항 요건 해당 — OFP 교체공항 ${S.nalt}개로 충족 (추가 교체공항도 ETA±1시간 선정기준 충족 확인)`);
-        else add('warn', `추가 교체공항 1개 이상 지정 필요 (5-31) — 현재 ${S.nalt}개`);
+        if (nalt >= 2) L.push(['ok', `추가 교체공항 요건 해당 — OFP 교체공항 ${nalt}개로 충족 (추가 교체공항도 ETA±1시간 선정기준 충족 확인)`]);
+        else L.push(['warn', `추가 교체공항 1개 이상 지정 필요 (5-31) — 현재 ${nalt}개`]);
       }
+      const all = [...L, ...dl, ...As.flatMap(a => a.al)], sev = { ok: 0, info: 0, warn: 1, bad: 2 }, worst = Math.max(0, ...all.map(([t]) => sev[t]));
       const head = worst === 2 ? ['bad', '⛔'] : worst === 1 ? ['warn', '⚠️'] : ['ok', '✅'];
-      return { L, head, am, eta, aEta, altn, dest };
+      return { L, D, dl, As, head, eta, aEta, nalt, short, eet };
     }
-    function wxmOut() {
-      const R = wxmCompute(), C = { ok: '#4ade80', warn: '#fbbf24', bad: '#f87171', info: '#94a3b8' };
-      const ic = { ok: '✅', warn: '⚠️', bad: '⛔', info: 'ℹ️' };
-      return `<div style="display:flex;flex-direction:column;gap:4px">${R.L.map(([t, x]) => `<div style="font-size:13px;line-height:1.45;color:${C[t]}">${ic[t]} ${esc(x)}</div>`).join('')}</div>`;
-    }
+    const WXC = { ok: '#4ade80', warn: '#fbbf24', bad: '#f87171', info: '#94a3b8' }, WXI = { ok: '✅', warn: '⚠️', bad: '⛔', info: 'ℹ️' };
+    const wxmLines = L => `<div style="display:flex;flex-direction:column;gap:4px">${L.map(([t, x]) => `<div style="font-size:13px;line-height:1.45;color:${WXC[t]}">${WXI[t]} ${esc(x)}</div>`).join('')}</div>`;
+    const wxmBadge = L => { const sev = { ok: 0, info: 0, warn: 1, bad: 2 }, w = Math.max(0, ...L.map(([t]) => sev[t])); return w === 2 ? ['⛔ 미충족', '#f87171'] : w === 1 ? ['⚠️ 확인 필요', '#fbbf24'] : ['✅ 충족', '#4ade80']; };
+    const wxmCeilTxt = c => c === Infinity ? 'NSC' : String(c);
     function wxMinHtml() {
-      const S = WXM, R = wxmCompute(), am = R.am, inp = 'padding:6px 8px;border-radius:8px;background:#0d1117;border:1px solid #3a4756;color:#fff;font-size:15px;width:100%;min-width:0';
-      const lab = 'display:block;font-size:11px;color:#a9b8c9;margin-bottom:2px;font-weight:600';
+      const S = WXM, R = wxmCompute(), inp = 'padding:6px 8px;border-radius:8px;background:#0d1117;border:1px solid #3a4756;color:#fff;font-size:15px;width:100%;min-width:0';
+      const lab = 'display:block;font-size:11px;color:#a9b8c9;margin-bottom:2px;font-weight:600', card = 'margin-top:10px;padding:8px 10px;border-radius:10px;border:1px solid #334155;background:#0f1620';
+      const fld = (label, attrs, val) => `<label><span style="${lab}">${label}</span><input ${attrs} type="text" inputmode="numeric" value="${esc(val)}" style="${inp}"></label>`;
+      const wxIn = (X) => {
+        const u = X.use || { ceil: '', vis: '' };
+        return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+            ${fld('예상 운고 ft (BKN/OVC · 없으면 NSC)', `data-wxw="ceil" data-wxc="${esc(X.code)}" data-wxkey="${esc(X.key)}"`, X.use ? wxmCeilTxt(u.ceil) : '')}
+            ${fld('예상 시정 m (9999 = 10 km 이상)', `data-wxw="vis" data-wxc="${esc(X.code)}" data-wxkey="${esc(X.key)}"`, X.use ? u.vis : '')}
+          </div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:3px">기본값: ${esc(X.edited ? (X.def ? '직접 입력으로 바꿈' : '예보 없음') : X.src)}${X.edited ? ` <button type="button" data-wxreset="${esc(X.key)}" style="margin-left:6px;padding:1px 8px;border-radius:6px;border:1px solid #38bdf8;color:#7dd3fc;font-size:11px;font-weight:700">↺ TAF/METAR 값으로 되돌리기</button>` : ''}</div>`;
+      };
+      const D = R.D, b0 = wxmBadge(R.dl);
+      const destCard = D.code ? `<div style="${card}">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:14px;color:#e2e8f0">🛬 목적지 ${esc(D.code)}</b><span style="font-size:12px;color:#94a3b8">ETA ${D.eta != null ? wxmZ(D.eta) : '--'}</span><span data-wxm-badge="${esc(D.code)}" style="margin-left:auto;font-size:12px;font-weight:800;color:${b0[1]}">${b0[0]}</span></div>
+          ${wxIn(D)}
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
+            ${fld('착륙 DA(H)/MDA(H) ft', `data-wxk="da" data-wxa="dest" data-wxc="${esc(D.code)}"`, wxmDest(D.code).da)}
+            ${fld('착륙 시정 VIS m', `data-wxk="vis" data-wxa="dest" data-wxc="${esc(D.code)}"`, wxmDest(D.code).vis)}
+            ${fld('RVR m (참고)', `data-wxk="rvr" data-wxa="dest" data-wxc="${esc(D.code)}"`, wxmDest(D.code).rvr)}
+          </div>
+          <div data-wxm-res="${esc(D.code)}" style="margin-top:8px;padding-top:6px;border-top:1px dashed #2c3744">${wxmLines(R.dl)}</div>
+        </div>` : '';
+      const altCards = R.As.map(a => {
+        const A = a.A, c = esc(a.code), b = wxmBadge(a.al);
+        const two = A.cfg === 'two', fix = A.cfg === 'cat2' || A.cfg === 'cat3';
+        const pair = (sfx, t) => `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">${fld(`${t} DA(H)/MDA(H) ft`, `data-wxk="da${sfx}" data-wxa="alt" data-wxc="${c}"`, A['da' + sfx])}${fld(`${t} 착륙 시정 VIS m`, `data-wxk="vis${sfx}" data-wxa="alt" data-wxc="${c}"`, A['vis' + sfx])}</div>`;
+        return `<div style="${card}">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:14px;color:#e2e8f0">🔁 교체 ${c}</b><span style="font-size:12px;color:#94a3b8">도착 ±1시간 ${wxmZ(a.a0)}~${wxmZ(a.a1)}</span><span data-wxm-badge="${c}" style="margin-left:auto;font-size:12px;font-weight:800;color:${b[1]}">${b[0]}</span></div>
+          ${wxIn(a)}
+          <label style="display:block;margin-top:8px"><span style="${lab}">쓸 수 있는 접근 구성 (4.1.3.9)</span><select data-wxk="cfg" data-wxa="alt" data-wxc="${c}" style="${inp};font-size:12px">${WXM_CFG.map(([k, n]) => `<option value="${k}" ${A.cfg === k ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+          ${fix ? '' : two ? pair('', '접근 A') + pair('2', '접근 B') : pair('', '접근')}
+          <div data-wxm-am="${c}" style="margin-top:6px;font-size:13px;font-weight:700;color:#7dd3fc">교체 최저치 ${a.am.ceil} ft / ${a.am.vis} m <span style="font-weight:400;color:#94a3b8;font-size:11.5px">(${esc(a.am.f)})</span></div>
+          <div style="font-size:10.5px;color:#7b8a9b;line-height:1.45;margin-top:3px">${fix ? 'CAT II·III는 엔진 1개 불능 CAT III 운항이 가능한 기체만 적용 (Note 4). ' : ''}GPS 접근은 시설 1개로 취급 (Note 2). 활주로는 풍속 제한도 고려해 선정 (Note 5). Jeppesen "FOR FILING AS ALTERNATE" 값은 쓰지 않음 (Note 1).</div>
+          <div data-wxm-res="${c}" style="margin-top:8px;padding-top:6px;border-top:1px dashed #2c3744">${wxmLines(a.al)}</div>
+        </div>`;
+      }).join('');
       return `<details id="wx-min" data-wxm-det ${S.open ? 'open' : ''} style="border:1px solid #2c3744;border-radius:12px;background:#141a22;padding:8px 10px">
-        <summary style="cursor:pointer;font-size:13px;font-weight:700;color:#e2e8f0"><span id="wxm-head">${R.head[1]}</span> 목적지·교체 기상요건 <span style="font-weight:400;color:#94a3b8;font-size:11px">FOM 5.7.1 · 최저치 입력</span></summary>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
-          <label><span style="${lab}">착륙 DA(H) 운고 (ft)</span><input data-wxm="ceil" type="text" inputmode="numeric" value="${S.ceil}" style="${inp}"></label>
-          <label><span style="${lab}">시정 VIS (m) · 1/2 SM=800</span><input data-wxm="vis" type="text" inputmode="numeric" value="${S.vis}" style="${inp}"></label>
-          <label><span style="${lab}">RVR (m) · 참고</span><input data-wxm="rvr" type="text" inputmode="numeric" value="${S.rvr}" style="${inp}"></label>
-        </div>
-        <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:8px">
-          <label><span style="${lab}">교체공항 최저치 기준 (4.1.3.9)</span><select data-wxm="cfg" style="${inp};font-size:12px">${WXM_CFG.map(([k, n]) => `<option value="${k}" ${S.cfg === k ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
-          <label><span style="${lab}">OFP 교체공항 수</span><select data-wxm="nalt" style="${inp}">${[1, 2, 3].map(n => `<option value="${n}" ${S.nalt === n ? 'selected' : ''}>${n}개</option>`).join('')}</select></label>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-          <label><span style="${lab}">교체 운고 (ft) — 비우면 자동 <span id="wxm-ac">${am.autoCeil}</span></span><input data-wxm="aCeil" type="text" inputmode="numeric" value="${S.aCeil == null ? '' : S.aCeil}" placeholder="${am.autoCeil}" style="${inp}"></label>
-          <label><span style="${lab}">교체 시정 (m) — 비우면 자동 <span id="wxm-av">${am.autoVis}</span></span><input data-wxm="aVis" type="text" inputmode="numeric" value="${S.aVis == null ? '' : S.aVis}" placeholder="${am.autoVis}" style="${inp}"></label>
-        </div>
-        <div id="wxm-out" style="margin-top:10px;padding-top:8px;border-top:1px dashed #2c3744">${wxmOut()}</div>
-        <div style="font-size:10.5px;color:#7b8a9b;line-height:1.5;margin-top:8px">보조 도구 — 최종 판단은 회사 규정·Jeppesen 차트 기준. TAF는 시정·운고만 비교하며(RVR 환산은 RVR 최저치 800 m 이상일 때만 허용, 4.1.3.7), 최저치 기본값은 DA 200 ft / RVR 550 m·VIS 800 m(1/2 SM)입니다. 교체공항은 Jeppesen "FOR FILING AS ALTERNATE" 값 대신 4.1.3.9 표를 사용합니다. 풍속 제한(Wind)은 포함하지 않습니다.</div>
+        <summary style="cursor:pointer;font-size:13px;font-weight:700;color:#e2e8f0"><span id="wxm-head">${R.head[1]}</span> 목적지·교체 기상요건 <span style="font-weight:400;color:#94a3b8;font-size:11px">FOM 5.7.1 · 4.1.3.9 · 기상값·최저치 입력</span></summary>
+        <div style="display:flex;align-items:flex-start;gap:8px;margin-top:8px"><div id="wxm-sum" style="flex:1">${wxmLines(R.L)}</div>
+          <label style="width:96px"><span style="${lab}">OFP 교체공항 수</span><select data-wxn="1" style="${inp}">${[1, 2, 3].map(n => `<option value="${n}" ${R.nalt === n ? 'selected' : ''}>${n}개</option>`).join('')}</select></label></div>
+        ${destCard}${altCards}
+        <div style="font-size:10.5px;color:#7b8a9b;line-height:1.5;margin-top:8px">보조 도구 — 최종 판단은 회사 규정·Jeppesen 차트 기준. 기상값 기본은 TAF(목적지 ETA 시점 / 교체공항 도착 ±1시간 최악), TAF가 없으면 현재 METAR이며, 직접 고치면 그 값으로만 판정합니다(TEMPO·BECMG 미반영). TAF는 시정·운고만 비교하며(RVR 환산은 RVR 최저치 800 m 이상일 때만 허용, 4.1.3.7), 최저치는 공항별로 저장됩니다(기본 DA 200 ft / VIS 800 m).</div>
       </details>`;
     }
+    function wxmRerender() { const d = $('wx-min'); if (!d) return; const t = document.createElement('div'); t.innerHTML = wxMinHtml().trim(); d.replaceWith(t.firstElementChild); }
     function wxmRefresh() {
-      const o = $('wxm-out'); if (!o) return;
-      o.innerHTML = wxmOut(); const R = wxmCompute();
-      $('wxm-head').textContent = R.head[1]; $('wxm-ac').textContent = R.am.autoCeil; $('wxm-av').textContent = R.am.autoVis;
-      const ac = document.querySelector('[data-wxm="aCeil"]'), av = document.querySelector('[data-wxm="aVis"]');
-      if (ac) ac.placeholder = R.am.autoCeil; if (av) av.placeholder = R.am.autoVis;
+      if (!$('wx-min')) return;
+      const R = wxmCompute(), set = (sel, html) => { const e = document.querySelector(sel); if (e) e.innerHTML = html; };
+      $('wxm-head').textContent = R.head[1]; set('#wxm-sum', wxmLines(R.L));
+      const bd = (code, L) => { const e = document.querySelector(`[data-wxm-badge="${code}"]`), b = wxmBadge(L); if (e) { e.textContent = b[0]; e.style.color = b[1]; } };
+      if (R.D.code) { set(`[data-wxm-res="${R.D.code}"]`, wxmLines(R.dl)); bd(R.D.code, R.dl); }
+      R.As.forEach(a => { set(`[data-wxm-res="${a.code}"]`, wxmLines(a.al)); bd(a.code, a.al); set(`[data-wxm-am="${a.code}"]`, `교체 최저치 ${a.am.ceil} ft / ${a.am.vis} m <span style="font-weight:400;color:#94a3b8;font-size:11.5px">(${esc(a.am.f)})</span>`); });
     }
     document.addEventListener('input', e => {
-      const t = e.target; if (!t.dataset || t.dataset.wxm === undefined) return;
-      if (t.tagName === 'SELECT') return;
-      const v = String(t.value).trim() === '' ? null : Number(String(t.value).replace(',', '.'));
-      if (v != null && isNaN(v)) return;
-      const k = t.dataset.wxm; WXM[k] = (v == null && (k === 'aCeil' || k === 'aVis')) ? null : (v == null ? WXM[k] : v);
-      wxmSave(); wxmRefresh();
+      const t = e.target; if (!t.dataset || t.tagName === 'SELECT') return;
+      const v = String(t.value).trim();
+      if (t.dataset.wxw) {   // 기상값(운고·시정) 직접 입력 — 비우면 TAF/METAR 기본값
+        const o = WXO[t.dataset.wxkey] = WXO[t.dataset.wxkey] || {}, k = t.dataset.wxw;
+        if (v === '') delete o[k];
+        else if (k === 'ceil' && /^(nsc|ns|skc|clr|cavok|없음)$/i.test(v)) o.ceil = Infinity;
+        else { const n = Number(v.replace(',', '.')); if (isNaN(n)) return; o[k] = n; }
+        wxmRefresh(); return;
+      }
+      if (t.dataset.wxk !== undefined) {   // 공항별 최저치
+        const n = Number(v.replace(',', '.')); if (v === '' || isNaN(n)) return;
+        const tb = t.dataset.wxa === 'dest' ? WXM.dest : WXM.alt; (tb[t.dataset.wxc] = tb[t.dataset.wxc] || {})[t.dataset.wxk] = n;
+        wxmSave(); wxmRefresh();
+      }
     });
     document.addEventListener('change', e => {
-      const t = e.target; if (!t.dataset || t.dataset.wxm === undefined || t.tagName !== 'SELECT') return;
-      WXM[t.dataset.wxm] = t.dataset.wxm === 'nalt' ? +t.value : t.value;
-      if (t.dataset.wxm === 'cfg') { WXM.aCeil = null; WXM.aVis = null; const a = document.querySelector('[data-wxm="aCeil"]'), b = document.querySelector('[data-wxm="aVis"]'); if (a) a.value = ''; if (b) b.value = ''; }
-      wxmSave(); wxmRefresh();
+      const t = e.target; if (!t.dataset || t.tagName !== 'SELECT') return;
+      if (t.dataset.wxn) { WXM.nalt = +t.value; wxmSave(); wxmRefresh(); return; }
+      if (t.dataset.wxk === 'cfg') { (WXM.alt[t.dataset.wxc] = WXM.alt[t.dataset.wxc] || {}).cfg = t.value; wxmSave(); wxmRerender(); }
     });
+    document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-wxreset]'); if (b) { delete WXO[b.dataset.wxreset]; wxmRerender(); } });
     document.addEventListener('toggle', e => { const d = e.target; if (d && d.dataset && d.dataset.wxmDet !== undefined) { WXM.open = d.open; wxmSave(); } }, true);
-    window.wxmEval = wxmEval; window.wxmAltMin = wxmAltMin;
+    window.wxmEval = wxmEval; window.wxmAltMin = wxmAltMin; window.wxmCompute = wxmCompute;
     // ===== 보안 등급 (OFP 회사 공지 "ALERT LEVELS BY STATION") — 출발 지점 기준, 4 미만(3·2·1)이면 Flight Info 상단에 크게 표시 =====
     const SEC_NAME = { 5: 'LOW', 4: 'MODERATE', 3: 'SUBSTANTIAL', 2: 'SEVERE', 1: 'CRITICAL' }, SEC_KO = { 5: '평시', 4: '관심', 3: '주의', 2: '경계', 1: '심각' };
     const SEC_MEAS = {   // 대한항공 회사 공지(COAD)의 등급별 조치 요약 (OFP 원문: COUNTER-MEASURES)
