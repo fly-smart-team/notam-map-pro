@@ -1,7 +1,7 @@
 // NOTAM Pro (개인용 AI 버전) — 오프라인 캐시 서비스 워커
 // 전략: 온라인이면 최신 페이지를 먼저 받아 바로 보여주고(4초 안에 응답 없으면 저장본), 오프라인이면 저장본
 // 배포 버전(notammap)과 같은 도메인을 쓰므로 캐시 이름을 따로 씀
-const CACHE = 'notam-pro-v58';
+const CACHE = 'notam-pro-v59';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './coad-ko.json', './notam-ko.json', './wx-brief.json'];
 const EXTRA = ['./hot/FAA-HOT-2026-27.pdf', './hot/hot-data.json', './twy/index.json', './mel-ko.json', './twy/RCTP.txt', './twy/RKSI.txt', './docs/ZBAA-deicing.html', './docs/ZBAA-deice-pads.jpg', './docs/ZBAA-deice-stop.jpg', './docs/wind-limits.html'];   // 제빙액 HOT 표 (오프라인용, 실패해도 무시)
 

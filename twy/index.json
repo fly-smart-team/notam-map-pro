@@ -1527,7 +1527,7 @@
   },
   "RKPC": {
    "name": "Jeju",
-   "date": "2026-11-08",
+   "date": "2026-11-12",
    "amm": {
     "bbox": [
      126.46,
@@ -1642,6 +1642,7 @@
     "note": "OSM + 사용자 제공 AMM 캡처(2026-11-08) 대조. 공식 기준: AIP KOREA AD 2.24",
     "notesSrc": "Jeppesen 10-9 · 10-9A · 10-9A1",
     "notes": [
+     "AIP RKPC AD 2-3·2-5 (2026-05-28, 유효 2026-07-08)와 HS1~HS5 문구 대조 완료 — 기존 내용과 일치.",
      "Jeju Tower가 \"Hold short of G1\"을 지시하면, RWY 13/31~P 교차부에서 P를 따라 서쪽으로 가는 항공기는 RWY 13/31 정지위치 표지에서 대기.",
      "E3는 날개폭 36 m(118 ft) 이상(C130 포함) 사용 불가 — A321(35.8 m) 사용 가능.",
      "Code F 운항 시간 1400~2130 UTC. 공항 주변 조류 많음.",
@@ -2436,6 +2437,131 @@
       "txt": "DOM1A (날개폭 28.5 m 이하)"
      }
     ]
+   }
+  },
+  "RKJY": {
+   "name": "Yeosu",
+   "date": "2026-11-12",
+   "amm": {
+    "bbox": [
+     127.58,
+     34.815,
+     127.66,
+     34.87
+    ],
+    "hs": [],
+    "src": "AIP KOREA RKJY AD CHART 2-1·2-3 (2026-05-28, 유효 2026-07-08)",
+    "notesSrc": "AIP KOREA RKJY AD CHART 2-1·2-3 (2026-05-28, 유효 2026-07-08)",
+    "notes": [
+     "주파수: TWR 122.5 · GND 118.525. 계류장 표고 19 m.",
+     "AIP 주의: 관제 허가 없이 활주로에 진입하지 말 것 (주기장·유도로 출입 시 활주로 정지위치 확인).",
+     "AIP 차트에 Hot Spot(HS) 지정 없음."
+    ]
+   },
+   "ver": {
+    "lv": "C",
+    "txt": "유도로 이름 미대조 (OSM 원본) · AIP 차트(2026-05-28) 제원·주의사항 참고"
+   }
+  },
+  "RKTN": {
+   "name": "Daegu",
+   "date": "2026-11-12",
+   "amm": {
+    "bbox": [
+     128.6,
+     35.865,
+     128.72,
+     35.925
+    ],
+    "hs": [],
+    "src": "AIP KOREA RKTN AD CHART 2-3·2-4 (2026-05-28, 유효 2026-07-08)",
+    "notesSrc": "AIP KOREA RKTN AD CHART 2-3·2-4 (2026-05-28, 유효 2026-07-08)",
+    "notes": [
+     "주파수: TWR 126.2 · 236.6 · 365.0 / GND 121.95 · 275.8.",
+     "유도로 F1: 폭 23 m, PCR 633/R/B/X/T (콘크리트). 계류장 PCR 633/R/B/W/T · 587/R/B/W/T (콘크리트), 559/F/B/X/T (아스팔트).",
+     "⚠ 주기장 4번: Code D 항공기 기준 유도선과 장애물 간 이격이 약 2.1 m 부족 (AIP 주석). Code D = 날개폭 36 m 이상 52 m 미만 — A321(35.8 m)은 Code C.",
+     "AIP 차트에 Hot Spot(HS) 지정 없음."
+    ]
+   },
+   "ver": {
+    "lv": "C",
+    "txt": "유도로 이름 미대조 (OSM 원본) · AIP 차트(2026-05-28) 제원·주의사항 참고"
+   }
+  },
+  "RKJJ": {
+   "name": "Gwangju",
+   "date": "2026-11-12",
+   "amm": {
+    "bbox": [
+     126.76,
+     35.1,
+     126.86,
+     35.155
+    ],
+    "hs": [],
+    "src": "AIP KOREA RKJJ AD CHART 2-3·2-4 (2026-05-28, 유효 2026-07-08)",
+    "notesSrc": "AIP KOREA RKJJ AD CHART 2-3·2-4 (2026-05-28, 유효 2026-07-08)",
+    "notes": [
+     "주파수: TWR 118.05 · 236.6 · 254.6 / GND 121.8 · 275.8. 계류장 표고 51 ft.",
+     "⚠ 고밀도 교통 지역 — ATC 지시를 주의 깊게 들을 것. 민항기는 TWR 허가 없이 G1·G2에 진입 금지 (AIP).",
+     "유도로 G: 폭 23 m, PCR 686/R/B/W/T · G6 36 m · G7 31 m, PCR 686/R/B/W/T. 계류장(아스팔트) PCR 503/F/B/X/T.",
+     "전 유도로 중심선·가장자리등 점등. 주기장 상세는 Apron management Unit (82-62-940-0312~9)에 문의."
+    ]
+   },
+   "ver": {
+    "lv": "C",
+    "txt": "유도로 이름 미대조 (OSM 원본) · AIP 차트(2026-05-28) 제원·주의사항 참고"
+   }
+  },
+  "RKTU": {
+   "name": "Cheongju",
+   "date": "2026-11-12",
+   "amm": {
+    "bbox": [
+     127.45,
+     36.69,
+     127.55,
+     36.745
+    ],
+    "hs": [],
+    "src": "AIP KOREA RKTU AD CHART 2-3·2-4 (2026-05-28, 유효 2026-07-08)",
+    "notesSrc": "AIP KOREA RKTU AD CHART 2-3·2-4 (2026-05-28, 유효 2026-07-08)",
+    "notes": [
+     "주파수: TWR 118.7 · 126.2 / GND 121.875. 계류장 표고 170 ft.",
+     "HS1: 활주로 24R 정지선(Critical area)을 ATC 허가 없이 넘지 말 것 (AIP 문구: \"pay extra caution to Critical area and do not cross the hold line for RWY 24R without authorization from ATC\").",
+     "HS2: 헬기 이착륙 항공기에 특히 주의하며 Hot Spot 일대를 택시.",
+     "평행 유도로에 차량·정비 장비가 잦음 — 주의.",
+     "유도로 폭/강도: B3·B4 33 m (PCR 577 F/A/X/T) · E1 36 m (PCR 577) · E2 30 m (PCR 577) · A3 25 m (PCR 629 F/B/X/T) · C3 33 m · D3 28 m (PCR 1 006 R/B/W/T) · C3·D3 교차부 PCR 1 006 · 계류장 PCR 1 006 R/B/W/T. 제빙패드(PAD) 2·3·4 있음.",
+     "HS1·HS2 지도상 위치는 아직 표시하지 않음 (AIP 차트 좌표 대조 필요)."
+    ]
+   },
+   "ver": {
+    "lv": "C",
+    "txt": "유도로 이름 미대조 (OSM 원본) · AIP 차트(2026-05-28) 제원·주의사항 참고"
+   }
+  },
+  "RKPK": {
+   "name": "Busan Gimhae",
+   "date": "2026-11-12",
+   "amm": {
+    "bbox": [
+     128.9,
+     35.155,
+     128.98,
+     35.21
+    ],
+    "hs": [],
+    "src": "AIP KOREA RKPK AD CHART 2-3 (2026-07-23, 유효 2026-09-02)",
+    "notesSrc": "AIP KOREA RKPK AD CHART 2-3 (2026-07-23, 유효 2026-09-02)",
+    "notes": [
+     "유도로 W1·G1~G3은 군 전용(N/A), W3은 군 정비용 — 민항기 사용 대상 아님. 유도로 R: PCR 662 F/B/X/T · H: PCR 621 F/A/X/T.",
+     "특수 유도선(Specific taxilane): G7~G11 구간 · G11. 격리 주기장 E1. 제빙패드·주기장 INS 좌표표는 AIP AD 2-3·2-4 참조.",
+     "이 차트는 개정 시행 2026-09-02 (AIRAC 반영본)."
+    ]
+   },
+   "ver": {
+    "lv": "C",
+    "txt": "유도로 이름 미대조 (OSM 원본) · AIP 차트(2026-05-28) 제원·주의사항 참고"
    }
   }
  },
