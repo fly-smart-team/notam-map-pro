@@ -4861,7 +4861,7 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
         }
         const kd = document.createElement('div'); kd.style.cssText = 'background:#0b1220;padding:2px 8px 10px;border-radius:0 0 8px 8px';
         kd.innerHTML = R.at ? hcAtKoHtml(R) : (['snow', 'snfg', 'snra'].includes(hcS.precip) ? hotKoHtml(74, false).replace(/<div style="margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid #334155[\s\S]*$/, '') : '') + hotKoHtml(R.page, !!hcS.adj, R.notes);
-        if (hcS.adj) { const bd = document.createElement('div'); bd.style.cssText = 'display:grid;padding-top:6px'; bd.innerHTML = hcAdjBasisHtml(true); kd.appendChild(bd); }
+        if (hcS.adj) { const bd = document.createElement('div'); bd.style.cssText = 'display:grid;padding-top:6px'; bd.innerHTML = hcAdjBasisHtml(false); kd.appendChild(bd); }
         box.appendChild(kd);
       } catch (e) { box.innerHTML = `<div class="text-[12px] text-rose-600 p-2">원본 표를 열지 못했습니다: ${esc(e.message || e)}</div>`; }
     }
