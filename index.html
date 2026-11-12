@@ -894,7 +894,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/12 09:20 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/12 17:40 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🔍 MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="px-2.5 py-1.5 rounded-lg border text-[12px] font-bold hover:opacity-90" style="border-color:#a78bfa;background:rgba(76,29,149,.35);color:#ddd6fe">🥶 Cold Temp</button>
@@ -4415,18 +4415,30 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
     // ===== 🧮 HOT 계산기 (FAA HOT 표 데이터: hot/hot-data.json — 원본 표와 칸별 대조 검증 후 생성) =====
     // 결과는 항상 원본 표 페이지의 해당 칸에 테두리를 그려 함께 보여준다 (눈으로 재확인용)
     let hcData = null, hcS = null;
+    // [키, FAA 표 원문(영어), 한글 설명] — 원문은 FAA HOT 표(Table 1~4)의 열 제목·각주 그대로
     const HC_PRECIP = [
-      ['frost', '서리 (Active Frost)'],
-      ['fzfg', '어는 안개 · 어는 안개비 · 얼음 결정 (FZFG · 영하 BR · IC)'],
-      ['snfg', '눈 + 어는 안개 (SN + FZFG)'],
-      ['snow', '눈 · 싸락눈 · 눈 알갱이 (SN · SG · SP)'],
-      ['fzdz', '어는 이슬비 (FZDZ, 강도 무관)'],
-      ['lfzr', '약한 어는 비 (-FZRA)'],
-      ['snra', '눈 섞인 비 (보통 눈 + 비)'],
-      ['rcsw', '차가운 날개 위의 비 (Cold-Soaked Wing, 0°C 초과)'],
-      ['pl', '얼음 싸라기·작은 우박 (PL·GS · SNPL 포함) → 허용 시간'],
-      ['other', '기타: 강한 눈 · 강한 얼음 싸라기(+PL) · 보통 이상 어는 비 · 우박(GR)']
+      ['frost', 'Active Frost', '서리 — 날개 위 서리가 생기는 중 (Table 1)'],
+      ['fzfg', 'Freezing Fog, Freezing Mist, or Ice Crystals', '어는 안개 · 어는 박무 · 얼음 결정 (FZFG · 영하 BR · IC)'],
+      ['snfg', 'Snow mixed with Freezing Fog', '눈 + 어는 안개 (SN + FZFG)'],
+      ['snow', 'Snow, Snow Grains or Snow Pellets', '눈 · 눈 알갱이 · 싸락눈 (SN · SG · SP) — Type I은 매우 약함/약함/보통, 강도는 Table 57'],
+      ['fzdz', 'Freezing Drizzle', '어는 이슬비 (FZDZ) — 약·보통·강 모두 포함'],
+      ['lfzr', 'Light Freezing Rain', '약한 어는 비 (-FZRA)'],
+      ['snra', 'Moderate Snow mixed with Rain', '보통 눈 + 비 (약한 눈+비는 Light Freezing Rain 사용)'],
+      ['rcsw', 'Rain on Cold-Soaked Wing', '차가운 날개(Cold-Soaked Wing) 위의 비 — 0°C 초과만'],
+      ['pl', 'Ice Pellets (or Small Hail) — Allowance Times (Table 55/56)', '얼음 싸라기·작은 우박 (PL·GS, SNPL 포함) → 허용 시간'],
+      ['other', 'Other: Heavy snow, ice pellets, moderate and heavy freezing rain, small hail and hail', '기타 — 강한 눈 · 강한 얼음 싸라기(+PL) · 보통 이상 어는 비 · 우박(GR)']
     ];
+    // 강수 종류 선택: 왼쪽 FAA 원문 | 오른쪽 한글 설명을 가로로 나란히 (내부 값은 숨은 select[name=precip] 유지)
+    const hcPpRow = (o, sel) => `<span style="display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:10px;align-items:start;width:100%;text-align:left"><b style="font-size:13px;line-height:1.35;color:${sel ? '#fff' : '#e2e8f0'}">${esc(o[1])}</b><span style="font-size:12.5px;line-height:1.4;color:${sel ? '#bae6fd' : '#a9b8c9'}">${esc(o[2])}</span></span>`;
+    function hcPrecipPicker(v) {
+      const cur = HC_PRECIP.find(o => o[0] === v) || HC_PRECIP[0];
+      return `<div data-hc-pp style="position:relative">
+        <select name="precip" style="display:none">${HC_PRECIP.map(o => `<option value="${o[0]}" ${o[0] === cur[0] ? 'selected' : ''}>${esc(o[1])}</option>`).join('')}</select>
+        <button type="button" data-hc-ppbtn style="display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border-radius:8px;background:#0f172a;border:1px solid #38bdf8;color:#fff"><span data-hc-pplbl style="flex:1;min-width:0">${hcPpRow(cur, false)}</span><span style="color:#7dd3fc;font-size:12px">▾</span></button>
+        <div data-hc-pppanel style="display:none;margin-top:4px;border:1px solid #38bdf8;border-radius:10px;background:#0b1220;max-height:60vh;overflow:auto">
+          ${HC_PRECIP.map(o => `<button type="button" data-hc-ppopt="${o[0]}" style="display:block;width:100%;padding:8px 10px;border:0;border-bottom:1px solid #1e293b;background:${o[0] === cur[0] ? '#0c4a6e' : 'transparent'}">${hcPpRow(o, o[0] === cur[0])}</button>`).join('')}
+        </div></div>`;
+    }
     // 회사 기종 → Type I 표 날개 표면 (날개가 주로 복합재: A220·A350·787·777-9 / 나머지 알루미늄)
     const HC_AC = [
       ['A220', 'A220', 'comp', /^BCS[13]$/], ['A321', 'A321', 'alu', /^A32[01N]|^A21N$/], ['A330', 'A330', 'alu', /^A33/], ['A350', 'A350', 'comp', /^A35/],
@@ -4656,6 +4668,16 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
           if (lg) { hcLogClick(lg); return; }
           const ob = e.target.closest('[data-hc-oat],[data-hc-oatset]');
           if (ob) { const inp = m.querySelector('[name="oat"]'); inp.value = ob.dataset.hcOatset != null ? ob.dataset.hcOatset : (Number(inp.value) || 0) + Number(ob.dataset.hcOat); hcFromForm({ target: inp }); m.querySelectorAll('[data-hc-oatset]').forEach(b => { const on = +b.dataset.hcOatset === +inp.value; b.className = `px-2 h-8 rounded-md border text-[12.5px] mono ${on ? 'border-cyan-400 bg-cyan-700 text-white font-bold' : 'border-slate-600 bg-slate-900 text-slate-200'}`; }); return; }
+          const ppb = e.target.closest('[data-hc-ppbtn]');
+          if (ppb) { const pn = ppb.parentElement.querySelector('[data-hc-pppanel]'); pn.style.display = pn.style.display === 'none' ? 'block' : 'none'; return; }
+          const ppo = e.target.closest('[data-hc-ppopt]');
+          if (ppo) {
+            const box = ppo.closest('[data-hc-pp]'), sel = box.querySelector('select[name="precip"]'); sel.value = ppo.dataset.hcPpopt;
+            const o = HC_PRECIP.find(x => x[0] === sel.value) || HC_PRECIP[0];
+            box.querySelector('[data-hc-pplbl]').innerHTML = hcPpRow(o, false); box.querySelector('[data-hc-pppanel]').style.display = 'none';
+            box.querySelectorAll('[data-hc-ppopt]').forEach(b => { const on = b.dataset.hcPpopt === sel.value; b.style.background = on ? '#0c4a6e' : 'transparent'; b.innerHTML = hcPpRow(HC_PRECIP.find(x => x[0] === b.dataset.hcPpopt), on); });
+            hcFromForm({ target: sel }); return;
+          }
           const pk = e.target.closest('[data-hc-pick]');
           if (pk) { hcS.fluid = pk.dataset.hcPick; const fq = m.querySelector('[name="fq"]'); fq.value = ''; hcSuggest(''); m.querySelector('[name="fluid"]').value = hcS.fluid; hcDraw(false); const o = m.querySelector('[data-hc-out]'); o && o.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
         });
@@ -4708,7 +4730,7 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
               <button type="button" data-hc-oat="1" class="w-10 h-10 rounded-lg border border-slate-600 bg-slate-800 text-[20px] text-slate-100">＋</button>
               <span class="flex gap-1 flex-wrap ml-1">${[3, 0, -2, -3, -5, -8, -10, -14, -18, -22, -25].map(t => `<button type="button" data-hc-oatset="${t}" class="px-2 h-8 rounded-md border text-[12.5px] mono ${+S.oat === t ? 'border-cyan-400 bg-cyan-700 text-white font-bold' : 'border-slate-600 bg-slate-900 text-slate-200'}">${t > 0 ? '+' + t : t}</button>`).join('')}</span>
             </div></div>
-          <label style="display:block"><div class="text-[11px] text-slate-400 mb-0.5 flex items-center gap-1">강수·기상 종류 <button type="button" data-plg-open class="ml-auto px-1.5 py-0 rounded border border-cyan-600 text-cyan-200 text-[11px] font-bold">ⓘ PL·SP 구별</button></div>${hcSel('precip', HC_PRECIP, S.precip)}</label>
+          <label style="display:block"><div class="text-[11px] text-slate-400 mb-0.5 flex items-center gap-1">강수·기상 종류 <button type="button" data-plg-open class="ml-auto px-1.5 py-0 rounded border border-cyan-600 text-cyan-200 text-[11px] font-bold">ⓘ PL·SP 구별</button></div>${hcPrecipPicker(S.precip)}</label>
           <div data-hc-int style="display:${isSnow ? 'block' : 'none'};grid-column:1/-1"><div class="text-[11px] text-slate-400 mb-0.5">강설 강도</div>
             <div class="flex gap-3 text-[12px] text-slate-200 mb-1"><label><input type="radio" name="intMode" value="vis" ${S.intMode === 'vis' ? 'checked' : ''}> 시정으로 계산 (Table 57)</label><label><input type="radio" name="intMode" value="sel" ${S.intMode === 'sel' ? 'checked' : ''}> 직접 선택</label></div>
             <div class="flex gap-1.5"><input name="vis" type="number" step="100" value="${S.vis}" class="w-24 bg-slate-900 border border-slate-600 rounded-md px-2 py-1 text-[13px] mono text-slate-100" title="시정 (m)"><span class="text-[11px] text-slate-400 self-center">m</span>${hcSel('night', [['0', '주간'], ['1', '야간']], S.night ? '1' : '0')}${hcSel('int', [['VL', '매우 약함'], ['L', '약함'], ['M', '보통'], ['H', '강함']], S.int)}</div></div>
