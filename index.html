@@ -920,7 +920,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/14 03:50 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/14 04:10 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🔍 MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="px-2.5 py-1.5 rounded-lg border text-[12px] font-bold hover:opacity-90" style="border-color:#a78bfa;background:rgba(76,29,149,.35);color:#ddd6fe">🥶 Cold Temp</button>
@@ -963,6 +963,14 @@ input,select,textarea,button{font-size:max(1em,14px)}
           <input id="pdf-input" type="file" accept="application/pdf,.pdf" class="hidden" />
         </label>
         <div id="pdf-progress" class="hidden text-[11px] text-sky-400 mono">PDF 분석 중...</div>
+        <div class="flex items-stretch gap-2">
+          <label id="ret-dropzone" class="flex-1 flex flex-col items-center justify-center gap-0.5 border-2 border-dashed border-indigo-700/60 hover:border-indigo-400 rounded-xl p-3 cursor-pointer bg-indigo-950/20 text-center">
+            <span id="ret-pdf-label" class="text-xs font-bold text-indigo-300">🔄 Return flight OFP 첨부 (퀵턴·선택)</span>
+            <span id="ret-pdf-sub" class="text-[10px] text-slate-400">돌아오는 편 OFP를 추가하면 2번 운항정보·3번 노탐·Joint Brief에 반영됩니다</span>
+            <input id="ret-pdf-input" type="file" accept="application/pdf,.pdf" class="hidden" />
+          </label>
+          <button id="btn-ret-clear" type="button" style="display:none" class="px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold">✕ 빼기</button>
+        </div>
 
         <textarea id="fpl-input" rows="3" placeholder="FPL 전문을 직접 붙여넣을 수도 있습니다 (선택)"
           class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs mono text-slate-200 focus:outline-none focus:border-sky-500"></textarea>
@@ -993,7 +1001,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
           <button id="btn-pkg1-tab-dep" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-slate-200"><span id="tab-label-dep">출발 (DEP: --)</span></button>
           <button id="btn-pkg1-tab-dest" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-sky-600 text-white shadow"><span id="tab-label-dest">목적 (DEST: --)</span></button>
           <button id="btn-pkg1-tab-altn" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-slate-200"><span id="tab-label-altn">교체 (ALTN: --)</span></button>
-          <button id="btn-pkg1-tab-ret" data-pkg1-tab="RALTN" style="display:none" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-slate-200"><span data-tab-label="ret">복편교체 (--)</span></button>
+          <button id="btn-pkg1-tab-ret" data-pkg1-tab="RALTN" style="display:none" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-slate-200"><span data-tab-label="ret">Return 교체 (--)</span></button>
         </div>
       </section>
 
@@ -1094,7 +1102,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
           <h2 class="font-bold text-sm text-slate-100 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> 4. 노탐 브리핑 (OFP 순서 · 출발/도착/교체 · ERA · FIR)</h2>
         </div>
         <details id="brf-tools" class="group rounded-lg border border-amber-800/50 bg-amber-950/10">
-          <summary class="cursor-pointer select-none list-none flex items-center gap-2 flex-wrap px-2 py-1 text-[11px]"><span class="text-amber-300 font-bold"><span class="group-open:hidden">▸</span><span class="hidden group-open:inline">▾</span> ⏱ ETD·ETA 조정 · 🔄 퀵턴(복편)</span><span id="brf-tools-status" class="text-[10px] text-slate-400 font-mono-code">계획값 사용 중</span></summary>
+          <summary class="cursor-pointer select-none list-none flex items-center gap-2 flex-wrap px-2 py-1 text-[11px]"><span class="text-amber-300 font-bold"><span class="group-open:hidden">▸</span><span class="hidden group-open:inline">▾</span> ⏱ ETD·ETA 조정 · 🔄 퀵턴(Return flight)</span><span id="brf-tools-status" class="text-[10px] text-slate-400 font-mono-code">계획값 사용 중</span></summary>
           <div class="flex flex-col gap-1.5 p-2 pt-0">
             <div class="flex flex-col gap-1.5 bg-amber-950/30 p-2 rounded-lg border border-amber-700/40">
               <div class="flex items-center justify-between flex-wrap gap-1">
@@ -1122,22 +1130,21 @@ input,select,textarea,button{font-size:max(1em,14px)}
               </div>
             </div>
 
-            <!-- 퀵턴(복편) 연동 및 임의 시간 입력 컨트롤 -->
+            <!-- 퀵턴(Return flight) 연동 및 임의 시간 입력 컨트롤 -->
             <div class="self-start flex flex-wrap items-center gap-1.5 text-[11px] text-sky-300 bg-sky-950/40 px-2 py-0.5 rounded-md border border-sky-800/40">
               <label class="flex items-center gap-1 cursor-pointer">
                 <input type="checkbox" id="chk-quickturn" class="rounded bg-slate-900 border-sky-600 text-sky-500 focus:ring-0 w-3 h-3" />
-                <span>🔄 퀵턴(복편) 연동</span>
+                <span>🔄 퀵턴(Return flight) 연동</span>
               </label>
-              <button id="btn-qt-ofp" type="button" class="px-2 py-0.5 rounded bg-indigo-700 hover:bg-indigo-600 text-white font-bold text-[11px]">📎 복편 OFP 추가</button>
-              <span id="qt-ofp-name" class="text-[10px] text-indigo-200 font-mono-code"></span>
+
               <div id="quickturn-time-inputs" class="hidden flex-wrap items-center gap-1 pl-1 border-l border-sky-700/60 font-mono-code text-[10px]">
-                <input type="text" id="qt-return-etd" placeholder="복편ETD(Z)" maxlength="4" class="w-16 bg-slate-900 text-amber-300 text-center rounded border border-slate-700 px-1 py-0.5 focus:outline-none focus:border-amber-400" title="예: 1500 (목적지 복편 출발시각)" />
+                <input type="text" id="qt-return-etd" placeholder="Ret ETD(Z)" maxlength="4" class="w-16 bg-slate-900 text-amber-300 text-center rounded border border-slate-700 px-1 py-0.5 focus:outline-none focus:border-amber-400" title="예: 1500 (목적지 Return 출발시각)" />
                 <span class="text-slate-500">~</span>
-                <input type="text" id="qt-return-eta" placeholder="복편ETA(Z)" maxlength="4" class="w-16 bg-slate-900 text-emerald-300 text-center rounded border border-slate-700 px-1 py-0.5 focus:outline-none focus:border-emerald-400" title="예: 1900 (출발지 복편 도착시각)" />
+                <input type="text" id="qt-return-eta" placeholder="Ret ETA(Z)" maxlength="4" class="w-16 bg-slate-900 text-emerald-300 text-center rounded border border-slate-700 px-1 py-0.5 focus:outline-none focus:border-emerald-400" title="예: 1900 (출발지 Return 도착시각)" />
                 <span class="text-slate-500">정비</span>
                 <input type="text" id="qt-turn-min" inputmode="numeric" maxlength="3" value="70" class="w-10 bg-slate-900 text-sky-200 text-center rounded border border-slate-700 px-1 py-0.5 focus:outline-none focus:border-sky-400" title="지상 정비(Turn) 시간 (분)" />
                 <span class="text-slate-500">분 · 비행</span>
-                <input type="text" id="qt-return-eet" inputmode="numeric" maxlength="3" placeholder="EET" class="w-10 bg-slate-900 text-sky-200 text-center rounded border border-slate-700 px-1 py-0.5 focus:outline-none focus:border-sky-400" title="복편 비행시간 (분), 비우면 OFP EET" />
+                <input type="text" id="qt-return-eet" inputmode="numeric" maxlength="3" placeholder="EET" class="w-10 bg-slate-900 text-sky-200 text-center rounded border border-slate-700 px-1 py-0.5 focus:outline-none focus:border-sky-400" title="Return 비행시간 (분), 비우면 OFP EET" />
                 <span class="text-slate-500">분</span>
                 <button id="btn-qt-suggest" type="button" class="px-2 py-0.5 rounded bg-sky-700 hover:bg-sky-600 text-white font-bold">제안 적용</button>
               </div>
@@ -1197,7 +1204,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
           <button data-pkg1-tab="DEP" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-slate-200"><span data-tab-label="dep">출발 (DEP: --)</span></button>
           <button data-pkg1-tab="DEST" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-sky-600 text-white shadow"><span data-tab-label="dest">목적 (DEST: --)</span></button>
           <button data-pkg1-tab="ALTN" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-slate-200"><span data-tab-label="altn">교체 (ALTN: --)</span></button>
-          <button data-pkg1-tab="RALTN" style="display:none" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-slate-200"><span data-tab-label="ret">복편교체 (--)</span></button>
+          <button data-pkg1-tab="RALTN" style="display:none" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-slate-200"><span data-tab-label="ret">Return 교체 (--)</span></button>
         </div>
 
         <!-- 운항 시간대 안내 배너 -->
@@ -1973,7 +1980,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       const hint = document.getElementById('qt-suggest-hint');
       if (hint) {
         const tag = (qtEtdManual || qtEtaManual) ? ' · 수동 입력 중 (제안 적용으로 복귀)' : ' · 자동 제안';
-        hint.textContent = `복편 제안: ETD ${formatMinutes(sugEtd)}Z (정비 ${qtTurnMin}분) / ETA ${formatMinutes(etdVal + eet)}Z (비행 ${eet}분)${tag}`;
+        hint.textContent = `Return 제안: ETD ${formatMinutes(sugEtd)}Z (정비 ${qtTurnMin}분) / ETA ${formatMinutes(etdVal + eet)}Z (비행 ${eet}분)${tag}`;
       }
     }
 
@@ -1993,13 +2000,13 @@ input,select,textarea,button{font-size:max(1em,14px)}
       const hhmm = ms => new Date(ms).toISOString().slice(11, 16) + 'Z';
       const chip = (n, cls) => `<button type="button" onclick="viewNotamDetail('${esc(n.notamId)}', 'PKG1')" class="px-1.5 py-0.5 rounded border text-[10px] ${cls}">${esc(n.notamId)}</button>`;
 
-      // 목적지: 복편 출발 시점 유효 노탐 (출발 시 창: 복편 ETD ±1h, 목록 규칙과 동일)
+      // 목적지: Return 출발 시점 유효 노탐 (출발 시 창: Return ETD ±1h, 목록 규칙과 동일)
       const destRet = (package1AirportNotams || []).filter(n => !n._ret && n.airport === ci.dest).map(n => ({
         n, retActive: pkg1ActiveWin(n, rE - 36e5, rE + 36e5),
         outActive: pkg1ActiveWin(n, aA - 30 * 6e4, aA + 36e5),
         critical: ['RWY', 'NAV', 'APCH_MIN'].includes(n.category)
       }));
-      // 출발지: 복편 도착 시점 유효 노탐 (도착 창: 복편 ETA -30분~+1h)
+      // 출발지: Return 도착 시점 유효 노탐 (도착 창: Return ETA -30분~+1h)
       const depRet = (package1AirportNotams || []).filter(n => !n._ret && n.airport === ci.dep).map(n => ({
         n, retActive: pkg1ActiveWin(n, rA - 30 * 6e4, rA + 36e5),
         outActive: pkg1ActiveWin(n, aE - 10 * 6e4, aE + 36e5),
@@ -2015,17 +2022,17 @@ input,select,textarea,button{font-size:max(1em,14px)}
       box.innerHTML = `
         <div class="rounded-lg border border-sky-800/50 bg-sky-950/20 p-2 flex flex-col gap-1.5 text-[11px]">
           <div class="flex flex-wrap items-center gap-1.5">
-            <span class="text-sky-300 font-bold">🔄 복편 점검</span>
-            <span class="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-200">복편 출발 ${esc(ci.dest)} ${formatMinutes(quickturnReturnEtdMin)}Z: 유효 ${retDestActive}건</span>
-            <span class="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-200">복편 도착 ${esc(ci.dep)} ${formatMinutes(quickturnReturnEtaMin)}Z: 유효 ${retDepActive}건</span>
+            <span class="text-sky-300 font-bold">🔄 Return 점검</span>
+            <span class="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-200">Return 출발 ${esc(ci.dest)} ${formatMinutes(quickturnReturnEtdMin)}Z: 유효 ${retDestActive}건</span>
+            <span class="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-200">Return 도착 ${esc(ci.dep)} ${formatMinutes(quickturnReturnEtaMin)}Z: 유효 ${retDepActive}건</span>
             ${gapWarn ? `<span class="px-1.5 py-0.5 rounded bg-rose-950/60 border border-rose-800/60 text-rose-300 font-bold">⚠ 지상시간 ${gap}분 (최소 30분 권장)</span>` : `<span class="px-1.5 py-0.5 rounded bg-emerald-950/40 border border-emerald-800/50 text-emerald-300">지상시간 ${gap}분</span>`}
           </div>
           <div class="flex flex-wrap items-center gap-1">
-            <span class="text-emerald-300 font-bold">🟢 복편 출발 시 새로 유효 ${newDest.length}건</span>
+            <span class="text-emerald-300 font-bold">🟢 Return 출발 시 새로 유효 ${newDest.length}건</span>
             ${newDest.map(x => chip(x.n, 'border-emerald-700/60 bg-emerald-950/40 text-emerald-200')).join(' ') || '<span class="text-slate-500">없음</span>'}
           </div>
           <div class="flex flex-wrap items-center gap-1">
-            <span class="text-emerald-300 font-bold">🟢 복편 도착 시 새로 유효 ${newDep.length}건</span>
+            <span class="text-emerald-300 font-bold">🟢 Return 도착 시 새로 유효 ${newDep.length}건</span>
             ${newDep.map(x => chip(x.n, 'border-emerald-700/60 bg-emerald-950/40 text-emerald-200')).join(' ') || '<span class="text-slate-500">없음</span>'}
           </div>
         </div>`;
@@ -2142,7 +2149,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       if (altnTab) altnTab.textContent = `교체 (${altnStr})`;
       document.querySelectorAll('[data-tab-label]').forEach(el => {
         const k = el.dataset.tabLabel;
-        el.textContent = k === 'dep' ? `출발 (${depStr}${etdTxt})` : k === 'dest' ? `목적 (${destStr}${etaTxt})` : k === 'ret' ? `복편교체 (${(jbQT && jbQT.meta && jbQT.meta.altn) || '--'})` : `교체 (${altnStr})`;
+        el.textContent = k === 'dep' ? `출발 (${depStr}${etdTxt})` : k === 'dest' ? `목적 (${destStr}${etaTxt})` : k === 'ret' ? `Return 교체 (${(jbQT && jbQT.meta && jbQT.meta.altn) || '--'})` : `교체 (${altnStr})`;
       });
 
       if (chkLabel) {
@@ -2177,11 +2184,11 @@ input,select,textarea,button{font-size:max(1em,14px)}
         if (!info.dep && !info.dest) {
           timeBanner.textContent = "비행계획서(FPL/OFP)를 입력하거나 불러오세요.";
         } else if (isDep) {
-          timeBanner.textContent = `🛫 출발 ${depStr} (${etdOverride ? '조정' : '계획'} ETD ${formatMinutes(info.etdMinutes)}Z)${quickturnActive && retEtaMs ? ` ➔ 🔄 복편도착 ETA ${formatMinutes(quickturnReturnEtaMin)}Z` : ''}`;
+          timeBanner.textContent = `🛫 출발 ${depStr} (${etdOverride ? '조정' : '계획'} ETD ${formatMinutes(info.etdMinutes)}Z)${quickturnActive && retEtaMs ? ` ➔ 🔄 Return도착 ETA ${formatMinutes(quickturnReturnEtaMin)}Z` : ''}`;
         } else if (isDest) {
           timeBanner.textContent = `🛬 목적지 ${destStr} (${etdOverride || etaOverride ? '조정' : '계획'} ETA ${formatMinutes(info.etaMinutes)}Z)${quickturnActive && retEtdMs ? ` ➔ 🔄 퀵턴출발 ETD ${formatMinutes(quickturnReturnEtdMin)}Z` : ''}`;
         } else {
-          timeBanner.textContent = isRAltn ? `🔄 복편 교체공항 ${jbQT.meta.altn} (복편 도착 ETA ${formatMinutes(quickturnReturnEtaMin != null ? quickturnReturnEtaMin : jbQT.meta.etaAbs)}Z 기준 · 복편 OFP 노탐)` : `📍 교체공항 ${altnStr} (도착 ETA ${formatMinutes(info.etaMinutes)}Z 기준)`;
+          timeBanner.textContent = isRAltn ? `🔄 Return flight 교체공항 ${jbQT.meta.altn} (Return 도착 ETA ${formatMinutes(quickturnReturnEtaMin != null ? quickturnReturnEtaMin : jbQT.meta.etaAbs)}Z 기준 · Return flight OFP 노탐)` : `📍 교체공항 ${altnStr} (도착 ETA ${formatMinutes(info.etaMinutes)}Z 기준)`;
         }
       }
       if (filterTag) {
@@ -3635,7 +3642,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     const brfClosed = new Set(), brfOpenW = new Set();   // 사용자가 접은 노탐 / 펼친 참고(⚪) 노탐 — 다시 그려도 유지
     let brfRouteWords = null;      // 내 경로 픽스·항로 (원문에서 색 표시)
     let brfManualOnly = false;     // 🔎 수동 확인 필요만
-    let brfValidOnly = false;      // 유효 노탐만 (조정 ETD 기준, 퀵턴 시 복편 유효 포함)
+    let brfValidOnly = false;      // 유효 노탐만 (조정 ETD 기준, 퀵턴 시 Return 유효 포함)
     let brfSecF = null;            // 공항 필터: null(전체) | DEP | DEST | ALTN | ERA | FIR
     let brfTier = null;            // 등급 필터: null(전체) | 'R' | 'Y' | 'W'
     const BRF_SEC = { DEP: '출발', DEST: '목적', ALTN: '교체', REFILE: '재발부(REFILE)', EDTO: 'EDTO 교체', ERA: 'ERA', FIR: 'FIR' };
@@ -5319,13 +5326,13 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
         const w = ctx.w, ref = n.sec === 'DEST' || n.sec === 'ALTN' ? { ms: w.eta, label: 'ETA' } : n.sec === 'FIR' && win[2] === 'FIR 통과' ? { ms: win[0] + 30 * 6e4, label: '진입' } : { ms: w.etd, label: 'ETD' };
         try { return buildFlightWindowBadge(n, { etd: win[0], eta: win[1] }, notamIsActive(n, win[0], win[1]), { s: ref, e: ref }).badgeHtml; } catch (e) { return ''; }
       };
-      // 퀵턴(복편): 목적지 = 복편 ETD ±1h, 출발지 = 복편 ETA -30분~+1h 에 유효한지
+      // 퀵턴(Return flight): 목적지 = Return ETD ±1h, 출발지 = Return ETA -30분~+1h 에 유효한지
       const qtOn = typeof quickturnActive !== 'undefined' && quickturnActive && quickturnReturnEtdMin != null && quickturnReturnEtaMin != null && info.flightDate;
       let qB = 0; if (qtOn) { const [y, m, d] = info.flightDate.split('-').map(Number); qB = Date.UTC(y, m - 1, d); }
       const qtRet = n => {
         if (!qtOn) return null;
-        if (n.sec === 'DEST') { const rE = qB + quickturnReturnEtdMin * 6e4; return notamIsActive(n, rE - 36e5, rE + 36e5) ? `복편 출발 ${formatMinutes(quickturnReturnEtdMin)}Z 유효` : null; }
-        if (n.sec === 'DEP') { const rA = qB + quickturnReturnEtaMin * 6e4; return notamIsActive(n, rA - 30 * 6e4, rA + 36e5) ? `복편 도착 ${formatMinutes(quickturnReturnEtaMin)}Z 유효` : null; }
+        if (n.sec === 'DEST') { const rE = qB + quickturnReturnEtdMin * 6e4; return notamIsActive(n, rE - 36e5, rE + 36e5) ? `Return 출발 ${formatMinutes(quickturnReturnEtdMin)}Z 유효` : null; }
+        if (n.sec === 'DEP') { const rA = qB + quickturnReturnEtaMin * 6e4; return notamIsActive(n, rA - 30 * 6e4, rA + 36e5) ? `Return 도착 ${formatMinutes(quickturnReturnEtaMin)}Z 유효` : null; }
         return null;
       };
       // 원문 강조 기준: 구간별 시간대 (출발 ETD-10분~+1h · 도착 ETA-30분~+1h · 교체 ETA~교체도착+1h · FIR 통과)
@@ -6634,7 +6641,7 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
       if (WC) { E.turb = [[WC.turbKo, WC.turbEn]]; }
       // Enroute = 경로 설명 (주요 도시만), Enroute Weather = 이륙 후·착륙 전 시간 기준 기상
       const RB = jbRouteBrief();
-      h.push(qt ? `<h1>QUICK TURN BRIEFING</h1><p class="jb-sub">${esc(jbFlightNo(cs))} · ${esc(info.dep || '')} → ${esc(info.dest || '')} · ${esc(info.flightDate || '')} · 복편 OFP 기준</p>`
+      h.push(qt ? `<h1>QUICK TURN BRIEFING</h1><p class="jb-sub">${esc(jbFlightNo(cs))} · ${esc(info.dep || '')} → ${esc(info.dest || '')} · ${esc(info.flightDate || '')} · Return flight OFP 기준</p>`
         : `<h1>JOINT BRIEFING</h1><p class="jb-sub">${esc(jbFlightNo(cs))} · ${esc(info.dep || '')} → ${esc(info.dest || '')} · ${esc(info.flightDate || '')} · 작성 ${new Date().toISOString().slice(0, 16).replace('T', ' ')}Z</p>`);
       h.push(`<h2>1. Flight Information: CREW</h2><ul>
         ${li(`<b>가. Flight Number / Flight Leg :</b> ${esc(cs || '--')} / ${esc(aptKoEn(info.dep))} → ${esc(aptKoEn(info.dest))}`)}
@@ -6708,7 +6715,7 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
     // ===== 퀵턴: 돌아오는 편 OFP를 Joint Brief에만 반영 (노탐 분석·지도·2번 칸은 그대로) =====
     let jbQT = null;
     async function jbLoadQT(file) {
-      showToast('퀵턴 OFP 읽는 중…');
+      showToast('Return flight OFP 읽는 중…');
       const pdf = await openPdf(new Uint8Array(await file.arrayBuffer()));
       const L = [], E = [];
       for (let i = 1; i <= pdf.numPages; i++) { const c = await (await pdf.getPage(i)).getTextContent(); L.push(layoutTextFromItems(c.items)); E.push(textFromItemsEol(c.items)); }
@@ -6735,7 +6742,7 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
       }
     }
 
-    // ===== 복편 OFP (퀵턴): Joint Brief + 2번 운항정보 + 3번 Pkg1 복편 교체공항 노탐 =====
+    // ===== Return flight OFP (퀵턴): Joint Brief + 2번 운항정보 + 3번 Pkg1 Return flight 교체공항 노탐 =====
     function qtParseMeta(q) {
       const n = q.fpl.replace(/[Ø]/g, '0');
       const dof = n.match(/DOF\/(\d{2})(\d{2})(\d{2})/), apt = [...n.matchAll(/-([A-Z]{4})(\d{4})(?:\s+([A-Z]{4})(?=\s|$))?/g)];
@@ -6761,10 +6768,10 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
       const on = !!(jbQT && jbQT.meta);
       document.querySelectorAll('[data-pkg1-tab="RALTN"]').forEach(b => { b.style.display = on ? '' : 'none'; });
       if (!on && currentPkg1Tab === 'RALTN') { currentPkg1Tab = 'DEST'; document.querySelectorAll('[data-pkg1-tab]').forEach(b => { b.className = b.dataset.pkg1Tab === 'DEST' ? 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-sky-600 text-white shadow' : 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-slate-200'; }); }
-      const nm = $('qt-ofp-name');
-      if (nm) nm.textContent = on ? `✔ ${jbFlightNo((jbQT.fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '')} ${jbQT.meta.dep}→${jbQT.meta.dest} · 교체 ${jbQT.meta.altn || '--'} ✕` : '';
-      if (nm) nm.style.cursor = on ? 'pointer' : '';
-      const bt = $('btn-qt-ofp'); if (bt) bt.textContent = on ? '📎 복편 OFP 교체' : '📎 복편 OFP 추가';
+      const lb = $('ret-pdf-label'), sb = $('ret-pdf-sub'), cl = $('btn-ret-clear');
+      if (lb) lb.textContent = on ? `✔ Return flight OFP · ${jbFlightNo((jbQT.fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '')} ${jbQT.meta.dep}→${jbQT.meta.dest}` : '🔄 Return flight OFP 첨부 (퀵턴·선택)';
+      if (sb) sb.textContent = on ? `교체공항 ${jbQT.meta.altn || '--'} · 노탐 ${(jbQT.altnNotams || []).length}건 · 다른 파일을 올리면 교체됩니다` : '돌아오는 편 OFP를 추가하면 2번 운항정보·3번 노탐·Joint Brief에 반영됩니다';
+      if (cl) cl.style.display = on ? '' : 'none';
     }
     function qtClearReturn() {
       jbQT = null; package1AirportNotams = (package1AirportNotams || []).filter(n => !n._ret);
@@ -6776,14 +6783,14 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
       try {
         const q = await jbLoadQT(file);
         q.meta = qtParseMeta(q);
-        if (info.dest && q.meta.dep && q.meta.dep !== info.dest && !confirm(`복편 OFP 출발(${q.meta.dep})이 현재 OFP 도착(${info.dest})과 다릅니다. 그래도 넣을까요?`)) { jbQT = prev; return false; }
+        if (info.dest && q.meta.dep && q.meta.dep !== info.dest && !confirm(`Return flight OFP 출발(${q.meta.dep})이 현재 OFP 도착(${info.dest})과 다릅니다. 그래도 넣을까요?`)) { jbQT = prev; return false; }
         q.flt = parseFlightInfo(q.text, q.fpl);
         const parsed = parseOfpNotams(q.text);
         q.altnNotams = (parsed.airport || []).filter(n => n.pkg !== 2 && n.airport === q.meta.altn).map(n => ({ ...n, _ret: true }));
-        // 복편 교체공항이 OFP 노탐에 없으면(같은 공항 등) 이유를 알림
+        // Return flight 교체공항이 OFP 노탐에 없으면(같은 공항 등) 이유를 알림
         jbQT = q;
         qtReattach();
-        if (info.dep) {   // 퀵턴 시각 연동: 복편 OFP 시각을 그대로 사용
+        if (info.dep) {   // 퀵턴 시각 연동: Return flight OFP 시각을 그대로 사용
           quickturnActive = true; const c = $('chk-quickturn'); if (c) c.checked = true;
           const ti = $('quickturn-time-inputs'); if (ti) ti.style.display = 'flex';
           qtReturnEet = q.meta.eet || null; const te = $('qt-return-eet'); if (te && qtReturnEet) te.value = qtReturnEet;
@@ -6797,17 +6804,12 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
         const ov = $('jb-doc');
         if (ov) { ov.querySelectorAll('[data-jb-qt]').forEach(x => x.remove()); ov.insertAdjacentHTML('beforeend', jbQTHtml()); }
         try { jbQTBtn(); } catch (e) { }
-        showToast(`복편 OFP 추가 — 교체공항 ${q.meta.altn || '--'} 노탐 ${q.altnNotams.length}건`);
+        showToast(`Return flight OFP 추가 — 교체공항 ${q.meta.altn || '--'} 노탐 ${q.altnNotams.length}건`);
         return true;
-      } catch (e) { jbQT = prev; qtReattach(); alert('복편 OFP를 읽지 못했습니다: ' + (e.message || e)); return false; }
+      } catch (e) { jbQT = prev; qtReattach(); alert('Return flight OFP를 읽지 못했습니다: ' + (e.message || e)); return false; }
     }
-    function qtPickReturnOfp() {
-      let inp = $('qt-ofp-input');
-      if (!inp) { inp = document.createElement('input'); inp.type = 'file'; inp.id = 'qt-ofp-input'; inp.accept = 'application/pdf,.pdf'; inp.style.display = 'none'; document.body.appendChild(inp);
-        inp.addEventListener('change', () => { const f = inp.files && inp.files[0]; inp.value = ''; if (f) qtAddReturnOfp(f); }); }
-      inp.click();
-    }
-    // 2번 운항정보 아래 복편 카드 (복편 OFP 기준)
+    function qtPickReturnOfp() { const inp = $('ret-pdf-input'); if (inp) inp.click(); }
+    // 2번 운항정보 아래 Return 카드 (Return flight OFP 기준)
     function qtRetCardHtml() {
       const q = jbQT; if (!q || !q.meta) return '';
       const o = info, gap = quickturnReturnEtdMin != null && o.etaMinutes != null ? quickturnReturnEtdMin - o.etaMinutes : null;
@@ -6823,14 +6825,32 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
           const toc = pdfNav.find(x => x.name === 'TOC'), tocFl = toc && typeof toc.fl === 'number' ? toc.fl : (fls.length ? fls[0] : null);
           const fu = (p.unit || '').replace(/^100/, '').replace(/KGS?$/, 'KG'), fuel = v => v == null ? '--' : (/^100/.test(p.unit || '') ? v * 100 : v).toLocaleString() + (fu ? ' ' + fu : '');
           const px = p.pax, FL = v => 'FL' + String(v).padStart(3, '0');
+          const rM = q.fpl.match(/-[NKM]\d{3,4}[FSAM]\d{3,4}\s+([\s\S]*?)\n?\s*-[A-Z]{4}\d{4}/), route = rM ? rM[1].replace(/\s+/g, ' ').trim() : '';
+          const ed = (() => { try { return parseEdto(q.text); } catch (e) { return null; } })();
+          const mel = (() => { try { return parseOfpMel(q.text).items || []; } catch (e) { return []; } })();
+          const tb = (() => { try { return jbTurb(w && w.etd, p.tripMin ?? info.eetMinutes); } catch (e) { return []; } })();
+          const dn = (pdfExtras && pdfExtras.turb || []).map(g => `${g.sev}${g.lvl ? ' ' + g.lvl : ''}${g.segs.length ? ' · ' + g.segs.map(x => x[0] + '→' + x[1]).join(', ') : ''}`);
+          const row = (l, v) => `<div class="flex gap-2 text-[12px] leading-snug"><span class="shrink-0 w-[4.6rem] text-slate-400">${l}</span><span class="min-w-0 text-slate-100 break-words">${v}</span></div>`;
+          const extra = `<div class="grid grid-cols-2 gap-2">
+              ${tile('TRIP', hm(p.tripMin), p.tripFuel != null ? fuel(p.tripFuel) + (p.tripDist ? ' · ' + p.tripDist + 'NM' : '') : '')}
+              ${tile('TOF', fuel(p.tof), p.altnFuel != null ? 'ALTN ' + fuel(p.altnFuel) + (p.altnMin != null ? ' · ' + hm(p.altnMin) : '') : '')}
+              ${tile('화물', pdfExtras && pdfExtras.cargoLbs != null ? Math.round(pdfExtras.cargoLbs).toLocaleString() + ' LBS' : '--', '')}
+              ${tile('EDTO', ed ? `<span class="text-amber-300">${ed.minutes ? ed.minutes + '분' : 'Y'}</span>` : '아님', ed && ed.alts && ed.alts.length ? ed.alts.map(a => a.code).join(' ') : '')}
+            </div>
+            <div class="flex flex-col gap-1 rounded-lg border border-slate-800 bg-slate-900/50 p-2">
+              ${route ? row('경로', `<span class="mono text-[11px] text-slate-300">${esc(route)}</span>`) : ''}
+              ${row('예상 난기류', tb.length ? tb.map(x => esc(x)).join('<br>') : '<span class="text-slate-500">SR 6 이상 구간 없음</span>')}
+              ${dn.length ? row('디스패치 노트', dn.map(x => esc(x)).join('<br>')) : ''}
+              ${row('MEL/CDL', mel.length ? mel.map(x => `<span class="inline-block mono text-[11px] px-1 rounded border border-amber-700/60 text-amber-200 mr-1 mb-0.5">${esc(x.kind)} ${esc(x.no)}</span>`).join('') : '<span class="text-slate-500">없음</span>')}
+            </div>`;
           const turn = gap == null ? '' : `<span class="px-1.5 py-0.5 rounded border text-[10px] font-bold ${gap < 30 ? 'bg-rose-950/60 border-rose-800/60 text-rose-300' : 'bg-emerald-950/40 border-emerald-800/50 text-emerald-300'}">지상 ${gap >= 120 ? Math.floor(gap / 60) + 'h ' + (gap % 60) + 'm' : gap + '분'}${gap < 30 ? ' ⚠' : ''}</span>`;
           return `<div class="mt-3 rounded-xl border border-indigo-700/60 bg-indigo-950/20 p-3 flex flex-col gap-3" data-qt-ret-card>
             <div class="flex items-center flex-wrap gap-x-2.5 gap-y-1">
-              <span class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-indigo-600 text-white">🔄 복편 · QUICK TURN</span>
+              <span class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-indigo-600 text-white">🔄 Return flight · QUICK TURN</span>
               <span class="text-lg font-bold mono text-white">${esc(p.callsign || '--')}</span>
               <span class="text-sm font-bold text-sky-300">${esc(type ? (AC_NAMES[type] || type) : '--')}</span>
               <span class="text-[11px] text-slate-400 mono">${esc(p.reg || '')}</span>${turn}
-              <button type="button" data-qt-ret-remove class="ml-auto text-[10px] text-slate-400 underline">복편 OFP 빼기</button>
+              <button type="button" data-qt-ret-remove class="ml-auto text-[10px] text-slate-400 underline">Return flight OFP 빼기</button>
             </div>
             <div class="grid ${altn ? 'grid-cols-3' : 'grid-cols-2'} items-start gap-2">
               ${pt(info.dep, w && w.etd, info.etdMinutes, 'text-emerald-300', 'items-start text-left')}
@@ -6838,7 +6858,7 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
               ${altn ? `<div class="flex flex-col items-end text-right gap-0.5 min-w-0"><div class="text-xl font-bold mono text-purple-300 leading-none">${esc(altn)}</div><div class="text-sm text-slate-100 leading-tight">${esc(ko(altn) || '-')}</div><div class="mono text-[11px] text-purple-200 mt-1">교체 ${p.altnMin != null ? hm(p.altnMin) : '--'}</div><div class="mono text-[11px] text-slate-300">${esc(fuel(p.altnFuel))}</div></div>` : ''}
             </div>
             <div class="flex items-center gap-2 text-[12px] text-sky-200 mono"><span>✈︎ 비행시간</span><b class="text-sky-100">${hm(p.tripMin ?? info.eetMinutes)}</b></div>
-            <div class="flex flex-col gap-1.5"><span class="text-[11px] font-bold text-slate-300">🌤️ 복편 기상 · 기온</span>
+            <div class="flex flex-col gap-1.5"><span class="text-[11px] font-bold text-slate-300">🌤️ Return 기상 · 기온</span>
               <div class="grid ${altn ? 'grid-cols-3' : 'grid-cols-2'} gap-2">
                 ${renderWxCard(info.dep, 'ETD', w ? w.etd : null, 'text-emerald-300')}
                 ${renderWxCard(info.dest, 'ETA', w ? w.eta : null, 'text-emerald-300')}
@@ -6849,17 +6869,18 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
               ${tile('예약 현황', px ? `${px.f + px.c + px.y}명` : '--', px ? `F ${px.f}/${px.fc} · C ${px.c}/${px.cc} · Y ${px.y}/${px.yc}` : 'OFP에 예약 정보 없음', 'text-emerald-300')}
               ${tile('RAMP OUT', fuel(p.ramp), '')}
             </div>
-            <div class="text-[10px] text-slate-400">복편 교체공항(${esc(altn || '--')}) 노탐은 3번 Package 1의 「복편교체」 탭 · Joint Brief는 복편 포함하여 생성됩니다.</div>
+            ${extra}
+            <div class="text-[10px] text-slate-400">Return flight 교체공항(${esc(altn || '--')}) 노탐은 3번 Package 1의 「Return 교체」 탭 · Joint Brief는 Return 포함하여 생성됩니다.</div>
           </div>`;
         });
       } catch (e) { console.warn(e); return ''; }
     }
     const jbQTHtml = () => jbQT ? `<div data-jb-qt><div style="page-break-before:always;border-top:3px dashed #6366f1;margin:28px 0 10px"></div>${jbWithQT(() => buildJointBrief(true))}</div>` : '';
     const jbFull = () => buildJointBrief() + jbQTHtml();
-    function jbQTBtn() { const b = document.querySelector('[data-jb="qt"]'); if (!b) return; const cs = jbQT ? ((jbQT.fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '') : ''; b.innerHTML = jbQT ? `↩ 퀵턴 ${esc(jbFlightNo(cs))} ✕` : '↩ 퀵턴 OFP 추가'; }
+    function jbQTBtn() { const b = document.querySelector('[data-jb="qt"]'); if (!b) return; const cs = jbQT ? ((jbQT.fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '') : ''; b.innerHTML = jbQT ? `↩ Return ${esc(jbFlightNo(cs))} ✕` : '↩ Return flight OFP 추가'; }
     async function jbQTClick() {
       const docEl = $('jb-doc');
-      if (jbQT) { if (!confirm('복편(퀵턴) OFP를 빼시겠습니까? (3번 복편교체 노탐·복편 카드도 함께 빠집니다)')) return; qtClearReturn(); refreshAll(false); return; }
+      if (jbQT) { if (!confirm('Return flight(퀵턴) OFP를 빼시겠습니까? (3번 Return 교체 노탐·Return 카드도 함께 빠집니다)')) return; qtClearReturn(); refreshAll(false); return; }
       qtPickReturnOfp();
     }
     function openJointBrief() {
@@ -6905,7 +6926,7 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
             <span class="ml-auto flex gap-1.5 flex-wrap">
               <button type="button" data-jb="greet" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-[12px] text-slate-200">🌏 언어 확인</button>
               <button type="button" data-jb="rate" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-[12px] text-slate-200">🔊 속도 <b data-jb-rate>${jbRate < 0.8 ? '느리게' : '보통'}</b></button>
-              <button type="button" data-jb="qt" class="px-2.5 py-1.5 rounded-lg bg-indigo-700 text-[12px] font-bold text-white">↩ 퀵턴 OFP 추가</button>
+              <button type="button" data-jb="qt" class="px-2.5 py-1.5 rounded-lg bg-indigo-700 text-[12px] font-bold text-white">↩ Return flight OFP 추가</button>
               <button type="button" data-jb="regen" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-[12px] text-slate-200">↻ 다시 생성</button>
               <button type="button" data-jb="copy" class="px-2.5 py-1.5 rounded-lg bg-sky-700 text-[12px] font-bold text-white">📋 복사 (구글 문서에 붙여넣기)</button>
               <button type="button" data-jb="doc" class="px-2.5 py-1.5 rounded-lg bg-emerald-700 text-[12px] font-bold text-white">⬇️ 문서 파일 저장 (.doc)</button>
@@ -8667,9 +8688,13 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
     }
     $('chk-pkg1-time-filter').addEventListener('change', e => { pkg1TimeFilterActive = e.target.checked; renderPackage1Notams(); });
     $('pkg1-sort-select').addEventListener('change', e => { pkg1SortMode = e.target.value; renderPackage1Notams(); });
-    $('btn-qt-ofp').addEventListener('click', qtPickReturnOfp);
-    $('qt-ofp-name').addEventListener('click', () => { if (jbQT && confirm('복편 OFP를 빼시겠습니까?')) { qtClearReturn(); refreshAll(false); } });
-    document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-qt-ret-remove]')) { if (confirm('복편 OFP를 빼시겠습니까?')) { qtClearReturn(); refreshAll(false); } } });
+    $('ret-pdf-input').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) qtAddReturnOfp(f); });
+    { const rd = $('ret-dropzone');
+      rd.addEventListener('dragover', e => { e.preventDefault(); rd.classList.add('border-indigo-400'); });
+      rd.addEventListener('dragleave', () => rd.classList.remove('border-indigo-400'));
+      rd.addEventListener('drop', e => { e.preventDefault(); rd.classList.remove('border-indigo-400'); const f = e.dataTransfer.files[0]; if (f) qtAddReturnOfp(f); }); }
+    $('btn-ret-clear').addEventListener('click', () => { if (jbQT && confirm('Return flight OFP를 빼시겠습니까?')) { qtClearReturn(); refreshAll(false); } });
+    document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-qt-ret-remove]')) { if (confirm('Return flight OFP를 빼시겠습니까?')) { qtClearReturn(); refreshAll(false); } } });
     $('chk-quickturn').addEventListener('change', e => {
       quickturnActive = e.target.checked;
       $('quickturn-time-inputs').style.display = quickturnActive ? 'flex' : 'none';
@@ -8689,7 +8714,7 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
       $('qt-return-eet').addEventListener('change', e => { const v = parseInt(e.target.value, 10); qtReturnEet = (!isNaN(v) && v > 0 && v < 900) ? v : null; resetManualAndRender(); });
       $('btn-qt-suggest').addEventListener('click', resetManualAndRender);
     }
-    // 퀵턴 입력이 바뀌면 3번 노탐 브리핑의 복편 배지도 갱신 (위 핸들러가 복편 시각을 먼저 계산)
+    // 퀵턴 입력이 바뀌면 3번 노탐 브리핑의 Return 배지도 갱신 (위 핸들러가 Return 시각을 먼저 계산)
     [['chk-quickturn', 'change'], ['qt-return-etd', 'input'], ['qt-return-eta', 'input'], ['qt-turn-min', 'change'], ['qt-return-eet', 'change'], ['btn-qt-suggest', 'click']]
       .forEach(([id, ev]) => { const el = $(id); if (el) el.addEventListener(ev, () => { try { renderBriefing(); } catch (er) { console.warn(er); } }); });
     $('era2-chips').addEventListener('change', e => {
