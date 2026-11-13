@@ -883,6 +883,32 @@ input,select,textarea,button{font-size:max(1em,14px)}
 </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
+<div id="lockScr" style="position:fixed;inset:0;z-index:2147483647;background:#050b18;display:none;align-items:center;justify-content:center;padding:24px;font-family:system-ui,-apple-system,sans-serif">
+<form id="lockForm" style="width:100%;max-width:340px;text-align:center;color:#e2e8f0">
+<div style="font-size:44px">🔒</div>
+<div style="font-size:19px;font-weight:800;margin:6px 0 4px">잠시 사용이 제한되어 있습니다</div>
+<div style="font-size:13px;color:#94a3b8;margin-bottom:16px">비밀번호를 입력하세요</div>
+<input id="lockPw" type="password" autocomplete="off" autocapitalize="off" style="width:100%;box-sizing:border-box;padding:13px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:17px;text-align:center">
+<div id="lockErr" style="color:#fb7185;font-size:13px;min-height:20px;margin:8px 0"></div>
+<button type="submit" style="width:100%;padding:13px;border:0;border-radius:10px;background:#0ea5e9;color:#fff;font-size:16px;font-weight:700">확인</button>
+</form></div>
+<script>
+(function(){
+  var H='776c793654c3c418669d8a8cb3558b22ed31e04bda349ca920a620378646f245', K='notamLock.ok.v1', S=document.getElementById('lockScr');
+  function ok(){ try{ return localStorage.getItem(K)===H; }catch(e){ return false; } }
+  function sha(t){ var b=new TextEncoder().encode(t); return crypto.subtle.digest('SHA-256',b).then(function(d){ return Array.from(new Uint8Array(d)).map(function(x){return x.toString(16).padStart(2,'0');}).join(''); }); }
+  if(ok()) return;
+  S.style.display='flex'; document.documentElement.style.overflow='hidden';
+  document.getElementById('lockForm').addEventListener('submit',function(e){
+    e.preventDefault(); var v=document.getElementById('lockPw').value;
+    sha('notam-lock-v1|'+v).then(function(h){
+      if(h===H){ try{localStorage.setItem(K,H);}catch(_){} S.style.display='none'; document.documentElement.style.overflow=''; }
+      else { document.getElementById('lockErr').textContent='비밀번호가 맞지 않습니다'; document.getElementById('lockPw').value=''; }
+    });
+  });
+})();
+</script>
+
   <div id="offline-bar">✈ 오프라인 — 저장된 자료·OFP 값으로 표시 중 <span id="offline-since" style="font-weight:400;color:#cbd5e1"></span></div>
   <!-- 기체 위치 · 출도착 팝업 (기번 버튼으로 열기) -->
   <div id="ac-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(2,6,23,.72);padding:16px;overflow:auto">
@@ -894,7 +920,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/12 18:20 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/13 13:40 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🔍 MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="px-2.5 py-1.5 rounded-lg border text-[12px] font-bold hover:opacity-90" style="border-color:#a78bfa;background:rgba(76,29,149,.35);color:#ddd6fe">🥶 Cold Temp</button>
