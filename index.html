@@ -920,7 +920,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/14 04:10 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/14 04:30 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🔍 MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="px-2.5 py-1.5 rounded-lg border text-[12px] font-bold hover:opacity-90" style="border-color:#a78bfa;background:rgba(76,29,149,.35);color:#ddd6fe">🥶 Cold Temp</button>
@@ -4574,7 +4574,7 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
       const lv = (typeof wxLive !== 'undefined' && wxLive[dep]) || {};
       let el = null, raw = '', when = Date.now(), srcTxt = '';
       if (lv.metar) { el = tafElems(lv.metar.split(/\s+/).slice(2)); raw = lv.metar; srcTxt = 'METAR'; S.oat = metarTemp(lv.metar); }
-      else if (pdfTaf && pdfTaf[dep] && w) { const r = tafAt(pdfTaf[dep], w.etd); el = { ...r.st, wx: [...(r.st.wx || []), ...r.notes.flatMap(g => (g.el && g.el.wx) || [])] }; raw = pdfTaf[dep].raw || ''; when = w.etd; srcTxt = 'ETD TAF'; }
+      else if (pdfTaf && tafOf(dep) && w) { const r = tafAt(tafOf(dep), w.etd); el = { ...r.st, wx: [...(r.st.wx || []), ...r.notes.flatMap(g => (g.el && g.el.wx) || [])] }; raw = tafOf(dep).raw || ''; when = w.etd; srcTxt = 'ETD TAF'; }
       if (S.oat == null && lv.om && w) { const t = omTempAt(lv.om, w.etd); if (t != null) { S.oat = Math.round(t); S.src.push('기온: ETD 예보 기온'); } } else if (S.oat != null) S.src.push('기온: 현재 METAR');
       if (el) {
         const wx = (el.wx || []).join(' ');
@@ -6167,6 +6167,30 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
       }
       return { raw: null, errs };
     }
+    // 실시간 TAF: aviationweather.gov → NOAA 순으로 조회. 실패/오프라인이면 tafOf()가 OFP의 TAF를 대신 사용
+    async function fetchTaf(icao) {
+      const srcs = [
+        ['aviationweather.gov', `https://aviationweather.gov/api/data/taf?ids=${icao}&format=raw`],
+        ['NOAA', `https://tgftp.nws.noaa.gov/data/forecasts/taf/stations/${icao}.TXT`],
+      ];
+      for (const [name, url] of srcs) {
+        try {
+          const r = await fetchTO(url); if (!r.ok) continue;
+          let t = (await r.text()).replace(/\r/g, '').replace(/^\s*\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}\s*\n/, '').trim();
+          if (!t || !new RegExp('\\b' + icao + '\\s+\\d{6}Z').test(t)) continue;
+          if (!/^TAF\b/.test(t)) t = 'TAF ' + t.replace(/^(?:AMD|COR)\s+/, m => m);
+          const o = parseTafs('\n' + t + '\n\n')[icao];
+          if (o) return Object.assign(o, { src: name, at: Date.now() });
+        } catch (e) { }
+      }
+      return null;
+    }
+    // 예보(TAF): 3시간 이내에 받은 실시간 TAF가 있으면 그것을, 없거나 오프라인이면 OFP의 TAF를 사용
+    function tafOf(icao) {
+      const l = wxLive[icao], t = l && l.taf;
+      if (t && t.body && Date.now() - t.at < 3 * 36e5 && !(typeof navigator !== 'undefined' && navigator.onLine === false)) return Object.assign(t, { live: true });
+      return pdfTaf[icao] ? Object.assign(pdfTaf[icao], { live: false }) : undefined;
+    }
     function airportLL(icao) { return getAirportCoord(icao) || AIRPORT_LL[icao] || null; }
     async function fetchOpenMeteo(icao) {
       const ll = airportLL(icao); if (!ll) return null;
@@ -6186,8 +6210,8 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
       if (typeof navigator !== 'undefined' && navigator.onLine === false) { ids.forEach(i => wxLive[i] = Object.assign(wxLive[i] || {}, { status: 'offline' })); renderFlightInfo(); return; }
       wxLiveBusy = true; ids.forEach(i => wxLive[i] = Object.assign(wxLive[i] || {}, { status: 'loading' })); renderFlightInfo();
       await Promise.all([...new Set(ids)].map(async i => {
-        const [m, om] = await Promise.all([fetchMetar(i), fetchOpenMeteo(i)]);
-        wxLive[i] = { metar: m && m.raw, metarSrc: m && m.src, errs: m && m.errs, om, status: (m && m.raw) || om ? 'ok' : navigator.onLine === false ? 'offline' : 'fail' };
+        const [m, om, tf] = await Promise.all([fetchMetar(i), fetchOpenMeteo(i), fetchTaf(i)]);
+        wxLive[i] = { metar: m && m.raw, metarSrc: m && m.src, errs: m && m.errs, om, taf: tf || (wxLive[i] && wxLive[i].taf) || null, status: (m && m.raw) || om ? 'ok' : navigator.onLine === false ? 'offline' : 'fail' };
       }));
       wxLiveAt = Date.now(); wxLiveBusy = false; renderFlightInfo();
     }
@@ -6212,7 +6236,7 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
       return p.join(' ');
     }
     function renderWxCard(icao, label, T, codeCls) {
-      const taf = pdfTaf[icao], live = wxLive[icao] || {};
+      const taf = tafOf(icao), live = wxLive[icao] || {};
       const hhmm = ms => formatMinutes(Math.floor((((ms % 864e5) + 864e5) % 864e5) / 6e4)) + 'Z';
       const tmp = c => c == null ? '' : `<span class="mono text-[12px] font-bold text-orange-200 whitespace-nowrap">${Math.round(c)}°<span class="text-slate-400 font-normal">/${cToF(c)}°F</span></span>`;
       const hdr = (left, c) => `<div class="flex items-baseline justify-between gap-1 mt-0.5"><span class="text-[10px] font-bold">${left}</span>${tmp(c)}</div>`;
@@ -6240,7 +6264,8 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
           const span = (g.label.match(/(\d{4})\/(\d{4})$/) || []);
           return `<div class="mono text-[10px] leading-snug pl-1 ${wxHazard(g.el) || worse ? 'text-amber-300' : 'text-slate-400'}">${esc(kind)}${span[1] ? ' ' + span[1].slice(2) + '-' + span[2].slice(2) + 'Z' : ''} ${esc(shortWx(g.el, true))}</div>`;
         }).join('') + (r.valid ? '' : '<div class="text-[10px] text-rose-300 pl-1">TAF 유효시간 밖</div>');
-      } else fc = `<div class="text-[10px] text-slate-500">${taf ? '시각 정보 없음' : 'OFP에 TAF 없음'}</div>`;
+      } else fc = `<div class="text-[10px] text-slate-500">${taf ? '시각 정보 없음' : 'TAF 없음 (OFP·실시간 모두)'}</div>`;
+      if (taf) fc += `<div class="text-[9px] ${taf.live ? 'text-emerald-400' : 'text-slate-500'}">TAF ${taf.live ? '실시간 ' + String(taf.issue[1]).padStart(2, '0') + String(taf.issue[2]).padStart(2, '0') + 'Z (' + esc(taf.src || '') + ')' : 'OFP 기준'}</div>`;
       return `<div class="rounded-lg border ${haz ? 'border-amber-600/60' : 'border-slate-800'} bg-slate-900/70 px-2 py-1.5 min-w-0 flex flex-col gap-0.5">
         <span class="mono font-bold text-sm ${codeCls}">${esc(icao)}</span>
         ${cur}${head}${fc}
@@ -6248,9 +6273,9 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
     }
     function renderWxRaw(ids) {
       const blocks = ids.filter(Boolean).map(i => {
-        const l = wxLive[i] || {}, t = pdfTaf[i];
+        const l = wxLive[i] || {}, t = tafOf(i);
         const errs = !l.metar && l.errs ? l.errs.map(e => `<div class="text-slate-500">${esc(e)}</div>`).join('') : '';
-        return `<div class="flex flex-col gap-0.5"><pre class="mono whitespace-pre-wrap text-slate-200">${esc(l.metar ? 'METAR ' + l.metar + (l.metarSrc ? '   (' + l.metarSrc + ')' : '') : 'METAR ' + i + ' —')}</pre>${errs}${t ? `<pre class="mono whitespace-pre-wrap text-slate-400">${esc(t.raw)}</pre>` : ''}</div>`;
+        return `<div class="flex flex-col gap-0.5"><pre class="mono whitespace-pre-wrap text-slate-200">${esc(l.metar ? 'METAR ' + l.metar + (l.metarSrc ? '   (' + l.metarSrc + ')' : '') : 'METAR ' + i + ' —')}</pre>${errs}${t ? `<pre class="mono whitespace-pre-wrap text-slate-400">${esc((t.live ? '[실시간 TAF · ' + (t.src || '') + '] ' : '[OFP TAF] ') + t.raw)}</pre>` : ''}</div>`;
       }).join('<div class="border-t border-slate-800"></div>');
       return `<details class="text-[10px] text-slate-500"><summary class="cursor-pointer select-none">원문 (METAR / TAF)</summary><div class="mt-1 flex flex-col gap-1.5 bg-slate-950/60 rounded p-2 border border-slate-800">${blocks}</div></details>`;
     }
@@ -6336,7 +6361,7 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
     }
     function jbWx(icao, T, label) {
       if (!icao) return '';
-      const taf = pdfTaf[icao], live = wxLive[icao] || {};
+      const taf = tafOf(icao), live = wxLive[icao] || {};
       const parts = [];
       // 현재 기상 (METAR) · 기온
       if (live.metar) {
@@ -6542,10 +6567,10 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
       // 날씨 (현재 METAR → 없으면 OFP TAF)
       const now = c => { const lv = (typeof wxLive !== 'undefined' && wxLive[c]) || {}; let el = null, t = null, raw = '';
         if (lv.metar) { el = tafElems(lv.metar.split(/\s+/).slice(2)); t = metarTemp(lv.metar); raw = lv.metar; }
-        else if (pdfTaf[c] && w) { el = tafAt(pdfTaf[c], c === info.dep ? w.etd : w.eta).st; raw = pdfTaf[c].raw || ''; }
+        else if (tafOf(c) && w) { el = tafAt(tafOf(c), c === info.dep ? w.etd : w.eta).st; raw = tafOf(c).raw || ''; }
         if (t == null && lv.om && lv.om.current) t = lv.om.current.temperature_2m;
         return { x: crewWx(el, raw), t: t != null ? Math.round(t) : null }; };
-      const fcst = (c, T) => { const lv = (typeof wxLive !== 'undefined' && wxLive[c]) || {}; if (!pdfTaf[c] || T == null) return null; const r = tafAt(pdfTaf[c], T); const t = omTempAt(lv.om, T); return { x: crewWx(r.st, pdfTaf[c].raw || ''), t: t != null ? Math.round(t) : null }; };
+      const fcst = (c, T) => { const lv = (typeof wxLive !== 'undefined' && wxLive[c]) || {}; if (!tafOf(c) || T == null) return null; const r = tafAt(tafOf(c), T); const t = omTempAt(lv.om, T); return { x: crewWx(r.st, tafOf(c).raw || ''), t: t != null ? Math.round(t) : null }; };
       const d = now(info.dep), a = now(info.dest), f = fcst(info.dest, w && w.eta);
       const kw = o => o && o.x ? `${o.x.ko}${o.t != null ? `, 기온 ${o.t}도` : ''}` : B, ew = o => o && o.x ? `${o.x.en}${o.t != null ? `, ${o.t} degrees` : ''}` : B;
       L.push('wx', [`${dep.ko}공항 날씨는 ${kw(d)}, ${dest.ko}공항은 ${kw(a)}입니다.${f && f.x ? ` 도착 시간 예보는 ${kw(f)}입니다.` : ''}`,
@@ -6994,7 +7019,7 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
       return k;
     }
     function arrAuto() {
-      const dest = info.dest, w = flightWindow(), eta = w ? w.eta : null, live = wxLive[dest] || {}, taf = pdfTaf[dest];
+      const dest = info.dest, w = flightWindow(), eta = w ? w.eta : null, live = wxLive[dest] || {}, taf = tafOf(dest);
       // 기본값은 도착 시각(ETA) 예보 기준: 날씨 = OFP의 TAF, 기온 = 예보 기온(Open-Meteo). 없을 때만 현재 METAR로 대신함
       let el = null, tempC = null, src = [];
       if (taf && eta != null) { try { el = tafAt(taf, eta).st; src.push('날씨: TAF(ETA 기준)'); } catch (e) { } }
@@ -7894,7 +7919,7 @@ MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ?
     // 한 공항의 [T0,T1] 기상 — 기본값은 TAF(구간 최악, 목적지는 ETA 시점), TAF가 없으면 현재 METAR. 직접 고친 값이 있으면 그 값으로 판정
     function wxmWx(code, T0, T1, min) {
       const key = code + '|' + T0, ov = WXO[key] || {};
-      const E = wxmEval(pdfTaf[code], T0, T1, min);
+      const E = wxmEval(tafOf(code), T0, T1, min);
       let def = null, src = '';
       if (E.lvl != null && E.base) { def = E.base; src = T1 > T0 ? 'TAF 최악값' : 'TAF'; }
       else { const l = (typeof wxLive !== 'undefined' && wxLive[code]) || {}; if (l.metar) { def = wxmMetric(tafElems(l.metar.split(/\s+/).slice(2))); src = 'METAR(현재)'; } }
