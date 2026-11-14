@@ -7695,23 +7695,42 @@ input,select,textarea,button{font-size:max(1em,14px)}
       return { stand: gv(x, 'fstandPosition'), gate: gv(x, 'gateNumber'), term: TERM[gv(x, 'terminalId')] || gv(x, 'terminalId'), remark: gv(x, 'remark'),
         sch: gv(x, 'scheduleDatetime'), est: gv(x, 'estimatedDatetime'), reg: gv(x, 'aircraftRegNo'), sub: gv(x, 'aircraftSubtype') };
     }
+    // 한국공항공사(KAC) 국내공항 운항현황: 중계서버 /kac/ 경로 필요 (KAC_KEY 시크릿)
+    const KAC_IATA = { RKSS: 'GMP', RKPC: 'CJU', RKPK: 'PUS', RKTU: 'CJJ', RKJJ: 'KWJ', RKTN: 'TAE', RKNY: 'YNY', RKPU: 'USN', RKJY: 'RSU', RKJB: 'MWX', RKTH: 'KPO', RKNW: 'WJU', RKPS: 'HIN', RKJK: 'KUV' };
+    const isLiveApt = a => a === 'RKSI' || !!KAC_IATA[a];
+    async function fetchKacFlight(dir, icao, c) {
+      const proxy = getProxy(); if (!proxy) throw new Error('중계 서버 주소 없음');
+      const q = new URLSearchParams({ schAirCode: KAC_IATA[icao], schLineType: 'D', schIOType: dir === 'DEP' ? 'O' : 'I', schFln: c.flt, type: 'json', numOfRows: '30', pageNo: '1' });
+      const res = await fetchTO(`${proxy}/kac/B551178/flight-status?${q}`, 12000);
+      const txt = await res.text(); let j = null; try { j = JSON.parse(txt); } catch (e) { }
+      if (res.status === 404) throw new Error('중계 서버에 /kac 경로가 없음 (Worker 업데이트 필요)');
+      if (!res.ok) throw new Error((j && j.error) || `HTTP ${res.status}`);
+      if (!j) throw new Error('응답 형식 오류 (인증키·승인 확인)');
+      const rows = []; (function w(o) { if (!o || typeof o !== 'object') return; if (Array.isArray(o)) return o.forEach(w); if (Object.keys(o).some(k => /fln|flight/i.test(k))) rows.push(o); else Object.values(o).forEach(w); })(j);
+      const pick = (o, re) => { const k = Object.keys(o).find(x => re.test(x) && o[x] != null && String(o[x]).trim() && o[x] !== '-'); return k ? String(o[k]).trim() : null; };
+      const fl = rows.filter(o => String(pick(o, /^(fln|flightid|flight)/i) || '').replace(/\s|^([A-Z0-9]{2})0+/g, '$1').toUpperCase() === c.flt);
+      if (!fl.length) return null;
+      const x = fl[0];
+      return { stand: pick(x, /stand|spot|apron|prkng|parking/i), gate: pick(x, /gate/i), term: null, remark: pick(x, /remark|status|rmk|state/i),
+        sch: null, est: null, schTxt: pick(x, /sch.*(time|dt)|std|sta/i), estTxt: pick(x, /(est|act|chg|etd|eta).*(time|dt)?/i) };
+    }
     async function refreshStands(force) {
       const c = standCtx(); if (!c) return;
-      const roles = [['DEP', info.dep], ['DEST', info.dest]].filter(([, a]) => a === 'RKSI');
+      const roles = [['DEP', info.dep], ['DEST', info.dest]].filter(([, a]) => isLiveApt(a));
       if (!roles.length) return;
       if (!c.flt) { standLive = { key: c.key, err: '편명을 운항편명(예: OZ122)으로 바꿀 수 없음' }; renderStands(); return; }
       if (navigator.onLine === false) { standLive = { key: c.key, err: '오프라인' }; renderStands(); return; }
       if (standLive.busy) return;
       standLive = Object.assign({}, standLive.key === c.key ? standLive : {}, { key: c.key, busy: true, err: null }); renderStands();
       try {
-        for (const [role] of roles) standLive[role] = await fetchIcnFlight(role === 'DEP' ? 'DEP' : 'ARR', c) || { none: true };
+        for (const [role, apt] of roles) { try { standLive[role] = (apt === 'RKSI' ? await fetchIcnFlight(role === 'DEP' ? 'DEP' : 'ARR', c) : await fetchKacFlight(role === 'DEP' ? 'DEP' : 'ARR', apt, c)) || { none: true }; } catch (e) { if (apt === 'RKSI') throw e; standLive[role] = { fail: e.message }; } }
         standLive.at = Date.now();
       } catch (e) { standLive.err = e.name === 'AbortError' ? '시간 초과' : /fetch|network/i.test(e.message) ? '네트워크 연결 없음' : e.message; }
       standLive.busy = false; renderStands(); try { renderAcLive(); } catch (e) { } try { renderBriefing(); } catch (e) { }
     }
     function maybeFetchStands() {
       const c = standCtx(); if (!c || standLive.key === c.key) return;
-      if (info.dep !== 'RKSI' && info.dest !== 'RKSI') { standLive = { key: c.key }; return; }
+      if (!isLiveApt(info.dep) && !isLiveApt(info.dest)) { standLive = { key: c.key }; return; }
       refreshStands(false);
     }
     // 주기장: 조종사들이 쓰는 삼각형 표시 (△ 안에 번호, 없으면 '입력'). 누르면 직접 입력·수정
@@ -7725,13 +7744,13 @@ input,select,textarea,button{font-size:max(1em,14px)}
       const p = pdfFlt || {};
       document.querySelectorAll('[data-stand-tri]').forEach(el => {
         const role = el.dataset.standTri, icao = role === 'DEP' ? info.dep : info.dest, manual = standManualGet(role);
-        const d = icao === 'RKSI' ? standLive[role] : null, auto = !manual && d && d.stand;
+        const d = isLiveApt(icao) ? standLive[role] : null, auto = !manual && d && d.stand;
         el.innerHTML = standTri(role, manual || (auto ? d.stand : ''), !!auto);
       });
       document.querySelectorAll('[data-stand-role]').forEach(el => {
         const role = el.dataset.standRole, icao = role === 'DEP' ? info.dep : info.dest;
         const manual = standManualGet(role);
-        const isIcn = icao === 'RKSI', d = isIcn ? standLive[role] : null;
+        const isIcn = isLiveApt(icao), d = isIcn ? standLive[role] : null;
         const jc = role === 'DEST' ? 'justify-center' : '';
         let h = '';
         if (isIcn && d && d.stand && !manual) {
@@ -7739,7 +7758,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
           const regDiff = d.reg && p.reg && d.reg.replace(/-/g, '') !== String(p.reg).replace(/-/g, '') ? `<span class="text-rose-300">기체 ${esc(d.reg)} (OFP ${esc(p.reg)})</span>` : '';
           h = `<div class="text-[10px] text-slate-400 leading-snug flex flex-wrap items-center gap-x-1.5 ${jc}">${[d.gate ? `Gate ${esc(d.gate)}` : '', d.term ? esc(d.term) : '', d.remark ? `<span class="text-amber-300">${esc(d.remark)}</span>` : '', chg, regDiff, standLive.at ? `${new Date(standLive.at).toISOString().slice(11, 16)}Z 조회` : ''].filter(Boolean).join(' · ')}<button type="button" data-stand-refresh class="text-[11px] text-sky-300" title="다시 조회">🔄</button></div>`;
         } else if (isIcn && !manual) {
-          const st = standLive.busy ? '조회 중…' : standLive.err ? `조회 실패: ${esc(standLive.err)}` : d && d.none ? '해당 편 없음 (D-3~D+6만 제공)' : d && !d.stand ? `아직 미배정${d.gate ? ' · Gate ' + esc(d.gate) : ''}` : '';
+          const st = standLive.busy ? '조회 중…' : d && d.fail ? `조회 실패: ${esc(d.fail)}` : standLive.err ? `조회 실패: ${esc(standLive.err)}` : d && d.none ? '해당 편 없음 (D-3~D+6만 제공)' : d && !d.stand ? `아직 미배정${d.gate ? ' · Gate ' + esc(d.gate) : ''}` : '';
           h = `<div class="text-[10px] ${standLive.err ? 'text-rose-300' : 'text-slate-400'} leading-snug flex flex-wrap items-center gap-x-1.5 ${jc}">${st ? `<span>${st}</span>` : ''}<button type="button" data-stand-refresh class="text-[11px] text-sky-300">🔄 조회</button></div>`;
         } else if (manual && isIcn) {
           h = `<div class="text-[10px] text-slate-500 ${jc}" style="${role === 'DEST' ? 'text-align:center' : ''}">직접 입력</div>`;
