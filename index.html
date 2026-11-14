@@ -924,7 +924,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v1.0 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v1.1 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -957,34 +957,34 @@ input,select,textarea,button{font-size:max(1em,14px)}
       <!-- 1. OFP 첨부 & 경로 -->
       <section id="sec-ofp" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3">
         <div class="flex items-center gap-2">
-          <h2 class="font-bold text-sm flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>1. OFP 분석</h2>
-          <button id="btn-reset" type="button" style="margin-left:auto;background:#1e293b;border:1px solid #475569;color:#cbd5e1;border-radius:10px;padding:5px 11px;font-size:12px;font-weight:700">↺ 초기화</button>
+          <h2 class="font-bold text-sm flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>1. OFP Analysis</h2>
+          <button id="btn-reset" type="button" style="margin-left:auto;background:#1e293b;border:1px solid #475569;color:#cbd5e1;border-radius:10px;padding:5px 11px;font-size:12px;font-weight:700">↺ Reset</button>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch">
           <label id="dropzone" class="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-sky-700/60 hover:border-sky-400 rounded-xl p-3 cursor-pointer bg-slate-950/60 text-center" style="min-height:92px;min-width:0;padding:26px 8px 8px">
             <span id="pdf-label" class="text-xs font-bold text-sky-300" style="font-size:13px;overflow-wrap:anywhere">1st leg OFP</span>
-            <span id="pdf-sub" class="text-[10px] text-slate-400" style="overflow-wrap:anywhere">눌러서 PDF 첨부 · 끌어다 놓기</span>
+            <span id="pdf-sub" class="text-[10px] text-slate-400" style="overflow-wrap:anywhere">Tap to attach PDF · or drop here</span>
             <input id="pdf-input" type="file" accept="application/pdf,.pdf" class="hidden" />
           </label>
           <div style="position:relative;min-width:0;display:flex">
             <label id="ret-dropzone" class="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-indigo-700/60 hover:border-indigo-400 rounded-xl p-3 cursor-pointer bg-indigo-950/20 text-center" style="flex:1;min-height:92px;min-width:0;opacity:.45;pointer-events:none;padding:26px 8px 8px">
-              <span id="ret-pdf-label" class="text-xs font-bold text-indigo-300" style="font-size:13px;overflow-wrap:anywhere">2nd leg OFP (필요 시)</span>
-              <span id="ret-pdf-sub" class="text-[10px] text-slate-400" style="overflow-wrap:anywhere">1st leg 먼저 첨부</span>
+              <span id="ret-pdf-label" class="text-xs font-bold text-indigo-300" style="font-size:13px;overflow-wrap:anywhere">2nd leg OFP (if required)</span>
+              <span id="ret-pdf-sub" class="text-[10px] text-slate-400" style="overflow-wrap:anywhere">Attach 1st leg first</span>
               <input id="ret-pdf-input" type="file" accept="application/pdf,.pdf" class="hidden" />
             </label>
-            <button id="btn-ret-clear" type="button" title="2nd leg 빼기" style="display:none;position:absolute;top:5px;right:5px;width:26px;height:26px;border-radius:9999px;background:#1e293b;border:1px solid #475569;color:#e2e8f0;font-size:13px;font-weight:700;line-height:1">✕</button>
+            <button id="btn-ret-clear" type="button" title="Remove 2nd leg" style="display:none;position:absolute;top:5px;right:5px;width:26px;height:26px;border-radius:9999px;background:#1e293b;border:1px solid #475569;color:#e2e8f0;font-size:13px;font-weight:700;line-height:1">✕</button>
           </div>
         </div>
-        <div id="pdf-progress" class="hidden text-[11px] text-sky-400 mono">PDF 분석 중...</div>
+        <div id="pdf-progress" class="hidden text-[11px] text-sky-400 mono">Analyzing PDF...</div>
 
-        <details class="pro-slim-hide"><summary style="cursor:pointer;font-size:12px;color:#94a3b8">FPL 직접 입력 (선택)</summary>
-          <textarea id="fpl-input" rows="3" placeholder="FPL 전문을 붙여넣으면 자동으로 적용됩니다"
+        <details class="pro-slim-hide"><summary style="cursor:pointer;font-size:12px;color:#94a3b8">Enter FPL manually (optional)</summary>
+          <textarea id="fpl-input" rows="3" placeholder="Paste the FPL — it is applied automatically"
             class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs mono text-slate-200 focus:outline-none focus:border-sky-500" style="margin-top:6px"></textarea>
         </details>
 
         <div id="route-summary" style="display:none" class="bg-slate-950/60 border border-slate-800 rounded-xl p-2.5 text-[11px] text-slate-400 mono whitespace-pre-wrap">경로 정보 없음</div>
-        <div id="diag" class="hidden bg-slate-950/60 border border-slate-800 rounded-xl p-2.5 text-[11px] text-slate-300 mono flex flex-col gap-0.5">PDF를 첨부하면 인식 단계별 결과가 표시됩니다.</div>
+        <div id="diag" class="hidden bg-slate-950/60 border border-slate-800 rounded-xl p-2.5 text-[11px] text-slate-300 mono flex flex-col gap-0.5">Attach a PDF to see the recognition steps.</div>
       </section>
 
       <!-- 2. Flight Information -->
@@ -3448,10 +3448,10 @@ input,select,textarea,button{font-size:max(1em,14px)}
     async function handlePdf(file) {
       const bar = $('pdf-progress'), label = $('pdf-label'), sub = $('pdf-sub');
       try { if (jbQT) qtClearReturn(); } catch (e) { }   // 1st leg를 바꾸면 2nd leg는 비움
-      bar.classList.remove('hidden'); label.textContent = 'PDF 읽는 중...';
+      bar.classList.remove('hidden'); label.textContent = 'Reading PDF...';
       sub.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB`;
       try {
-        if (!window.pdfjsLib) throw new Error('PDF 읽기 엔진 로드 실패');
+        if (!window.pdfjsLib) throw new Error('Failed to load the PDF reader');
         const data = new Uint8Array(await file.arrayBuffer());
         const pdf = await openPdf(data);
         window.__pdfDoc = pdf;
@@ -3464,7 +3464,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
         }
         const candLayout = layoutPages.join('\n');
         const candEol = eolPages.join('\n');
-        if (!candLayout.replace(/\s/g, '').length) throw new Error('텍스트를 찾지 못했습니다 (스캔 PDF는 지원하지 않음)');
+        if (!candLayout.replace(/\s/g, '').length) throw new Error('No text found (scanned PDFs are not supported)');
 
         // 두 방식 중 항법로그 인식이 많은 쪽을 사용
         const nLayout = parseNavlog(candLayout).length;
@@ -3502,27 +3502,27 @@ input,select,textarea,button{font-size:max(1em,14px)}
         pdfEtp = parseEtp(fullText);
 
         renderDiag([
-          `텍스트 추출: ${method} · ${pdf.numPages}페이지 · 항법로그 후보 ${nLayout}/${nEol}`,
-          fplMatch ? `✅ FPL 인식: ${esc(info.dep)} → ${esc(info.dest)} · ETD ${formatMinutes(info.etdMinutes)}Z` : '❌ FPL(FPL-...) 인식 실패',
-          nav.length >= 2 ? `✅ 항법로그: ${nav.length}점 → 경로선 표시` : '❌ 항법로그 인식 실패 (LATITUDE 표 확인 필요)',
-          ...((window.__navDropped || []).length ? [`⚠️ 좌표 보정: ${window.__navDropped.map(esc).join(', ')} (구간거리와 불일치 → 앞뒤 점 사이로 보정)`] : []),
-          `FIR 노탐 ${firNotams.length}건 · 공역 노탐 ${airNotams.length}건`,
-          pdfEdto ? `✈️ EDTO 비행${pdfEdto.minutes ? ' (' + pdfEdto.minutes + '분)' : ''} · EDTO 교체공항 ${pdfEdto.alts.map(a => a.code).join(' ') || '-'}` : '· EDTO 비행 아님'
+          `Text extraction: ${method} · ${pdf.numPages} pages · navlog candidates ${nLayout}/${nEol}`,
+          fplMatch ? `✅ FPL recognized: ${esc(info.dep)} → ${esc(info.dest)} · ETD ${formatMinutes(info.etdMinutes)}Z` : '❌ FPL (FPL-...) not recognized',
+          nav.length >= 2 ? `✅ Navlog: ${nav.length} points → route line drawn` : '❌ Navlog not recognized (check the LATITUDE table)',
+          ...((window.__navDropped || []).length ? [`⚠️ Coordinates corrected: ${window.__navDropped.map(esc).join(', ')} (leg distance mismatch → placed between neighbouring points)`] : []),
+          `FIR NOTAMs ${firNotams.length} · Airspace NOTAMs ${airNotams.length}`,
+          pdfEdto ? `✈️ EDTO flight${pdfEdto.minutes ? ' (' + pdfEdto.minutes + ' min)' : ''} · EDTO alternates ${pdfEdto.alts.map(a => a.code).join(' ') || '-'}` : '· Not an EDTO flight'
         ]);
         renderEdtoBanner();
 
         { const cs1 = (pdfFlt && pdfFlt.callsign) || (($('fpl-input').value.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '');
           label.textContent = '✔ ' + (cs1 ? jbFlightNo(cs1).replace(/ \(.*\)$/, '') + ' ' : '') + (info.dep || '') + '→' + (info.dest || '');
-          sub.textContent = `${pdf.numPages}p · 항법로그 ${nav.length}점 · FIR 노탐 ${firNotams.length}건`;
+          sub.textContent = `${pdf.numPages}p · ${nav.length} nav pts · ${firNotams.length} FIR NOTAMs`;
           try { qtSyncTabs(); } catch (e) { } }
         refreshAll(true);
-        showToast('OFP 분석 완료');
+        showToast('OFP analysis complete');
       } catch (e) {
         console.error(e);
-        label.textContent = 'PDF 분석 실패';
-        sub.textContent = e.message || '알 수 없는 오류';
-        renderDiag([`❌ ${esc(e.message || '알 수 없는 오류')}`]);
-        showToast('PDF 분석 실패');
+        label.textContent = 'PDF analysis failed';
+        sub.textContent = e.message || 'Unknown error';
+        renderDiag([`❌ ${esc(e.message || 'Unknown error')}`]);
+        showToast('PDF analysis failed');
       } finally {
         bar.classList.add('hidden');
       }
@@ -3540,10 +3540,10 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
     function updateRouteSummary() {
       const el = $('route-summary');
-      if (!info.dep && !routeCoordinates.length) { el.textContent = '경로 정보 없음'; el.style.display = 'none'; return; }
+      if (!info.dep && !routeCoordinates.length) { el.textContent = 'No route data'; el.style.display = 'none'; return; }
       const etd = info.etdMinutes !== null ? formatMinutes(info.etdMinutes) + 'Z' : '--';
       const eta = info.etaMinutes !== null ? formatMinutes(info.etaMinutes) + 'Z' : '--';
-      el.textContent = `DEP ${info.dep || '--'} ETD ${etd} · DEST ${info.dest || '--'} ETA ${eta}\n경로 소스: ${routeSource}${routeTokens.length ? '\n' + routeTokens.join(' ➔ ') : ''}`;
+      el.textContent = `DEP ${info.dep || '--'} ETD ${etd} · DEST ${info.dest || '--'} ETA ${eta}\nRoute source: ${routeSource}${routeTokens.length ? '\n' + routeTokens.join(' ➔ ') : ''}`;
       el.style.whiteSpace = 'pre-wrap';
       el.style.display = routeTokens.length ? 'none' : '';   // 경로 파싱이 잘 되면 숨김 (실패했을 때만 보여줌)
     }
@@ -6784,7 +6784,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       for (let i = 1; i <= pdf.numPages; i++) { const c = await (await pdf.getPage(i)).getTextContent(); L.push(layoutTextFromItems(c.items)); E.push(textFromItemsEol(c.items)); }
       const a = L.join('\n'), b = E.join('\n'), text = parseNavlog(b).length > parseNavlog(a).length ? b : a;
       const fpl = (text.match(/\(FPL-[\s\S]*?\)/) || [''])[0];
-      if (!fpl) throw new Error('FPL을 찾지 못했습니다 — OFP가 맞는지 확인하세요');
+      if (!fpl) throw new Error('FPL not found — check that this is the right OFP');
       const nav = parseNavlog(text);
       jbQT = { text, fpl, nav: nav.length >= 2 ? nav : [], name: file.name };
       return jbQT;
@@ -6832,8 +6832,8 @@ input,select,textarea,button{font-size:max(1em,14px)}
       document.querySelectorAll('[data-pkg1-tab="RALTN"]').forEach(b => { b.style.display = on ? '' : 'none'; });
       if (!on && currentPkg1Tab === 'RALTN') { currentPkg1Tab = 'DEST'; document.querySelectorAll('[data-pkg1-tab]').forEach(b => { b.className = b.dataset.pkg1Tab === 'DEST' ? 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-sky-600 text-white shadow' : 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-slate-200'; }); }
       const lb = $('ret-pdf-label'), sb = $('ret-pdf-sub'), cl = $('btn-ret-clear'), rz = $('ret-dropzone'), hasMain = !!pdfFlt;
-      if (lb) lb.textContent = on ? `✔ ${jbFlightNo((jbQT.fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '').replace(/ \(.*\)$/, '')} ${jbQT.meta.dep}→${jbQT.meta.dest}` : '2nd leg OFP (필요 시)';
-      if (sb) sb.textContent = on ? `교체 ${jbQT.meta.altn || '--'} · 노탐 ${(jbQT.altnNotams || []).length}건 · 다시 누르면 교체` : hasMain ? '눌러서 PDF 첨부 · 끌어다 놓기' : '1st leg 먼저 첨부';
+      if (lb) lb.textContent = on ? `✔ ${jbFlightNo((jbQT.fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '').replace(/ \(.*\)$/, '')} ${jbQT.meta.dep}→${jbQT.meta.dest}` : '2nd leg OFP (if required)';
+      if (sb) sb.textContent = on ? `Altn ${jbQT.meta.altn || '--'} · ${(jbQT.altnNotams || []).length} NOTAMs · tap to replace` : hasMain ? 'Tap to attach PDF · or drop here' : 'Attach 1st leg first';
       if (rz) { rz.style.opacity = hasMain ? '' : '.45'; rz.style.pointerEvents = hasMain ? '' : 'none'; }
       if (cl) cl.style.display = on ? '' : 'none';
     }
@@ -6847,7 +6847,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       try {
         const q = await jbLoadQT(file);
         q.meta = qtParseMeta(q);
-        if (info.dest && q.meta.dep && q.meta.dep !== info.dest && !confirm(`Return flight OFP 출발(${q.meta.dep})이 현재 OFP 도착(${info.dest})과 다릅니다. 그래도 넣을까요?`)) { jbQT = prev; return false; }
+        if (info.dest && q.meta.dep && q.meta.dep !== info.dest && !confirm(`The 2nd leg departs ${q.meta.dep}, but the 1st leg arrives at ${info.dest}. Add it anyway?`)) { jbQT = prev; return false; }
         q.flt = parseFlightInfo(q.text, q.fpl);
         const parsed = parseOfpNotams(q.text);
         q.altnNotams = (parsed.airport || []).filter(n => n.pkg !== 2 && n.airport === q.meta.altn).map(n => ({ ...n, _ret: true }));
@@ -6868,11 +6868,11 @@ input,select,textarea,button{font-size:max(1em,14px)}
         const ov = $('jb-doc');
         if (ov) { ov.querySelectorAll('[data-jb-qt]').forEach(x => x.remove()); ov.insertAdjacentHTML('beforeend', jbQTHtml()); }
         try { jbQTBtn(); } catch (e) { }
-        showToast(`Return flight OFP 추가 — 교체공항 ${q.meta.altn || '--'} 노탐 ${q.altnNotams.length}건`);
+        showToast(`2nd leg OFP added — alternate ${q.meta.altn || '--'} · ${q.altnNotams.length} NOTAMs`);
         return true;
-      } catch (e) { jbQT = prev; qtReattach(); alert('Return flight OFP를 읽지 못했습니다: ' + (e.message || e)); return false; }
+      } catch (e) { jbQT = prev; qtReattach(); alert('Could not read the 2nd leg OFP: ' + (e.message || e)); return false; }
     }
-    function qtPickReturnOfp() { if (!pdfFlt) { showToast('1st leg OFP를 먼저 첨부하세요'); return; } const inp = $('ret-pdf-input'); if (inp) inp.click(); }
+    function qtPickReturnOfp() { if (!pdfFlt) { showToast('Attach the 1st leg OFP first'); return; } const inp = $('ret-pdf-input'); if (inp) inp.click(); }
     // Return flight OFP 기준 데이터 + 기상 카드 (퀵턴 합친 화면용)
     function qtRetData() {
       const q = jbQT; if (!q || !q.meta) return null;
@@ -8767,18 +8767,18 @@ input,select,textarea,button{font-size:max(1em,14px)}
     });
 
     $('btn-reset').addEventListener('click', () => {
-      if ((pdfFlt || (typeof jbQT !== 'undefined' && jbQT)) && !confirm('OFP와 분석 결과를 모두 지웁니다. 초기화할까요?')) return;
+      if ((pdfFlt || (typeof jbQT !== 'undefined' && jbQT)) && !confirm('This clears the OFP and all analysis results. Reset?')) return;
       $('fpl-input').value = '';
       pdfInput.value = '';
       $('pdf-label').textContent = '1st leg OFP';
-      $('pdf-sub').textContent = '눌러서 PDF 첨부 · 끌어다 놓기';
+      $('pdf-sub').textContent = 'Tap to attach PDF · or drop here';
       info = { dep:'', dest:'', altn:'', era:[], etdMinutes:null, etaMinutes:null, eetMinutes:null, flightDate:'' };
       pdfFlt = null; etdOverride = null; etaOverride = null; package1AirportNotams = []; package2AirportNotams = []; package2AreaNotams = []; era2Selected.clear();
       try { qtClearReturn(); } catch (e) { console.warn(e); }
       routeCoordinates = []; routeTokens = []; routeElapsed = []; routeFir = []; routeSource = '없음';
       firNotams = []; airNotams = []; otherNotams = []; ofpOrdered = []; pdfEtp = []; pdfEdto = null; renderEdtoBanner();
       pdfNav = []; pdfFirCode = null; pdfFirList = []; pdfAltn = null; pdfEra = [];
-      renderDiag(['PDF를 첨부하면 인식 단계별 결과가 표시됩니다.']);
+      renderDiag(['Attach a PDF to see the recognition steps.']);
       refreshAll(false);
     });
 
@@ -8819,8 +8819,8 @@ input,select,textarea,button{font-size:max(1em,14px)}
       rd.addEventListener('dragover', e => { e.preventDefault(); rd.classList.add('border-indigo-400'); });
       rd.addEventListener('dragleave', () => rd.classList.remove('border-indigo-400'));
       rd.addEventListener('drop', e => { e.preventDefault(); rd.classList.remove('border-indigo-400'); const f = e.dataTransfer.files[0]; if (f) qtAddReturnOfp(f); }); }
-    $('btn-ret-clear').addEventListener('click', () => { if (jbQT && confirm('Return flight OFP를 빼시겠습니까?')) { qtClearReturn(); refreshAll(false); } });
-    document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-qt-ret-remove]')) { if (confirm('Return flight OFP를 빼시겠습니까?')) { qtClearReturn(); refreshAll(false); } } });
+    $('btn-ret-clear').addEventListener('click', () => { if (jbQT && confirm('Remove the 2nd leg OFP?')) { qtClearReturn(); refreshAll(false); } });
+    document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-qt-ret-remove]')) { if (confirm('Remove the 2nd leg OFP?')) { qtClearReturn(); refreshAll(false); } } });
     $('chk-quickturn').addEventListener('change', e => {
       quickturnActive = e.target.checked;
       $('quickturn-time-inputs').style.display = quickturnActive ? 'flex' : 'none';
@@ -9516,11 +9516,11 @@ input,select,textarea,button{font-size:max(1em,14px)}
     })();
 
     // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
-    const APP_VERSION = '1.0';
+    const APP_VERSION = '1.1';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
-      $('app-ver').textContent = '업데이트 중…';
+      $('app-ver').textContent = 'Updating…';
       try { const ks = await caches.keys(); await Promise.all(ks.filter(k => k.startsWith('notam-pro-')).map(k => caches.delete(k))); } catch (e) { }
       try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) { }
       location.replace(location.pathname + '?v=' + Date.now());
@@ -9540,7 +9540,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
         const apply = col => {
           [...sec.children].forEach(c => { if (c !== hdr) c.classList.toggle('hidden', col); });
           if (hdr !== h2) [...hdr.children].forEach(c => { if (!c.contains(h2)) c.classList.toggle('hidden', col); });
-          btn.textContent = col ? '▸ 펼치기' : '▾ 접기';
+          btn.textContent = sec.id === 'sec-ofp' ? (col ? '▸ Expand' : '▾ Collapse') : (col ? '▸ 펼치기' : '▾ 접기');
           sec.classList.toggle('pb-3', col);
           if (sec.querySelector('#map')) {
             // 지도 섹션을 접으면 왼쪽(노탐) 영역을 전체 폭으로
@@ -9688,12 +9688,12 @@ input,select,textarea,button{font-size:max(1em,14px)}
         return;
       }
       navigator.serviceWorker.register('sw.js').then(reg => {
-        navigator.serviceWorker.ready.then(() => set(navigator.onLine ? '✓ 오프라인 저장됨' : '✈ 오프라인 모드 (저장본)', 'border-emerald-700 text-emerald-300'));
+        navigator.serviceWorker.ready.then(() => set(navigator.onLine ? '✓ Saved offline' : '✈ Offline mode (saved copy)', 'border-emerald-700 text-emerald-300'));
         if (navigator.onLine && reg.active) reg.active.postMessage('check-update');
       }).catch(() => set('오프라인 저장 실패', 'border-rose-700 text-rose-300'));
       navigator.serviceWorker.addEventListener('message', e => {
         if (e.data && e.data.type === 'updated') {
-          set('새 버전 받음 — 다시 열면 적용', 'border-sky-600 text-sky-300');
+          set('New version ready — reopen to apply', 'border-sky-600 text-sky-300');
           showToast('새 버전을 받았습니다. 앱을 다시 열면 적용됩니다.');
         }
       });
@@ -9703,8 +9703,8 @@ input,select,textarea,button{font-size:max(1em,14px)}
         try { if (!off) localStorage.setItem('notamPro.lastOnline', String(Date.now())); else if (since) { const t = +localStorage.getItem('notamPro.lastOnline'); since.textContent = t ? '· 마지막 연결 ' + new Date(t).toISOString().slice(5, 16).replace('T', ' ') + 'Z' : ''; } } catch (e) { }
       };
       bar();
-      window.addEventListener('offline', () => { set('✈ 오프라인 모드 (저장본)', 'border-emerald-700 text-emerald-300'); bar(); });
-      window.addEventListener('online', () => { set('✓ 오프라인 저장됨', 'border-emerald-700 text-emerald-300'); bar(); });
+      window.addEventListener('offline', () => { set('✈ Offline mode (saved copy)', 'border-emerald-700 text-emerald-300'); bar(); });
+      window.addEventListener('online', () => { set('✓ Saved offline', 'border-emerald-700 text-emerald-300'); bar(); });
       // 저장 데이터(중요 노탐·설정)를 지우지 않도록 브라우저에 요청
       if (navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(() => { });
     })();
