@@ -3,6 +3,7 @@
 //
 // 경로
 //   GET  /health                : 상태 확인 (토큰 불필요)
+//   GET  /dgk/*, /kac/*         : 공공데이터포털 중계 (주기장·게이트·운항현황). 키는 Worker가 붙임
 //   POST /ai/notam-summary      : 노탐 한글 요약 (토큰 필요)
 //        본문: { "notams": [ { "id": "A1234/26", "text": "원문..." }, ... ] }
 //        응답: { "provider", "model", "items": [ { "id", "summary", "uncertain" } ] }
@@ -11,12 +12,13 @@
 //   ACCESS_TOKEN       : 개인 접근 토큰 (필수, 앱에서 X-Access-Token 헤더로 보냄)
 //   DEEPSEEK_API_KEY   : DeepSeek 키 (있으면 사용)
 //   ANTHROPIC_API_KEY  : Claude 키 (있으면 사용)
+//   KAC_KEY            : 공공데이터포털(data.go.kr) 인증키 — 인천공항·한국공항공사 조회 공용 (DGK_KEY 이름도 인정)
 // 일반 변수 (선택)
 //   AI_ORDER           : 시도 순서, 기본 "deepseek,anthropic"
 //   DEEPSEEK_MODEL     : 기본 deepseek-flash
 //   ANTHROPIC_MODEL    : 기본 claude-haiku-5-5
 
-const VERSION = '0.3';
+const VERSION = '0.4';
 const ALLOWED_ORIGINS = ['https://fly-smart-team.github.io'];
 const MAX_NOTAMS = 30;           // 한 번에 보낼 수 있는 노탐 수
 const MAX_CHARS = 4000;          // 노탐 하나 최대 글자 수
@@ -248,6 +250,29 @@ async function notamSummary(request, env, origin) {
   return json({ ...(used || { provider: 'cache' }), items }, 200, origin);
 }
 
+
+// ───────── 공공데이터포털 중계 (인천공항 B551177 · 한국공항공사 B551178) ─────────
+async function dataGoProxy(request, env, url, origin) {
+  if (request.method !== 'GET') return json({ error: 'GET만 가능합니다' }, 405, origin);
+  if (origin && !ALLOWED_ORIGINS.includes(origin)) return json({ error: '허용되지 않은 출처' }, 403, origin);
+  const path = url.pathname.replace(/^\/(dgk|kac)/, '');
+  if (!/^\/(B551177|B551178)\/[A-Za-z0-9_\-\/]+$/.test(path)) return json({ error: '허용되지 않은 경로' }, 403, origin);
+  const key = env.KAC_KEY || env.DGK_KEY || env.DATA_GO_KEY;
+  if (!key) return json({ error: '서버에 KAC_KEY가 설정되지 않았습니다' }, 500, origin);
+  const q = new URLSearchParams(url.search);
+  q.delete('serviceKey'); q.delete('ServiceKey');
+  let k = key; try { if (/%[0-9A-Fa-f]{2}/.test(k)) k = decodeURIComponent(k); } catch { }
+  const target = `https://apis.data.go.kr${path}?serviceKey=${encodeURIComponent(k)}&${q.toString()}`;
+  const cache = caches.default, ck = new Request(`https://notam-proxy.cache/dg/${await sha256(target)}`);
+  const hit = await cache.match(ck);
+  if (hit) return new Response(hit.body, { status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8', ...cors(origin) } });
+  const res = await fetchWithTimeout(target, { headers: { Accept: 'application/json' } });
+  const text = await res.text();
+  const headers = { 'Content-Type': res.headers.get('Content-Type') || 'application/json; charset=utf-8', ...cors(origin) };
+  if (res.ok) await cache.put(ck, new Response(text, { headers: { 'Content-Type': headers['Content-Type'], 'Cache-Control': 'max-age=120' } }));
+  return new Response(text, { status: res.status, headers });
+}
+
 // ───────── 진입점 ─────────
 export default {
   async fetch(request, env) {
@@ -266,6 +291,10 @@ export default {
         order: activeProviders(env),
         colo: (request.cf && request.cf.colo) || '',
       }, 200, origin);
+    }
+
+    if (url.pathname.startsWith('/dgk/') || url.pathname.startsWith('/kac/')) {
+      try { return await dataGoProxy(request, env, url, origin); } catch (e) { return json({ error: String((e && e.message) || e) }, 502, origin); }
     }
 
     if (url.pathname.startsWith('/ai/')) {
