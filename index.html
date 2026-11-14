@@ -920,7 +920,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/14 11:00 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/14 12:00 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🔍 MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="px-2.5 py-1.5 rounded-lg border text-[12px] font-bold hover:opacity-90" style="border-color:#a78bfa;background:rgba(76,29,149,.35);color:#ddd6fe">🥶 Cold Temp</button>
@@ -6867,6 +6867,21 @@ input,select,textarea,button{font-size:max(1em,14px)}
       } catch (e) { jbQT = prev; qtReattach(); alert('Return flight OFP를 읽지 못했습니다: ' + (e.message || e)); return false; }
     }
     function qtPickReturnOfp() { const inp = $('ret-pdf-input'); if (inp) inp.click(); }
+    // Return flight OFP 기준 데이터 + 기상 카드 (퀵턴 합친 화면용)
+    function qtRetData() {
+      const q = jbQT; if (!q || !q.meta) return null;
+      const gap = quickturnReturnEtdMin != null && info.etaMinutes != null ? quickturnReturnEtdMin - info.etaMinutes : null;
+      try {
+        return jbWithQT(() => {
+          const p = pdfFlt || {}, w = flightWindow(), altn = p.altn || info.altn || '';
+          const fu = (p.unit || '').replace(/^100/, '').replace(/KGS?$/, 'KG'), fuel = v => v == null ? '--' : (/^100/.test(p.unit || '') ? v * 100 : v).toLocaleString() + (fu ? ' ' + fu : '');
+          return { gap, p, w, dep: info.dep, dest: info.dest, etdMin: info.etdMinutes, etaMin: info.etaMinutes, altn, altnMin: p.altnMin, altnFuel: p.altnFuel != null ? fuel(p.altnFuel) : '', tripMin: p.tripMin ?? info.eetMinutes, pax: p.pax,
+            cDep: renderWxCard(info.dep, 'Return ETD', w ? w.etd : null, 'text-emerald-300'), cDest: renderWxCard(info.dest, 'Return ETA', w ? w.eta : null, 'text-emerald-300'),
+            cAltn: altn ? renderWxCard(altn, 'ETA', w && p.altnMin != null ? w.eta + p.altnMin * 6e4 : (w ? w.eta : null), 'text-purple-300') : '',
+            raw: renderWxRaw([info.dep, info.dest, altn]) };
+        });
+      } catch (e) { console.warn(e); return null; }
+    }
     // 2번 운항정보 아래 Return 카드 (Return flight OFP 기준)
     function qtRetCardHtml() {
       const q = jbQT; if (!q || !q.meta) return '';
@@ -6908,23 +6923,10 @@ input,select,textarea,button{font-size:max(1em,14px)}
               <span class="text-lg font-bold mono text-white">${esc(p.callsign || '--')}</span>
               <span class="text-sm font-bold text-sky-300">${esc(type ? (AC_NAMES[type] || type) : '--')}</span>
               <span class="text-[11px] text-slate-400 mono">${esc(p.reg || '')}</span>${turn}
-              <button type="button" data-qt-ret-remove class="ml-auto text-[10px] text-slate-400 underline">Return flight OFP 빼기</button>
             </div>
-            <div class="grid ${altn ? 'grid-cols-3' : 'grid-cols-2'} items-start gap-2">
-              ${pt(info.dep, w && w.etd, info.etdMinutes, 'text-emerald-300', 'items-start text-left')}
-              ${pt(info.dest, w && w.eta, info.etaMinutes, 'text-emerald-300', altn ? 'items-center text-center' : 'items-end text-right')}
-              ${altn ? `<div class="flex flex-col items-end text-right gap-0.5 min-w-0"><div class="text-xl font-bold mono text-purple-300 leading-none">${esc(altn)}</div><div class="text-sm text-slate-100 leading-tight">${esc(ko(altn) || '-')}</div><div class="mono text-[11px] text-purple-200 mt-1">교체 ${p.altnMin != null ? hm(p.altnMin) : '--'}</div><div class="mono text-[11px] text-slate-300">${esc(fuel(p.altnFuel))}</div></div>` : ''}
-            </div>
-            <div class="flex items-center gap-2 text-[12px] text-sky-200 mono"><span>✈︎ 비행시간</span><b class="text-sky-100">${hm(p.tripMin ?? info.eetMinutes)}</b></div>
-            <div class="flex flex-col gap-1.5"><span class="text-[11px] font-bold text-slate-300">🌤️ Return 기상 · 기온</span>
-              <div class="grid ${altn ? 'grid-cols-3' : 'grid-cols-2'} gap-2">
-                ${renderWxCard(info.dep, 'ETD', w ? w.etd : null, 'text-emerald-300')}
-                ${renderWxCard(info.dest, 'ETA', w ? w.eta : null, 'text-emerald-300')}
-                ${altn ? renderWxCard(altn, 'ETA', w && p.altnMin != null ? w.eta + p.altnMin * 6e4 : (w ? w.eta : null), 'text-purple-300') : ''}
-              </div></div>
-            <div class="grid grid-cols-3 gap-2">
+            <div class="text-[10px] text-slate-400">출발·도착·교체공항, 비행시간, 기상, 예약 현황은 위 운항정보에 가는편과 함께 표시됩니다.</div>
+            <div class="grid grid-cols-2 gap-2">
               ${tile('순항고도', tocFl ? FL(tocFl) : '--', steps.length > 1 ? 'STEP ' + steps.map(FL).join(' → ') : '')}
-              ${tile('예약 현황', px ? `${px.f + px.c + px.y}명` : '--', px ? `F ${px.f}/${px.fc} · C ${px.c}/${px.cc} · Y ${px.y}/${px.yc}` : 'OFP에 예약 정보 없음', 'text-emerald-300')}
               ${tile('RAMP OUT', fuel(p.ramp), '')}
             </div>
             ${extra}
@@ -8166,7 +8168,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       const flTxt = v => { const m = mLv.find(mm => Math.abs(mm * 3.28084 / 100 - v) <= 2.5); return 'FL' + String(v).padStart(3, '0') + (m ? ` (${m.toLocaleString()}m)` : ''); };
       // ETD/ETA (조정 반영) + 현지시각
       const w = flightWindow();
-      const endpoint = (role, icao, ms, minutes, alignRight, codeCls = 'text-emerald-300', noTime = false) => {
+      const endpoint = (role, icao, ms, minutes, alignRight, codeCls = 'text-emerald-300', noTime = false, compact = false) => {
         const hasStand = role === 'DEP' || role === 'DEST';
         const slot = hasStand ? `<div class="stand-tri-n" data-stand-tri="${role}"></div><div class="mt-1" data-stand-role="${role}"></div>` : '';
         const nm = getAirportNameInfo(icao), lt = localTime(icao, ms);
@@ -8179,8 +8181,8 @@ input,select,textarea,button{font-size:max(1em,14px)}
             ${hasStand ? `<div class="stand-tri-w" data-stand-tri="${role}"></div>` : ''}
           </div>
           ${noTime ? '<div class="mt-1 h-[3.75rem]"></div>' : `<div class="mono text-sm font-bold text-white mt-1">${minutes != null ? formatMinutes(minutes) + 'Z' : '--'}</div>
-          <div class="mono text-sm font-bold text-amber-200 whitespace-nowrap">${lt ? `${lt.md} ${lt.hm} L` : '<span class="text-slate-500">현지시각 없음</span>'}</div>
-          ${lt ? `<div class="mono text-[10px] text-slate-400">${lt.utc}</div>` : ''}`}
+          <div class="mono ${compact ? 'text-[12px]' : 'text-sm'} font-bold text-amber-200 whitespace-nowrap">${lt ? (compact ? `${lt.hm} L` : `${lt.md} ${lt.hm} L`) : '<span class="text-slate-500">현지시각 없음</span>'}</div>
+          ${lt ? `<div class="mono text-[10px] text-slate-400">${compact ? lt.md + ' ' + lt.utc : lt.utc}</div>` : ''}`}
           ${slot}
         </div>`;
       };
@@ -8192,6 +8194,27 @@ input,select,textarea,button{font-size:max(1em,14px)}
       const altnCode = p.altn || info.altn || '';
       const altnNm = getAirportNameInfo(altnCode);
       const adjusted = !!etdOverride || !!etaOverride;
+      const Q = (() => { try { return qtRetData(); } catch (e) { return null; } })();
+      const legMid = (t, lb) => `<div class="flex flex-col items-center gap-1 px-0.5" style="align-self:end;margin-bottom:1.6rem"><div class="text-[10px] text-slate-400">${lb}</div><div class="flex items-center gap-1"><span class="w-3 sm:w-6 border-t border-dashed border-slate-600"></span><span class="text-sky-300">✈︎</span><span class="w-3 sm:w-6 border-t border-dashed border-slate-600"></span></div><div class="mono font-bold text-sky-200">${t}</div></div>`;
+      const altBox = (lb, code, min, fuelTxt2) => { const nm = getAirportNameInfo(code); return `<div class="rounded-lg border border-purple-800/60 bg-purple-950/20 px-2 py-1.5 min-w-0"><div class="text-[10px] text-purple-300">${lb}</div><div class="flex items-baseline gap-2 flex-wrap"><span class="text-lg font-bold mono text-purple-200 leading-none">${esc(code || '--')}</span><span class="text-[12px] text-slate-100">${esc(nm && nm.ko ? nm.ko : '')}</span></div><div class="mono text-[11px] text-purple-100">교체 ${min != null ? hm(min) : '--'}${fuelTxt2 ? ' · ' + esc(fuelTxt2) : ''}</div></div>`; };
+      const turnBadge = Q && Q.gap != null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${Q.gap < 30 ? 'bg-rose-950/60 border-rose-800/60 text-rose-300' : 'bg-emerald-950/40 border-emerald-800/50 text-emerald-300'}">지상 ${Q.gap >= 120 ? Math.floor(Q.gap / 60) + 'h ' + (Q.gap % 60) + 'm' : Q.gap + '분'}${Q.gap < 30 ? ' ⚠' : ''}</span>` : '';
+      const qtRoute = !Q ? '' : `<div class="flex items-center flex-wrap gap-x-2 gap-y-1 rounded-lg border border-indigo-700/60 bg-indigo-950/30 px-2 py-1">
+          <span class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-indigo-600 text-white">🔄 QUICK TURN</span>
+          <span class="mono text-sm font-bold text-white">${esc(cs || '--')} <span class="text-slate-500">→</span> ${esc((Q.p && Q.p.callsign) || '--')}</span>${turnBadge}
+          <span class="mono text-[11px] text-slate-300">Return ETD ${Q.etdMin != null ? formatMinutes(Q.etdMin % 1440) + 'Z' : '--'}${Q.w ? ' · ' + ((localTime(Q.dep, Q.w.etd) || {}).hm || '') + ' L' : ''}</span>
+          <button type="button" data-qt-ret-remove class="ml-auto text-[10px] text-slate-400 underline">Return flight OFP 빼기</button></div>
+        <div class="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start gap-1.5" style="align-items:start">
+          ${endpoint('DEP', info.dep, w ? w.etd : null, info.etdMinutes, false, 'text-emerald-300', false, true)}
+          ${legMid(hm(p.tripMin ?? info.eetMinutes), '가는편')}
+          ${endpoint('DEST', info.dest, w ? w.eta : null, info.etaMinutes, 'center', 'text-emerald-300', false, true)}
+          ${legMid(hm(Q.tripMin), 'Return')}
+          ${endpoint('RET', Q.dest, Q.w ? Q.w.eta : null, Q.etaMin != null ? Q.etaMin % 1440 : null, true, 'text-emerald-300', false, true)}
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          ${altBox('교체공항 · 가는편', altnCode, p.altnMin, p.altnFuel != null ? fuelTxt(p.altnFuel) : '')}
+          ${altBox('교체공항 · Return', Q.altn, Q.altnMin, Q.altnFuel)}
+        </div>`;
+      const paxTile = (lb, px) => tile(lb, px ? `${px.f + px.c + px.y}명` : '--', px ? `F ${px.f}/${px.fc} · C ${px.c}/${px.cc} · Y ${px.y}/${px.yc}` : 'OFP에 예약 정보 없음', 'text-emerald-300');
       box.innerHTML = `<div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3 flex flex-col gap-3">
         ${secBannerHtml()}
         <div class="flex items-center flex-wrap gap-x-2.5 gap-y-1">
@@ -8202,7 +8225,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
             <span class="ac-dot" style="width:8px;height:8px;border-radius:50%;background:${acDotColor()};display:inline-block"></span><span class="mono">${esc(p.reg || '--')}</span>
             <span class="text-[10px] font-normal text-sky-300" style="white-space:nowrap">📡 위치·출도착 ›</span></button>
         </div>
-        <div class="grid ${altnCode ? 'grid-cols-[1fr_auto_1fr_auto_1fr]' : 'grid-cols-[1fr_auto_1fr]'} items-start gap-1.5" style="align-items:start">
+        ${Q ? qtRoute : `        <div class="grid ${altnCode ? 'grid-cols-[1fr_auto_1fr_auto_1fr]' : 'grid-cols-[1fr_auto_1fr]'} items-start gap-1.5" style="align-items:start">
           ${endpoint('DEP', info.dep, w ? w.etd : null, info.etdMinutes, false)}
           <div class="flex flex-col items-center gap-1 px-0.5" style="align-self:end;margin-bottom:1.6rem">
             <div class="text-[10px] text-slate-400">비행시간</div>
@@ -8217,22 +8240,40 @@ input,select,textarea,button{font-size:max(1em,14px)}
             <div class="mono font-bold text-purple-200">${p.altnMin != null ? hm(p.altnMin) : '--'}</div>
           </div>
           ${endpoint('ALTN', altnCode, null, null, true, 'text-purple-300', true)}` : ''}
-        </div>
+        </div>`}
         <div class="flex flex-col gap-1.5">
           <div class="flex items-center justify-between gap-2 flex-wrap"><span class="text-[11px] font-bold text-slate-300">🌤️ 기상 · 기온</span><span class="flex items-center gap-2 text-[10px] text-slate-500">${wxLiveAt ? '실시간 ' + new Date(wxLiveAt).toISOString().slice(11, 16) + 'Z 조회' : ''}<button type="button" data-wx-refresh class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-sky-300 font-bold">🔄 실시간 조회</button></span></div>
-          <div class="grid ${altnCode ? 'grid-cols-3' : 'grid-cols-2'} gap-2">
+          ${Q ? `<div class="text-[10px] text-slate-400">가는편 → Return 순서 (공항 · 시각)</div>
+          <div class="grid gap-2" style="grid-template-columns:repeat(auto-fit,minmax(148px,1fr))">
+            ${renderWxCard(info.dep, '가는편 ETD', w ? w.etd : null, 'text-emerald-300')}
+            ${renderWxCard(info.dest, '가는편 ETA', w ? w.eta : null, 'text-emerald-300')}
+            ${Q.cDep}${Q.cDest}
+          </div>
+          <div class="text-[10px] text-purple-300">교체공항 기상</div>
+          <div class="grid gap-2" style="grid-template-columns:repeat(auto-fit,minmax(148px,1fr))">
+            ${altnCode ? renderWxCard(altnCode, '가는편 교체 ETA', w && p.altnMin != null ? w.eta + p.altnMin * 6e4 : (w ? w.eta : null), 'text-purple-300') : ''}
+            ${Q.cAltn}
+          </div>
+          ${renderWxRaw([info.dep, info.dest, altnCode])}${Q.raw}` : `<div class="grid ${altnCode ? 'grid-cols-3' : 'grid-cols-2'} gap-2">
             ${renderWxCard(info.dep, 'ETD', w ? w.etd : null, 'text-emerald-300')}
             ${renderWxCard(info.dest, 'ETA', w ? w.eta : null, 'text-emerald-300')}
             ${altnCode ? renderWxCard(altnCode, 'ETA', w && p.altnMin != null ? w.eta + p.altnMin * 6e4 : (w ? w.eta : null), 'text-purple-300') : ''}
           </div>
-          ${renderWxRaw([info.dep, info.dest, altnCode])}
+          ${renderWxRaw([info.dep, info.dest, altnCode])}`}
           ${wxMinHtml()}
         </div>
-        <div class="pro-slim-hide grid grid-cols-3 gap-2">
+        ${Q ? `<div class="grid grid-cols-2 gap-2">
+          ${paxTile('예약 현황 · 가는편 ' + esc(cs), pax)}
+          ${paxTile('예약 현황 · Return ' + esc((Q.p && Q.p.callsign) || ''), Q.pax)}
+        </div>
+        <div class="pro-slim-hide grid grid-cols-2 gap-2">
+          ${tile('순항고도 (가는편)', tocFl ? flTxt(tocFl) : '--', steps.length > 1 ? 'STEP ' + steps.map(flTxt).join(' → ') : '')}
+          ${tile('RAMP OUT (가는편)', fuelTxt(p.ramp), '')}
+        </div>` : `<div class="pro-slim-hide grid grid-cols-3 gap-2">
           ${tile('순항고도', tocFl ? flTxt(tocFl) : '--', steps.length > 1 ? 'STEP ' + steps.map(flTxt).join(' → ') : '')}
           ${tile('예약 현황', pax ? `${pax.f + pax.c + pax.y}명` : '--', pax ? `F ${pax.f}/${pax.fc} · C ${pax.c}/${pax.cc} · Y ${pax.y}/${pax.yc}` : (pdfFlt ? 'OFP에 예약 정보 없음' : ''), 'text-emerald-300')}
           ${tile('RAMP OUT', fuelTxt(p.ramp), '')}
-        </div>
+        </div>`}
         <div class="grid grid-cols-[2fr_1fr] gap-2"><button type="button" data-jb-open class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg">📝 JOINT BRIEF 생성</button><button type="button" data-arr-open class="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm shadow-lg">📢 도착 방송</button></div>
         <div id="efb-perf"></div>
         <div id="mel-card"></div>
