@@ -1,0 +1,86 @@
+{
+ "52-10-01A": {
+  "groups": [
+   {
+    "name": "A321neo",
+    "regs": [
+     "HL8356",
+     "HL8364",
+     "HL8371",
+     "HL8398",
+     "HL8399",
+     "HL8510",
+     "HL8511",
+     "HL8533",
+     "HL8534",
+     "HL8582",
+     "HL8584",
+     "HL8586",
+     "HL8705"
+    ],
+    "door": "mel-img/door-neo.jpg",
+    "figs": [
+     {
+      "t": "Diagram 1-1 · 연장 해상 비행 아님 (Non-extended overwater)",
+      "src": "mel-img/neo-1.jpg"
+     },
+     {
+      "t": "Diagram 1-2 · 연장 해상 비행 (Extended overwater)",
+      "src": "mel-img/neo-2.jpg"
+     }
+    ]
+   },
+   {
+    "name": "A321-200",
+    "regs": [
+     "HL8004",
+     "HL8018",
+     "HL8038",
+     "HL8039",
+     "HL8059",
+     "HL8060",
+     "HL8071",
+     "HL8074",
+     "HL8277",
+     "HL8278",
+     "HL8279"
+    ],
+    "door": "mel-img/door-a200.jpg",
+    "figs": [
+     {
+      "t": "171석 · 연장 해상 비행 아님 (Non-extended overwater)",
+      "src": "mel-img/a200-171-1.jpg"
+     },
+     {
+      "t": "171석 · 연장 해상 비행 (Extended overwater)",
+      "src": "mel-img/a200-171-2.jpg"
+     },
+     {
+      "t": "174석 · 연장 해상 비행 아님 (Non-extended overwater)",
+      "src": "mel-img/a200-174-1.jpg"
+     },
+     {
+      "t": "174석 · 연장 해상 비행 (Extended overwater)",
+      "src": "mel-img/a200-174-2.jpg"
+     },
+     {
+      "t": "195석 · 연장 해상 비행 아님 (Non-extended overwater)",
+      "src": "mel-img/a200-195-1.jpg"
+     },
+     {
+      "t": "195석 · 연장 해상 비행 (Extended overwater)",
+      "src": "mel-img/a200-195-2.jpg"
+     }
+    ]
+   }
+  ]
+ },
+ "52-10-02A": {
+  "same": "52-10-01A",
+  "only": "A321neo"
+ },
+ "52-10-09A": {
+  "same": "52-10-01A",
+  "only": "A321neo"
+ }
+}
