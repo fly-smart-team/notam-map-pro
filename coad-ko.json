@@ -1,5 +1,5 @@
 {
- "version": "2026-11-03 11:51Z",
+ "version": "2026-11-14 15:33Z",
  "note": "COAD 한국어 요약 (Claude 작성). 키 = 원문 정규화 해시. 원문이 바뀌면 키가 달라져 앱에서 \"변경됨\"으로 표시",
  "items": {
   "kk8nd1": {
@@ -84,7 +84,8 @@
   },
   "69sdbm": {
    "id": "RCAA COAD02/20",
-   "s": "RCAA-RJJJ FIR: 타이베이 ACC가 일본 관제와 협의됐다고 해도 MOLKA 직행 지시를 따르지 말고 계획 경로(LAO-M646-HCN-TINHO)를 유지한다. 기상 회피가 필요하면 센카쿠(댜오위다오) 열도(N254433 E1232817) 근접을 피해 가능하면 서쪽으로 회피한다."
+   "t": "SENKAKU DIAOYUDAO ISLANDS",
+   "s": "Keep out of the 20NM Radius of \"SENKA (N 25 47.9 E 123 35.8)\".\nIf Taipei ATC instructs \"After TINHO Direct to MOLKA\", request Direct LEKOS (or MORSU)."
   },
   "1gpvim": {
    "id": "RCAA COAD03/20",

@@ -924,7 +924,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v1.5 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v1.6 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -1714,7 +1714,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       ['VVDN', /VIETNAM AIRLINES TWR FRQ : 121\.6/, '지상조업 VIETNAM AIRLINES · 타워 121.6MHz · ☎ +84-939-54558'],
       ['RKRR', /RKRR GPS UNRELIABLE ADVISORY INFO/, '군 훈련으로 GPS 신뢰도 저하 가능 · 신호 끊기면 ATC에 보고 (무선 또는 ☎ 032-880-0247/8)'],
       ['RCAA', /SHALL FILE AIRWAY W4 FOR NORTHBOUND/, 'KAPLI·KABAM·POTIB 경유(2200~1600Z): 북쪽 W4, 남쪽 B591/Q11 제출'],
-      ['RCAA', /DO NOT FLY DIRECT RTE TO MOLKA/, '타이베이 ACC가 MOLKA 직행을 줘도 계획 경로(LAO-M646-HCN-TINHO) 유지 · 기상 회피는 가능하면 서쪽으로(센카쿠 근접 회피)'],
+      ['RCAA', /DO NOT FLY DIRECT RTE TO MOLKA/, 'SENKAKU DIAOYUDAO ISLANDS · Keep out of the 20NM Radius of "SENKA (N 25 47.9 E 123 35.8)" · If Taipei ATC instructs "After TINHO Direct to MOLKA", request Direct LEKOS (or MORSU)'],
       ['RCAA', /INBOUND TRAFFIC VIA POTIB TO INCHEON FIR SHALL ROUTE/, 'POTIB 경유 인천 FIR 진입(1750~2020Z): M646 HCN B591 SANAS M750 MOLKA → Z401 (북쪽 방향만 해당)'],
     ];
     function koCoad(text, u, notamId) {
@@ -4370,7 +4370,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       return `<div class="text-[12px] leading-snug rounded-md border border-emerald-600/60 bg-emerald-950/40 px-2 py-1 text-emerald-50"><span class="mr-1 px-1 py-0.5 rounded bg-emerald-700 text-white text-[9px] font-bold align-middle">저장 요약</span>${esc(c.s)}${c.u ? ' <span class="text-amber-300 font-bold">⚠ 원문 확인</span>' : ''}</div>`;
     }
     function coadBlock(c) {
-      return `<div class="text-[12px] leading-snug rounded-md border border-teal-600/60 bg-teal-950/40 px-2 py-1 text-teal-50"><span class="mr-1 px-1 py-0.5 rounded bg-teal-700 text-white text-[9px] font-bold align-middle">COAD 요약</span>${esc(c.s)}</div>`;
+      return `<div class="text-[12px] leading-snug rounded-md border border-teal-600/60 bg-teal-950/40 px-2 py-1 text-teal-50"><span class="mr-1 px-1 py-0.5 rounded bg-teal-700 text-white text-[9px] font-bold align-middle">COAD 요약</span>${c.t ? `<b class="text-white">${esc(c.t)}</b><br>` : ''}<span style="white-space:pre-line">${esc(c.s)}</span></div>`;
     }
     function aiBlock(a) {
       return `<div class="text-[12px] leading-snug rounded-md border border-violet-600/60 bg-violet-950/40 px-2 py-1 text-violet-100"><span class="mr-1 px-1 py-0.5 rounded bg-violet-700 text-white text-[9px] font-bold align-middle">AI 요약</span>${esc(a.s)}${a.u ? ' <span class="text-amber-300 font-bold">⚠ 원문 확인</span>' : ''}<span class="ml-1 text-[9px] text-violet-300/70">${esc(a.p === 'deepseek' ? 'DeepSeek' : a.p === 'anthropic' ? 'Claude' : a.p || '')}</span></div>`;
@@ -5164,7 +5164,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       }
       // 회사 고정 노탐
       if (/SHALL FILE AIRWAY W4 FOR NORTHBOUND/.test(t)) return rcaaFileRule(ctx);
-      if (/\bSENKAKU\b/.test(t)) return { tier: 'W', why: '참고 · 센카쿠 위치 지도 표시' };
+      if (/\bSENKAKU\b/.test(t)) return { tier: 'W', why: 'Reference · Senkaku shown on map' };
       if (/INBOUND TRAFFIC VIA POTIB TO INCHEON FIR/.test(t) && !ctx.outKR) {
         if (!routeTokens.includes('POTIB')) return { tier: 'W', why: '경로 해당 없음 (POTIB 미경유)' };
         const need = ['M646', 'HCN', 'B591', 'SANAS', 'M750', 'MOLKA'], miss = need.filter(x => !ctx.airways.has(x) && !ctx.fixes.has(x));
@@ -5318,16 +5318,15 @@ input,select,textarea,button{font-size:max(1em,14px)}
     // 지도: 센카쿠(댜오위다오) 열도 반경 20NM (회사 노탐 RCAA COAD02/20, 참고용)
     function drawSenkaku(layer) {
       const n = (ofpOrdered || []).find(x => /\bSENKAKU\b/i.test(x.rawText || x.etext || '')); if (!n) return;
-      const m = String(n.rawText || n.etext).toUpperCase().match(/N\s?(\d{2})(\d{2})(\d{2})\s*E\s?(\d{3})(\d{2})(\d{2})/); if (!m) return;
-      const ll0 = [+m[1] + +m[2] / 60 + +m[3] / 3600, +m[4] + +m[5] / 60 + +m[6] / 3600];
+            const ll0 = [25 + 47.9 / 60, 123 + 35.8 / 60];   // SENKA (N 25 47.9 E 123 35.8) — 20NM 반경 중심 (노탐의 섬 좌표 N254433 E1232817 와 약 7.6NM 차이)
       const R = routeCoordinates, meanLon = R.length ? R.reduce((t, p) => t + p[1], 0) / R.length : ll0[1];
       let lon = ll0[1]; while (lon - meanLon > 180) lon -= 360; while (lon - meanLon < -180) lon += 360;
       let bd = Infinity, bi = -1; R.forEach((p, i) => { const d = gcNm(p, ll0); if (d < bd) { bd = d; bi = i; } });
       const w = flightWindow(), el = bi >= 0 ? elAt(bi) : null, tm = w && el != null ? new Date(w.etd + el * 6e4).toISOString().slice(11, 16) + 'Z' : '';
-      const pop = `<div style="font-size:12px;line-height:1.5;max-width:240px"><b>센카쿠(댜오위다오) 열도</b>${isFinite(bd) ? `<br><span style="color:#475569">경로에서 약 ${Math.round(bd)}NM${bi >= 0 ? ` (${esc(routeTokens[bi] || '')} 부근 ${tm})` : ''}</span>` : ''}
-        <br>• 기상 회피 시 가능하면 <b>서쪽으로</b> (열도 근접 비행 회피)<br>• 타이베이 ACC가 MOLKA 직행을 줘도 계획 경로(LAO-M646-HCN-TINHO) 유지<br><span style="color:#64748b">${esc(n.notamId)} · 참고</span></div>`;
+      const pop = `<div style="font-size:12px;line-height:1.5;max-width:260px"><b>SENKAKU DIAOYUDAO ISLANDS</b>${isFinite(bd) ? `<br><span style="color:#475569">Route passes about ${Math.round(bd)}NM from SENKA${bi >= 0 ? ` (near ${esc(routeTokens[bi] || '')} ${tm})` : ''}</span>` : ''}
+        <br>• Keep out of the <b>20NM</b> radius of "SENKA (N 25 47.9 E 123 35.8)"<br>• If Taipei ATC instructs "After TINHO Direct to MOLKA", request <b>Direct LEKOS (or MORSU)</b><br><span style="color:#64748b">${esc(n.notamId)} · reference</span></div>`;
       L.circle([ll0[0], lon], { radius: 20 * 1852, color: '#94a3b8', weight: 1.5, dashArray: '5 5', fillColor: '#94a3b8', fillOpacity: 0.08 }).addTo(layer).bindPopup(pop);
-      L.marker([ll0[0], lon], { icon: L.divIcon({ className: '', iconSize: [0, 0], html: '<div style="transform:translate(-50%,-50%);white-space:nowrap;font:600 10px/1 ui-monospace,monospace;color:#cbd5e1;text-shadow:0 0 3px #000">센카쿠</div>' }) }).addTo(layer).bindPopup(pop);
+      L.marker([ll0[0], lon], { icon: L.divIcon({ className: '', iconSize: [0, 0], html: '<div style="transform:translate(-50%,-50%);white-space:nowrap;font:600 10px/1 ui-monospace,monospace;color:#cbd5e1;text-shadow:0 0 3px #000">SENKA</div>' }) }).addTo(layer).bindPopup(pop);
     }
     // 지도: 이양 지점 마커 + 125E 기준선
     function drawAkaraToc(layer) {
@@ -5458,7 +5457,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
             <button type="button" data-brf-star="${esc(n.notamId)}" class="shrink-0 w-7 h-7 mt-0.5 rounded-md border text-base leading-none ${r.star ? 'bg-amber-400 border-amber-300 text-slate-950' : 'border-slate-600 text-slate-500'}" title="중요 노탐 지정">${r.star ? '★' : '☆'}</button>
             <div class="min-w-0 flex-1" data-brf-toggle>
               <div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${T.pill}">${T.label}</span><span class="mono text-[11px] font-bold ${T.txt}">${esc(n.notamId)}</span>${hk ? '<span class="px-1 rounded bg-cyan-900/70 text-cyan-200 text-[10px] font-bold">🧊 HOT</span>' : ''}<span class="text-[10px] text-sky-300 mono whitespace-nowrap">🕒 ${esc((n.validFrom || '') + ' ~ ' + (n.validTo || 'PERM'))}${n.schedule ? ' · ' + esc(n.schedule) : ''}</span>${r.tb}${r.qt ? `<span class="px-1 rounded text-[10px] font-bold bg-sky-900/70 border border-sky-500/60 text-sky-200">🔄 ${esc(r.qt)}</span>` : ''}<span class="text-[10px] ${T.txt}">${esc(r.why)}</span>${r.manual ? `<span class="px-1 rounded text-[10px] font-bold bg-amber-900/60 border border-dashed border-amber-400 text-amber-100" title="${esc(r.manual)}">🔎 수동 확인 · ${esc(r.manual)}</span>` : ''}${r.same && r.same.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">같은 내용 +${r.same.length}건</span>` : ''}${r.rel && r.rel.length ? `<span class="px-1 rounded text-[10px] bg-slate-800 border border-slate-600 text-slate-300">관련 노탐 ${r.rel.length}건 묶음</span>` : ''}${n.dupIn && n.dupIn.length ? `<span class="text-[9px] text-slate-500">+${esc(n.dupIn.join('·'))} 중복</span>` : ''}${n.geo || brfCoordList(n.rawText || n.etext || '').length ? `<button type="button" data-brf-map="${esc(n.notamId)}" class="text-[10.5px] font-bold text-sky-200 bg-sky-950/60 border border-sky-600 px-1.5 rounded">📍 지도 이동</button>` : ''}${twyHas(n) ? `<button type="button" data-twy-open="${esc(n.secCode)}" data-twy-id="${esc(n.notamId)}" class="text-[10.5px] font-bold px-1.5 rounded" style="background:#7f1d1d;border:1px solid #f87171;color:#fff">🛬 유도로</button>` : ''}<span data-brf-caret class="ml-auto text-[10px] text-slate-500">${open ? '▾ 접기' : '▸ 펼치기'}</span></div>
-              <div data-brf-line class="${open ? 'hidden' : ''}">${cd ? `<div class="text-[11px] text-teal-200 leading-snug line-clamp-1">📘 ${esc(cd.s)}</div>` : pre ? `<div class="text-[11px] text-emerald-200 leading-snug line-clamp-1">📗 ${esc(pre.s)}</div>` : ai ? `<div class="text-[11px] text-violet-200 leading-snug line-clamp-1">🤖 ${esc(ai.s)}</div>` : ''}<div class="mono text-[11px] ${cd || pre || ai ? 'text-slate-400' : 'text-slate-300'} leading-snug line-clamp-1" title="원문">${cd || pre || ai ? '<span class="text-[9px] text-slate-500 font-sans">원문 </span>' : ''}${esc(line)}</div></div>
+              <div data-brf-line class="${open ? 'hidden' : ''}">${cd ? `<div class="text-[11px] text-teal-200 leading-snug line-clamp-1">📘 ${cd.t ? `<b>${esc(cd.t)}</b> · ` : ''}${esc(String(cd.s).replace(/\n/g, ' '))}</div>` : pre ? `<div class="text-[11px] text-emerald-200 leading-snug line-clamp-1">📗 ${esc(pre.s)}</div>` : ai ? `<div class="text-[11px] text-violet-200 leading-snug line-clamp-1">🤖 ${esc(ai.s)}</div>` : ''}<div class="mono text-[11px] ${cd || pre || ai ? 'text-slate-400' : 'text-slate-300'} leading-snug line-clamp-1" title="원문">${cd || pre || ai ? '<span class="text-[9px] text-slate-500 font-sans">원문 </span>' : ''}${esc(line)}</div></div>
             </div>
           </div>
           <div class="${open ? '' : 'hidden'} px-2 pb-2 flex flex-col gap-1" data-brf-raw>${hotBtn(hk)}${cdChg ? `<div class="text-[11px] text-amber-300 font-bold">⚠ COAD 내용이 바뀌었습니다 — 저장 요약 없음 (AI 요약 대상)</div>` : ''}${cd ? coadBlock(cd) : pre ? preBlock(pre) : ai ? aiBlock(ai) : `<button type="button" data-ai-one="${esc(n.notamId)}" class="self-start px-2 py-0.5 rounded border border-violet-600/60 bg-violet-950/40 text-violet-200 text-[11px] font-bold" ${aiBusy ? 'disabled' : ''}>🤖 AI로 요약</button>`}${koHtml}<pre class="mono text-[10.5px] whitespace-pre-wrap break-words text-slate-200 bg-slate-900 rounded p-2">${esc(n.validity || '')}\n${brfCoordLink(brfHl(n), n.notamId)}</pre>${brfLegend(n)}${abbrPanel(n.rawText || n.etext)}</div>
@@ -9530,7 +9529,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     })();
 
     // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
-    const APP_VERSION = '1.5';
+    const APP_VERSION = '1.6';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
