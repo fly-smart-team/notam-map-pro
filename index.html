@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NOTAM Pro (AI 개인용)</title>
+  <title>NOTAM Pro</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -823,6 +823,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
   </style>
 <style>
   /* 간단히 보기: 잘 안 쓰는 부분 숨김 (헤더 ▤ 버튼으로 전체 보기 전환) */
+  .hdr-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:10px;border:1px solid rgba(2,132,199,.7);background:rgba(8,47,73,.45);color:#bae6fd;font-size:12px;font-weight:700;line-height:1}
+  .hdr-btn:hover{background:rgba(12,74,110,.6)}
+  .hdr-row{flex-wrap:wrap;justify-content:flex-end}
+  @media (max-width:640px){ header > div{flex-wrap:wrap} .hdr-row{flex:1 1 100%;justify-content:space-between;gap:4px} .hdr-btn{padding:6px 7px;gap:4px} }
   body.pro-slim #fpl-input, body.pro-slim #pkg1-airport-names, body.pro-slim #pkg1-tabs-flt,
   body.pro-slim .pro-slim-hide, body.pro-slim #map-summary { display: none !important; }
   /* 주기장 삼각형: 넓은 화면은 공항 이름 오른쪽, 좁은 화면(폰)은 시각 아래 */
@@ -920,16 +924,13 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/14 12:30 ↻</button>
-      <span class="ml-auto flex items-center gap-1.5">
-        <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🔍 MEL</button>
-        <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="px-2.5 py-1.5 rounded-lg border text-[12px] font-bold hover:opacity-90" style="border-color:#a78bfa;background:rgba(76,29,149,.35);color:#ddd6fe">🥶 Cold Temp</button>
-        <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="px-2.5 py-1.5 rounded-lg border border-amber-600/70 bg-amber-950/40 text-[12px] font-bold text-amber-200 hover:bg-amber-900/50">🔋 위험물</button>
-        <button id="btn-wind" type="button" title="바람 제한치 계산 · 활주로 상태(Braking Action) — FOM 4.5/5.8 · FCRM 1.17 · FCOM RCAM" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🌬 Wind</button>
-        <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="px-2.5 py-1.5 rounded-lg border border-cyan-600/70 bg-cyan-950/40 text-[12px] font-bold text-cyan-200 hover:bg-cyan-900/50">🧊 ANTI/D-ICING</button>
-        <button id="btn-claude" type="button" title="Claude 작업 대화 열기 — OFP를 붙여 사전 분석 요청" class="px-2.5 py-1.5 rounded-lg border border-orange-500/70 bg-orange-950/40 text-[12px] font-bold text-orange-200 hover:bg-orange-900/50">✳️ Claude</button>
-        <button id="btn-slim" type="button" title="간단히 보기 / 전체 보기" class="h-7 px-1.5 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-[11px] border border-slate-700">▤ 간단히</button>
-        <button id="btn-claude-set" type="button" title="Claude 연결 주소 바꾸기" class="w-7 h-7 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-800 text-xs">⚙</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v1.0 ↻</button>
+      <span class="hdr-row ml-auto flex items-center gap-1.5">
+        <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
+        <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
+        <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l9 16H3z"/><path d="M12 10v4.5M12 17.2v.1"/></svg>DG</button>
+        <button id="btn-wind" type="button" title="바람 제한치 계산 · 활주로 상태(Braking Action) — FOM 4.5/5.8 · FCRM 1.17 · FCOM RCAM" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5M3 12h16a2.5 2.5 0 1 1-2.5 2.5M3 16h8a2 2 0 1 1-2 2"/></svg>Wind</button>
+        <button type="button" data-hc-open title="제방빙액 지속시간(HOT) 검색 · FAA HOT 표" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/></svg>Anti-Ice</button>
       </span>
     </div>
     <!-- 히든 메뉴: FOM S13.1 위험물 검색 (보조배터리 Wh 계산 포함) · 파일 내장 -->
@@ -4178,13 +4179,8 @@ input,select,textarea,button{font-size:max(1em,14px)}
     document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-mel-load]')) { if (melDB) melLoadFile(); else melFromCloud(false).then(ok => { if (!ok) melLoadFile(); }); } });
     // 2번 칸(Flight Information)이 다시 그려질 때마다 기상 차트 분석도 다시 넣음 (기상·기온 바로 아래)
 
-    // ===== 간단히 보기 (기본) / 전체 보기 =====
-    (() => {
-      const K = 'notamPro.slim', get = () => { try { return localStorage.getItem(K) !== '0'; } catch (e) { return true; } };
-      const apply = on => { document.body.classList.toggle('pro-slim', on); const b = document.getElementById('btn-slim'); if (b) b.textContent = on ? '▤ 간단히' : '▦ 전체'; };
-      apply(get());
-      document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#btn-slim')) return; const on = !document.body.classList.contains('pro-slim'); try { localStorage.setItem(K, on ? '1' : '0'); } catch (er) { } apply(on); showToast(on ? '간단히 보기 — 잘 안 쓰는 부분을 숨겼습니다' : '전체 보기'); });
-    })();
+    // 간단히 보기: 예전의 '간단히/전체' 전환 버튼은 없앰 — 항상 간단히 보기
+    document.body.classList.add('pro-slim');
     // share/fms-wind.js 와 같은 코드 (배포 버전에 그대로 옮길 수 있게 따로 파일로도 둠)
     // ===== FMS 순항 바람 입력 (Airbus CRZ WIND) =====
     // OFP 'WIND AND TEMPERATURE SUMMARY'를 읽어 어느 웨이포인트에 바람·기온을 넣을지 고른다.
@@ -9519,6 +9515,8 @@ input,select,textarea,button{font-size:max(1em,14px)}
       $('wind-pop').addEventListener('click', e => { e.preventDefault(); const w = window.open(url(), '_blank'); if (!w) location.href = url(); });   // 스크립트로 연 창이라야 '닫기'(window.close)가 됨
     })();
 
+    // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
+    const APP_VERSION = '1.0';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
@@ -9527,19 +9525,6 @@ input,select,textarea,button{font-size:max(1em,14px)}
       try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) { }
       location.replace(location.pathname + '?v=' + Date.now());
     });
-    // ===== Claude 연결: 비행 전 OFP를 붙여 노탐·COAD 사전 요약과 기상 차트 분석을 요청하는 대화로 이동 =====
-    (function () {
-      const KEY = 'notamPro.claudeUrl', DEF = 'https://claude.ai/code/session_01DAoW3rschdahNvSqYTHrvQ';
-      const url = () => { try { return localStorage.getItem(KEY) || DEF; } catch (e) { return DEF; } };
-      $('btn-claude').addEventListener('click', () => { window.open(url(), '_blank', 'noopener'); });
-      $('btn-claude-set').addEventListener('click', () => {
-        const v = prompt('Claude 연결 주소 (claude.ai 대화·프로젝트 링크)\n비우면 기본 주소로 돌아갑니다.', url());
-        if (v == null) return;
-        try { if (/^https:\/\/(claude\.ai|.*\.claude\.ai)\//.test(v.trim())) localStorage.setItem(KEY, v.trim()); else if (!v.trim()) localStorage.removeItem(KEY); else { alert('claude.ai 주소만 넣을 수 있습니다.'); return; } } catch (e) { }
-        showToast('Claude 연결 주소를 저장했습니다');
-      });
-    })();
-
     // ===== 섹션 접기/펼치기 (제목만 남기고 숨김 · 상태는 이 기기에 저장) =====
     (function () {
       const KEY = 'sectionCollapsed.v1';

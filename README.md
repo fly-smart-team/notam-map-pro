@@ -1,4 +1,4 @@
-# NOTAM Pro (AI 개인용)
+# NOTAM Pro
 
 배포 버전 `fly-smart-team/notammap` **v104** (`release-v104`, 커밋 `22e78f6`)에서 복사해 시작한 개인용 AI 버전입니다. 배포 버전에는 반영하지 않습니다.
 

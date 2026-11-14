@@ -1,5 +1,5 @@
 {
-  "name": "NOTAM Pro (AI 개인용)",
+  "name": "NOTAM Pro",
   "short_name": "NOTAM Pro",
   "start_url": "./index.html",
   "scope": "./",
