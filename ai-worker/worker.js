@@ -3,6 +3,8 @@
 //
 // 경로
 //   GET  /health                : 상태 확인 (토큰 불필요)
+//   GET  /adsb/reg/HL8510       : 기체 실시간 위치 (adsb.fi / adsb.lol / airplanes.live)
+//   GET  /icn/reg/HL8511        : 인천공항 도착·출발 기록 (기체별)
 //   GET  /dgk/*, /kac/*         : 공공데이터포털 중계 (주기장·게이트·운항현황). 키는 Worker가 붙임
 //   POST /ai/notam-summary      : 노탐 한글 요약 (토큰 필요)
 //        본문: { "notams": [ { "id": "A1234/26", "text": "원문..." }, ... ] }
@@ -12,13 +14,13 @@
 //   ACCESS_TOKEN       : 개인 접근 토큰 (필수, 앱에서 X-Access-Token 헤더로 보냄)
 //   DEEPSEEK_API_KEY   : DeepSeek 키 (있으면 사용)
 //   ANTHROPIC_API_KEY  : Claude 키 (있으면 사용)
-//   KAC_KEY            : 공공데이터포털(data.go.kr) 인증키 — 인천공항·한국공항공사 조회 공용 (DGK_KEY 이름도 인정)
+//   ICN_KEY / KAC_KEY  : 공공데이터포털(data.go.kr) 인증키. 하나만 있어도 인천공항·한국공항공사 모두 사용 (같은 계정 키)
 // 일반 변수 (선택)
 //   AI_ORDER           : 시도 순서, 기본 "deepseek,anthropic"
 //   DEEPSEEK_MODEL     : 기본 deepseek-flash
 //   ANTHROPIC_MODEL    : 기본 claude-haiku-5-5
 
-const VERSION = '0.4';
+const VERSION = '0.5';   // 0.5: 기존 중계(v1.3: /adsb /icn /dgk) + /kac + AI 통합
 const ALLOWED_ORIGINS = ['https://fly-smart-team.github.io'];
 const MAX_NOTAMS = 30;           // 한 번에 보낼 수 있는 노탐 수
 const MAX_CHARS = 4000;          // 노탐 하나 최대 글자 수
@@ -251,14 +253,115 @@ async function notamSummary(request, env, origin) {
 }
 
 
+
+// 공공데이터 인증키: 용도별 우선순위 (하나만 설정해도 모두 동작)
+function dgKey(env, kind) {
+  const order = kind === 'kac' ? ['KAC_KEY', 'ICN_KEY', 'DGK_KEY', 'DATA_GO_KEY'] : ['ICN_KEY', 'KAC_KEY', 'DGK_KEY', 'DATA_GO_KEY'];
+  for (const k of order) if (env[k]) return env[k];
+  return '';
+}
+
+// ───────── 기체 위치 · 인천공항 기록 (기존 중계 v1.3)
+// 출처 하나 조회 (최대 5초)
+async function one(name, url) {
+  const t0 = Date.now();
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 5000);
+  try {
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: { 'User-Agent': 'notam-lite-proxy/1.1 (personal, non-commercial)', 'Accept': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const j = await res.json();
+    return { src: name, ac: j.ac || j.aircraft || [], ms: Date.now() - t0 };
+  } catch (e) {
+    throw new Error(`${name}: ${e.name === 'AbortError' ? '시간 초과(5초)' : e.message}`);
+  } finally { clearTimeout(timer); }
+}
+
+// 세 곳 동시 조회 → 가장 먼저 성공한 결과 사용
+async function adsbByReg(reg) {
+  const r = encodeURIComponent(reg.toUpperCase().replace(/[^A-Z0-9-]/g, ''));
+  const jobs = [
+    one('adsb.fi', `https://opendata.adsb.fi/api/v2/registration/${r}`),
+    one('adsb.lol', `https://api.adsb.lol/v2/reg/${r}`),
+    one('airplanes.live', `https://api.airplanes.live/v2/reg/${r}`),
+  ];
+  try {
+    // 기체가 잡힌 결과 우선, 없으면 빈 결과라도 성공으로
+    const withAc = await Promise.any(jobs.map(p => p.then(x => x.ac.length ? x : Promise.reject(new Error('empty')))));
+    return { ...withAc, errs: [] };
+  } catch (_) {
+    const all = await Promise.allSettled(jobs);
+    const ok = all.find(x => x.status === 'fulfilled');
+    const errs = all.filter(x => x.status === 'rejected').map(x => x.reason.message);
+    if (ok) return { ...ok.value, errs };
+    return { src: null, ac: [], errs, fail: true };
+  }
+}
+
+
+// ---- 인천공항 운항 현황: 하루치(도착/출발)를 받아 5분간 보관 ----
+const ICN_BASE = 'https://apis.data.go.kr/B551177/statusOfAllFltDeOdp';
+async function icnDay(op, date, env, ctx, stat) {
+  const cacheKey = new Request(`https://icn-cache.local/${op}/${date}`);
+  const cache = caches.default;
+  const hit = await cache.match(cacheKey);
+  if (hit) { stat.cached++; return hit.json(); }
+  const all = [];
+  for (let page = 1; page <= 3; page++) {
+    const q = new URLSearchParams({ serviceKey: dgKey(env, 'dgk'), type: 'json', searchDate: date, searchFrom: '0000', searchTo: '2400', searchdtCode: 'S', numOfRows: '1000', pageNo: String(page) });
+    const r = await fetch(`${ICN_BASE}/${op}?${q}`, { headers: { 'Accept': 'application/json' } });
+    stat.calls++;
+    const txt = await r.text();
+    let j; try { j = JSON.parse(txt); } catch (e) { throw new Error(`${op} ${date}: 응답 형식 오류 ${txt.slice(0, 80)}`); }
+    const body = (j.response || j).body || {}, head = (j.response || j).header || {};
+    if (head.resultCode && head.resultCode !== '00') throw new Error(`${op} ${date}: ${head.resultCode} ${head.resultMsg || ''}`);
+    let items = body.items; if (items && !Array.isArray(items)) items = items.item ? [].concat(items.item) : [];
+    items = items || [];
+    for (const x of items) {
+      const reg = String(x.aircraftRegNo || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (!reg || reg === '-') continue;
+      all.push({ reg, flt: x.flightId, cs: x.codeshare, ap: x.airportCode, apn: x.airport, sch: x.scheduleDatetime, est: x.estimatedDatetime,
+        stand: x.fstandPosition, gate: x.gateNumber, term: x.terminalId, rmk: x.remark, sub: x.aircraftSubtype });
+    }
+    if (all.length + 0 >= (+body.totalCount || 0) || items.length < 1000) break;
+  }
+  ctx.waitUntil(cache.put(cacheKey, new Response(JSON.stringify(all), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=300' } })));
+  return all;
+}
+function kstDates(from, to) {
+  const d0 = Date.UTC(+from.slice(0, 4), +from.slice(4, 6) - 1, +from.slice(6, 8)), d1 = Date.UTC(+to.slice(0, 4), +to.slice(4, 6) - 1, +to.slice(6, 8));
+  const out = []; for (let d = d0; d <= d1 && out.length < 4; d += 864e5) out.push(new Date(d).toISOString().slice(0, 10).replace(/-/g, ''));
+  return out;
+}
+async function icnByReg(reg, from, to, env, ctx) {
+  const R = reg.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const stat = { calls: 0, cached: 0 }, errs = [];
+  const res = { reg: R, from, to, arr: [], dep: [] };
+  for (const date of kstDates(from, to)) {
+    for (const [op, key] of [['getFltArrivalsDeOdp', 'arr'], ['getFltDeparturesDeOdp', 'dep']]) {
+      try {
+        const rows = await icnDay(op, date, env, ctx, stat);
+        rows.forEach(x => { const t = x.est || x.sch || ''; if (x.reg === R && t >= from && t <= to && x.cs !== 'Slave') res[key].push(x); });
+      } catch (e) { errs.push(e.message); }
+    }
+  }
+  const by = (a, b) => String(a.est || a.sch).localeCompare(String(b.est || b.sch));
+  res.arr.sort(by); res.dep.sort(by);
+  return { ...res, errs, ...stat };
+}
+
+
 // ───────── 공공데이터포털 중계 (인천공항 B551177 · 한국공항공사 B551178) ─────────
 async function dataGoProxy(request, env, url, origin) {
   if (request.method !== 'GET') return json({ error: 'GET만 가능합니다' }, 405, origin);
-  if (origin && !ALLOWED_ORIGINS.includes(origin)) return json({ error: '허용되지 않은 출처' }, 403, origin);
+  if (origin && !ALLOWED_ORIGINS.includes(origin) && !/^http:\/\/localhost(:\d+)?$/.test(origin)) return json({ error: '허용되지 않은 출처' }, 403, origin);
   const path = url.pathname.replace(/^\/(dgk|kac)/, '');
   if (!/^\/(B551177|B551178)\/[A-Za-z0-9_\-\/]+$/.test(path)) return json({ error: '허용되지 않은 경로' }, 403, origin);
-  const key = env.KAC_KEY || env.DGK_KEY || env.DATA_GO_KEY;
-  if (!key) return json({ error: '서버에 KAC_KEY가 설정되지 않았습니다' }, 500, origin);
+  const key = dgKey(env, /^\/kac/.test(url.pathname) ? 'kac' : 'dgk');
+  if (!key) return json({ error: '서버에 ICN_KEY(또는 KAC_KEY) 비밀값이 없습니다' }, 500, origin);
   const q = new URLSearchParams(url.search);
   q.delete('serviceKey'); q.delete('ServiceKey');
   let k = key; try { if (/%[0-9A-Fa-f]{2}/.test(k)) k = decodeURIComponent(k); } catch { }
@@ -275,7 +378,7 @@ async function dataGoProxy(request, env, url, origin) {
 
 // ───────── 진입점 ─────────
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const origin = request.headers.get('Origin') || '';
 
@@ -285,12 +388,22 @@ export default {
       const keys = {};
       for (const [name, p] of Object.entries(PROVIDERS)) keys[name] = !!env[p.keyName];
       return json({
-        ok: true, version: VERSION,
+        ok: true, version: VERSION, v: '1.3', icnKey: !!dgKey(env, 'dgk'), kacKey: !!dgKey(env, 'kac'),
         token: !!env.ACCESS_TOKEN,
         keys,
         order: activeProviders(env),
         colo: (request.cf && request.cf.colo) || '',
       }, 200, origin);
+    }
+
+    const am = url.pathname.match(/^\/adsb\/reg\/([A-Za-z0-9-]{3,10})$/);
+    if (am) { const r = await adsbByReg(am[1]); return json(r, r.fail ? 502 : 200, origin); }
+    const im = url.pathname.match(/^\/icn\/reg\/([A-Za-z0-9-]{3,10})$/);
+    if (im) {
+      if (!dgKey(env, 'dgk')) return json({ error: 'Worker에 ICN_KEY 비밀값이 없습니다' }, 500, origin);
+      const from = url.searchParams.get('from') || '', to = url.searchParams.get('to') || '';
+      if (!/^\d{12}$/.test(from) || !/^\d{12}$/.test(to) || from > to) return json({ error: 'from/to는 YYYYMMDDHHmm (KST)' }, 400, origin);
+      try { return json(await icnByReg(im[1], from, to, env, ctx), 200, origin); } catch (e) { return json({ error: String((e && e.message) || e) }, 502, origin); }
     }
 
     if (url.pathname.startsWith('/dgk/') || url.pathname.startsWith('/kac/')) {
