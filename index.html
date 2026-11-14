@@ -963,7 +963,8 @@ input,select,textarea,button{font-size:max(1em,14px)}
           <input id="pdf-input" type="file" accept="application/pdf,.pdf" class="hidden" />
         </label>
         <div id="pdf-progress" class="hidden text-[11px] text-sky-400 mono">PDF 분석 중...</div>
-        <div class="flex items-stretch gap-2">
+        <button id="btn-ret-toggle" type="button" aria-expanded="false" class="self-start text-[12px] font-bold rounded-full px-3 py-1.5 border" style="background:rgba(49,46,129,.35);border-color:#6366f1;color:#c7d2fe">🔄 Return flight OFP (퀵턴) <span id="ret-toggle-st"></span> <span id="ret-toggle-arrow">▸ 펴기</span></button>
+        <div id="ret-wrap" class="flex items-stretch gap-2" style="display:none">
           <label id="ret-dropzone" class="flex-1 flex flex-col items-center justify-center gap-0.5 border-2 border-dashed border-indigo-700/60 hover:border-indigo-400 rounded-xl p-3 cursor-pointer bg-indigo-950/20 text-center">
             <span id="ret-pdf-label" class="text-xs font-bold text-indigo-300">🔄 Return flight OFP 첨부 (퀵턴·선택)</span>
             <span id="ret-pdf-sub" class="text-[10px] text-slate-400">돌아오는 편 OFP를 추가하면 2번 운항정보·3번 노탐·Joint Brief에 반영됩니다</span>
@@ -980,7 +981,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
           <button id="btn-reset" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 px-3 rounded-xl text-xs border border-slate-700">초기화</button>
         </div>
 
-        <div id="route-summary" class="bg-slate-950/60 border border-slate-800 rounded-xl p-2.5 text-[11px] text-slate-400 mono whitespace-pre-wrap">경로 정보 없음</div>
+        <div id="route-summary" style="display:none" class="bg-slate-950/60 border border-slate-800 rounded-xl p-2.5 text-[11px] text-slate-400 mono whitespace-pre-wrap">경로 정보 없음</div>
         <div id="diag" class="hidden bg-slate-950/60 border border-slate-800 rounded-xl p-2.5 text-[11px] text-slate-300 mono flex flex-col gap-0.5">PDF를 첨부하면 인식 단계별 결과가 표시됩니다.</div>
       </section>
 
@@ -3534,11 +3535,12 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
     function updateRouteSummary() {
       const el = $('route-summary');
-      if (!info.dep && !routeCoordinates.length) { el.textContent = '경로 정보 없음'; return; }
+      if (!info.dep && !routeCoordinates.length) { el.textContent = '경로 정보 없음'; el.style.display = 'none'; return; }
       const etd = info.etdMinutes !== null ? formatMinutes(info.etdMinutes) + 'Z' : '--';
       const eta = info.etaMinutes !== null ? formatMinutes(info.etaMinutes) + 'Z' : '--';
       el.textContent = `DEP ${info.dep || '--'} ETD ${etd} · DEST ${info.dest || '--'} ETA ${eta}\n경로 소스: ${routeSource}${routeTokens.length ? '\n' + routeTokens.join(' ➔ ') : ''}`;
       el.style.whiteSpace = 'pre-wrap';
+      el.style.display = routeTokens.length ? 'none' : '';   // 경로 파싱이 잘 되면 숨김 (실패했을 때만 보여줌)
     }
 
     const CARD_STYLE = {
@@ -6833,7 +6835,25 @@ input,select,textarea,button{font-size:max(1em,14px)}
       if (lb) lb.textContent = on ? `✔ Return flight OFP · ${jbFlightNo((jbQT.fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '')} ${jbQT.meta.dep}→${jbQT.meta.dest}` : '🔄 Return flight OFP 첨부 (퀵턴·선택)';
       if (sb) sb.textContent = on ? `교체공항 ${jbQT.meta.altn || '--'} · 노탐 ${(jbQT.altnNotams || []).length}건 · 다른 파일을 올리면 교체됩니다` : '돌아오는 편 OFP를 추가하면 2번 운항정보·3번 노탐·Joint Brief에 반영됩니다';
       if (cl) cl.style.display = on ? '' : 'none';
+      try { retToggleSync(); } catch (e) { }
     }
+    // Return flight OFP 첨부란: 기본 접힘, 펴기/접기 선택은 기기에 기억
+    const RET_OPEN_KEY = 'retOfpOpen.v1';
+    function retToggleSync() {
+      let open = false; try { open = localStorage.getItem(RET_OPEN_KEY) === '1'; } catch (e) { }
+      const w = $('ret-wrap'), b = $('btn-ret-toggle'), a = $('ret-toggle-arrow'), st = $('ret-toggle-st');
+      if (!w || !b) return;
+      w.style.display = open ? '' : 'none'; b.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (a) a.textContent = open ? '▾ 접기' : '▸ 펴기';
+      const on = !!(typeof jbQT !== 'undefined' && jbQT && jbQT.meta);
+      if (st) st.innerHTML = on ? `<span style="color:#6ee7b7">✔ ${esc(jbFlightNo((jbQT.fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || ''))} ${esc(jbQT.meta.dep)}→${esc(jbQT.meta.dest)}</span>` : '';
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest || !e.target.closest('#btn-ret-toggle')) return;
+      let open = false; try { open = localStorage.getItem(RET_OPEN_KEY) === '1'; localStorage.setItem(RET_OPEN_KEY, open ? '0' : '1'); } catch (er) { open = !(($('ret-wrap') || {}).style || {}).display; }
+      retToggleSync();
+    });
+    setTimeout(() => { try { retToggleSync(); } catch (e) { } }, 0);
     function qtClearReturn() {
       jbQT = null; package1AirportNotams = (package1AirportNotams || []).filter(n => !n._ret);
       document.querySelectorAll('[data-jb-qt]').forEach(x => x.remove()); try { jbQTBtn(); } catch (e) { }
