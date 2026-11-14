@@ -924,7 +924,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v1.3 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v1.4 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -1059,11 +1059,16 @@ input,select,textarea,button{font-size:max(1em,14px)}
           <span id="thr-info" class="text-slate-400"></span>
         </div>
         <div id="map" class="rounded-xl overflow-hidden border border-slate-800"></div>
+        <details id="map-index" style="border:1px solid #334155;border-radius:12px;background:rgba(15,23,42,.6)">
+          <summary style="cursor:pointer;padding:7px 11px;font-size:13px;font-weight:700;color:#e2e8f0;list-style:none;display:flex;align-items:center;gap:8px"><span id="map-index-arrow" style="color:#94a3b8;font-size:11px">▸</span>Index <span style="font-weight:400;font-size:11px;color:#94a3b8">Legend · NOTAM types</span><span id="idx-note" style="margin-left:auto;font-size:11px;font-weight:700;color:#fbbf24"></span></summary>
+          <div style="padding:6px 11px 10px;display:flex;flex-direction:column;gap:8px">
         <div class="flex flex-wrap gap-3 text-[10px] text-slate-400">
-          <span style="color:#34d399">● DEP · DEST</span><span style="color:#c084fc">● ALTN</span><span style="color:#22d3ee">● ERA</span><span style="color:#a3e635">● EDTO</span><span>🟦 수동 입력 도형</span><span>🟥 경로 교차 · 통과시각 유효</span><span>🟧 경로 교차 · 비활성</span><span>🟨 경로 미교차</span>
-          
-        </div>
-        <div id="cat-chips" class="flex flex-wrap gap-1.5"></div>
+              <span style="color:#34d399">● DEP · DEST</span><span style="color:#c084fc">● ALTN</span><span style="color:#22d3ee">● ERA</span><span style="color:#a3e635">● EDTO</span><span>🟦 수동 입력 도형</span><span>🟥 경로 교차 · 통과시각 유효</span><span>🟧 경로 교차 · 비활성</span><span>🟨 경로 미교차</span>
+              
+            </div>
+            <div id="cat-chips" class="flex flex-wrap gap-1.5"></div>
+          </div>
+        </details>
         <!-- 좌표 입력 · FMS 변환 (경로 지도 아래) -->
         <div id="mm-panel" class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex flex-col gap-2">
           <div class="flex items-center justify-between"><span class="text-[11px] font-bold text-teal-200">✏️ 좌표 입력 · FMS 변환</span><button type="button" id="mm-ocr" style="margin-left:auto;margin-right:8px;padding:2px 8px;border-radius:7px;border:1px solid #2c3744;background:#1b232d;color:#b4bfcb;font-size:11px;font-weight:700">📷 사진으로 입력</button><span id="mm-count" class="text-[11px] text-slate-400"></span></div>
@@ -5760,8 +5765,18 @@ input,select,textarea,button{font-size:max(1em,14px)}
       $('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 
+    // 지도 Index(범례·종류별 표시): 기본 접힘, 펼침 상태는 기기에 기억
+    (() => {
+      const d = document.getElementById('map-index'); if (!d) return;
+      const K = 'mapIndexOpen.v1', ar = document.getElementById('map-index-arrow');
+      try { d.open = localStorage.getItem(K) === '1'; } catch (e) { }
+      const sync = () => { if (ar) ar.textContent = d.open ? '▾' : '▸'; };
+      sync();
+      d.addEventListener('toggle', () => { sync(); try { localStorage.setItem(K, d.open ? '1' : '0'); } catch (e) { } });
+    })();
     function renderCatChips(counts) {
       const box = $('cat-chips'), keys = Object.keys(NOTAM_CATS).filter(k => counts[k]);
+      { const n = $('idx-note'); if (n) n.textContent = catHidden.size ? `${catHidden.size} type${catHidden.size > 1 ? 's' : ''} hidden` : ''; }
       if (!keys.length) { box.innerHTML = ''; return; }
       box.innerHTML = '<span class="text-[10px] text-slate-500 self-center">종류별 표시</span>' + keys.map(k =>
         `<button data-cat="${k}" class="cat-chip ${catHidden.has(k) ? 'off' : ''}"><span>${NOTAM_CATS[k].e}</span>${esc(NOTAM_CATS[k].l)} ${counts[k]}</button>`).join('');
@@ -9515,7 +9530,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     })();
 
     // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
-    const APP_VERSION = '1.3';
+    const APP_VERSION = '1.4';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
