@@ -922,9 +922,10 @@ input,select,textarea,button{font-size:max(1em,14px)}
     </div>
   </div>
 
+  <div id="fpl-global-alert" style="display:none;position:sticky;top:0;z-index:60;background:#b91c1c;color:#fff;font-weight:800;font-size:14px;text-align:center;padding:9px 12px;cursor:pointer;border-bottom:2px solid #fecaca"></div>
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v1.6 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v1.7 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -957,7 +958,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       <!-- 1. OFP 첨부 & 경로 -->
       <section id="sec-ofp" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3">
         <div class="flex items-center gap-2">
-          <h2 class="font-bold text-sm flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>1. OFP Analysis</h2>
+          <h2 class="font-bold text-sm flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>1. OFP Analysis<span id="fpl-chip" style="display:none"></span></h2>
           <button id="btn-reset" type="button" style="margin-left:auto;background:#1e293b;border:1px solid #475569;color:#cbd5e1;border-radius:10px;padding:5px 11px;font-size:12px;font-weight:700">↺ Reset</button>
         </div>
 
@@ -977,6 +978,12 @@ input,select,textarea,button{font-size:max(1em,14px)}
           </div>
         </div>
         <div id="pdf-progress" class="hidden text-[11px] text-sky-400 mono">Analyzing PDF...</div>
+
+        <div id="fpl-chk-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <label id="fpl-chk-1" style="display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;padding:8px 6px;border-radius:12px;border:1px solid #475569;background:#0f172a;color:#cbd5e1;font-size:12px;font-weight:700;cursor:pointer;text-align:center;opacity:.45;pointer-events:none"><span class="fpl-chk-txt">📄 Filed FPL (PDF)</span><input id="fpl-chk-input-1" type="file" accept="application/pdf,.pdf" class="hidden" /></label>
+          <label id="fpl-chk-2" style="display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;padding:8px 6px;border-radius:12px;border:1px solid #475569;background:#0f172a;color:#cbd5e1;font-size:12px;font-weight:700;cursor:pointer;text-align:center;opacity:.45;pointer-events:none"><span class="fpl-chk-txt">📄 Filed FPL (PDF)</span><input id="fpl-chk-input-2" type="file" accept="application/pdf,.pdf" class="hidden" /></label>
+        </div>
+        <div id="fpl-chk-panel" style="display:flex;flex-direction:column;gap:8px"></div>
 
         <details class="pro-slim-hide"><summary style="cursor:pointer;font-size:12px;color:#94a3b8">Enter FPL manually (optional)</summary>
           <textarea id="fpl-input" rows="3" placeholder="Paste the FPL — it is applied automatically"
@@ -3450,9 +3457,118 @@ input,select,textarea,button{font-size:max(1em,14px)}
       return await lib.getDocument({ data, isEvalSupported: false }).promise;
     }
 
+    // ===================== FPL 검증: OFP 안의 ATS FPL ↔ 실제 전송된 FPL(PDF) =====================
+    // 핵심: 기번(REG)과 경로가 같은지. RMK·19번 항목(보충 정보)은 무시. 안 맞으면 눈에 띄게 경고.
+    const fplChk = { 1: null, 2: null };
+    const fplNorm = t => String(t || '').replace(/[Ø]/g, '0').replace(/\s+/g, ' ').trim().toUpperCase();
+    function parseAtsFpl(raw) {
+      const m = String(raw || '').replace(/[Ø]/g, '0').match(/\(\s*FPL\s*-[\s\S]*?\)/); if (!m) return null;
+      const s = fplNorm(m[0]).replace(/^\(\s*/, '').replace(/\)\s*$/, '');
+      const parts = s.split('-').map(x => x.trim());
+      if (parts.length < 8 || parts[0] !== 'FPL') return null;
+      let k = 8; while (k < parts.length && !/^E\/\d{4}/.test(parts[k])) k++;
+      const f18 = parts.slice(8, k).join('-');
+      const kv = {}; for (const x of f18.matchAll(/(?:^|\s)([A-Z]{2,5})\/(.*?)(?=\s[A-Z]{2,5}\/|$)/g)) if (!(x[1] in kv)) kv[x[1]] = x[2].trim();
+      const dep = (parts[5] || '').match(/^([A-Z]{4})(\d{4})/) || [], dst = (parts[7] || '').split(' ');
+      const d2 = (dst[0] || '').match(/^([A-Z]{4})(\d{4})/) || [];
+      const route = (parts[6] || '').split(' ').filter(Boolean);
+      return { acid: parts[1], type: (parts[3] || '').split('/')[0], equip: (parts[4] || ''), dep: dep[1] || '', eobt: dep[2] || '', dest: d2[1] || '', eet: d2[2] || '', altn: dst.slice(1).filter(Boolean).join(' '),
+        route, reg: (kv.REG || '').replace(/[^A-Z0-9]/g, ''), dof: kv.DOF || '', eetFir: kv.EET || '', pbn: kv.PBN || '', dat: kv.DAT || '', sur: kv.SUR || '', sel: kv.SEL || '', raw: m[0] };
+    }
+    function fplTokDiff(a, b) {   // 토큰 배열 LCS 비교 → 서로 다른 토큰 표시
+      const n = a.length, m = b.length, L = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+      for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = a[i] === b[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+      const A = a.map(t => ({ t, d: true })), B = b.map(t => ({ t, d: true }));
+      let i = 0, j = 0; while (i < n && j < m) { if (a[i] === b[j]) { A[i].d = false; B[j].d = false; i++; j++; } else if (L[i + 1][j] >= L[i][j + 1]) i++; else j++; }
+      return { A, B };
+    }
+    function compareFpl(o, f) {
+      const items = [], add = (key, label, sev, a, b) => { if (String(a) !== String(b)) items.push({ key, label, sev, ofp: a || '—', filed: b || '—' }); };
+      add('reg', 'Aircraft REG', 'crit', o.reg, f.reg);
+      const routeSame = o.route.join(' ') === f.route.join(' ');
+      add('acid', 'Callsign', 'crit', o.acid, f.acid); add('type', 'Aircraft type', 'crit', o.type, f.type);
+      add('dep', 'Departure', 'crit', o.dep, f.dep); add('dest', 'Destination', 'crit', o.dest, f.dest); add('altn', 'Alternate(s)', 'crit', o.altn, f.altn);
+      add('eobt', 'EOBT', 'warn', o.eobt, f.eobt); add('dof', 'DOF', 'warn', o.dof, f.dof); add('eet', 'Total EET', 'warn', o.eet, f.eet);
+      add('equip', 'Equipment', 'warn', o.equip, f.equip); add('pbn', 'PBN', 'warn', o.pbn, f.pbn); add('sur', 'SUR', 'warn', o.sur, f.sur); add('dat', 'DAT', 'warn', o.dat, f.dat); add('sel', 'SELCAL', 'warn', o.sel, f.sel); add('eetFir', 'FIR EET', 'warn', o.eetFir, f.eetFir);
+      let routeDiff = null;
+      if (!routeSame) { routeDiff = fplTokDiff(o.route, f.route); items.unshift({ key: 'route', label: 'Route', sev: 'crit' }); }
+      const crit = items.filter(x => x.sev === 'crit').length, warn = items.filter(x => x.sev === 'warn').length;
+      return { status: crit ? 'mismatch' : 'ok', crit, warn, items, routeDiff, routeLen: o.route.length, reg: o.reg };
+    }
+    async function fplFromPdf(file) {
+      const pdf = await openPdf(new Uint8Array(await file.arrayBuffer()));
+      const L = [], E = [];
+      for (let i = 1; i <= pdf.numPages; i++) { const c = await (await pdf.getPage(i)).getTextContent(); L.push(layoutTextFromItems(c.items)); E.push(textFromItemsEol(c.items)); }
+      const texts = [L.join('\n'), E.join('\n')];
+      if (!texts[0].replace(/\s/g, '').length) throw new Error('No text found (scanned PDFs are not supported)');
+      const all = [];
+      for (const t of texts) { for (const m of String(t).matchAll(/\(\s*FPL\s*-[\s\S]*?\)/g)) { const p = parseAtsFpl(m[0]); if (p && p.route.length) all.push(p); } if (all.length) break; }
+      if (!all.length) throw new Error('No ATS FPL message "(FPL-…)" found in this PDF');
+      return all;
+    }
+    function fplOfpText(leg) { return leg === 1 ? (window.__ofpFpl1 || '') : (typeof jbQT !== 'undefined' && jbQT ? jbQT.fpl : ''); }
+    async function attachFiledFpl(leg, file) {
+      const ofp = parseAtsFpl(fplOfpText(leg));
+      if (!ofp) { showToast('FPL not found in the OFP — attach the OFP first'); return; }
+      try {
+        const all = await fplFromPdf(file);
+        const f = all.find(x => x.acid === ofp.acid) || all[0];
+        const res = compareFpl(ofp, f); res.note = f.acid !== ofp.acid ? `PDF contains ${all.length} FPL(s); none has callsign ${ofp.acid}` : '';
+        fplChk[leg] = { name: file.name, res, at: Date.now() };
+      } catch (e) { fplChk[leg] = { name: file.name, err: e.message || String(e) }; }
+      renderFplChk();
+    }
+    function renderFplChk() {
+      const have = { 1: !!window.__ofpFpl1, 2: !!(typeof jbQT !== 'undefined' && jbQT && jbQT.fpl) };
+      [1, 2].forEach(leg => {
+        const lb = $('fpl-chk-' + leg); if (!lb) return;
+        const c = fplChk[leg], t = lb.querySelector('.fpl-chk-txt');
+        lb.style.opacity = have[leg] ? '' : '.45'; lb.style.pointerEvents = have[leg] ? '' : 'none';
+        let txt = `📄 ${leg === 1 ? '1st' : '2nd'} leg · Filed FPL (PDF)`, bd = '#475569', bg = '#0f172a', col = '#cbd5e1';
+        if (c && c.res) { if (c.res.status === 'mismatch') { txt = `✖ ${leg === 1 ? '1st' : '2nd'} leg · MISMATCH`; bd = '#fca5a5'; bg = '#b91c1c'; col = '#fff'; } else { txt = `✔ ${leg === 1 ? '1st' : '2nd'} leg · FPL MATCH`; bd = '#16a34a'; bg = 'rgba(5,46,22,.6)'; col = '#bbf7d0'; } }
+        else if (c && c.err) { txt = `⚠ ${leg === 1 ? '1st' : '2nd'} leg · cannot read`; bd = '#f59e0b'; col = '#fde68a'; }
+        if (t) t.textContent = txt; lb.style.borderColor = bd; lb.style.background = bg; lb.style.color = col;
+      });
+      // 상세 패널
+      const pan = $('fpl-chk-panel'); let html = '';
+      const tok = (arr) => arr.map(x => x.d ? `<span style="background:#dc2626;color:#fff;border-radius:4px;padding:0 3px;font-weight:800">${esc(x.t)}</span>` : esc(x.t)).join(' ');
+      [1, 2].forEach(leg => {
+        const c = fplChk[leg]; if (!c) return; const nm = leg === 1 ? '1st leg' : '2nd leg';
+        if (c.err) { html += `<div style="border:1px solid #f59e0b;background:rgba(120,53,15,.35);color:#fde68a;border-radius:12px;padding:8px 10px;font-size:12px">⚠ <b>${nm}</b> — filed FPL could not be checked: ${esc(c.err)}</div>`; return; }
+        const r = c.res;
+        if (r.status === 'ok') {
+          const notes = r.items.filter(x => x.sev === 'warn');
+          html += `<div style="border:1px solid #16a34a;background:rgba(5,46,22,.5);color:#bbf7d0;border-radius:12px;padding:8px 10px;font-size:12px;line-height:1.5">✔ <b>FPL MATCH · ${nm}</b> — REG <b>${esc(r.reg || '—')}</b> · Route identical (${r.routeLen} items)<div style="color:#86efac;font-size:11px">${esc(c.name)}${r.note ? ' · ' + esc(r.note) : ''}</div>${notes.length ? `<div style="color:#fcd34d;font-size:11px;margin-top:3px">Notes: ${notes.map(x => `${esc(x.label)} OFP ${esc(x.ofp)} / filed ${esc(x.filed)}`).join(' · ')}</div>` : ''}</div>`;
+        } else {
+          const rows = r.items.filter(x => x.key !== 'route').map(x => `<tr><td style="padding:2px 8px 2px 0;color:${x.sev === 'crit' ? '#fecaca' : '#fde68a'}">${x.sev === 'crit' ? '●' : '○'} ${esc(x.label)}</td><td style="padding:2px 8px 2px 0;font-family:ui-monospace,monospace">${esc(x.ofp)}</td><td style="padding:2px 0;font-family:ui-monospace,monospace;font-weight:800;color:#fff">${esc(x.filed)}</td></tr>`).join('');
+          html += `<div style="border:3px solid #fca5a5;background:#7f1d1d;color:#fff;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5">
+            <div style="font-size:16px;font-weight:900">✖ FPL MISMATCH · ${nm}</div>
+            <div style="font-size:12px;font-weight:700;margin-bottom:4px">The filed ATS FPL does NOT match the OFP. Verify with Dispatch before departure.</div>
+            ${rows ? `<table style="border-collapse:collapse;font-size:12px;margin:4px 0"><tr style="color:#fecaca;font-size:10px"><td></td><td>OFP</td><td>FILED</td></tr>${rows}</table>` : ''}
+            ${r.routeDiff ? `<div style="margin-top:4px"><b>ROUTE</b> <span style="color:#fecaca;font-size:11px">(highlighted = different)</span><div style="font-size:10px;color:#fecaca;margin-top:2px">OFP</div><div style="font-family:ui-monospace,monospace;font-size:11px;word-break:break-word">${tok(r.routeDiff.A)}</div><div style="font-size:10px;color:#fecaca;margin-top:4px">FILED</div><div style="font-family:ui-monospace,monospace;font-size:11px;word-break:break-word">${tok(r.routeDiff.B)}</div></div>` : ''}
+            <div style="color:#fecaca;font-size:11px;margin-top:4px">${esc(c.name)}${r.note ? ' · ' + esc(r.note) : ''}</div></div>`;
+        }
+      });
+      if (pan) pan.innerHTML = html;
+      // 제목 줄 칩 (섹션을 접어도 보임)
+      const chip = $('fpl-chip'), legs = [1, 2].filter(l => have[l]);
+      let state = 'none'; if (legs.length) { const bad = legs.some(l => fplChk[l] && fplChk[l].res && fplChk[l].res.status === 'mismatch'), unv = legs.some(l => !fplChk[l] || fplChk[l].err); state = bad ? 'bad' : unv ? 'unv' : 'ok'; }
+      if (chip) {
+        const S = { none: ['', 'display:none'], ok: ['FPL ✔', 'background:#15803d;color:#fff'], unv: ['FPL ?', 'background:#334155;color:#fde68a;border:1px solid #f59e0b'], bad: ['FPL ✖ MISMATCH', 'background:#dc2626;color:#fff'] }[state];
+        chip.textContent = S[0]; chip.style.cssText = state === 'none' ? 'display:none' : `${S[1]};border-radius:9999px;padding:2px 9px;font-size:11px;font-weight:800;margin-left:4px`; chip.title = state === 'unv' ? 'Filed FPL not verified yet — attach the filed FPL (PDF)' : '';
+      }
+      const g = $('fpl-global-alert');
+      if (g) { if (state === 'bad') { const legsBad = legs.filter(l => fplChk[l] && fplChk[l].res && fplChk[l].res.status === 'mismatch').map(l => l === 1 ? '1st leg' : '2nd leg').join(' · '); g.textContent = `✖ FPL MISMATCH (${legsBad}) — filed FPL ≠ OFP · Verify with Dispatch`; g.style.display = 'block'; } else g.style.display = 'none'; }
+    }
+    [1, 2].forEach(leg => {
+      const inp = $('fpl-chk-input-' + leg); if (inp) inp.addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) attachFiledFpl(leg, f); });
+    });
+    { const g = $('fpl-global-alert'); if (g) g.addEventListener('click', () => { const s = $('sec-ofp'); if (s) s.scrollIntoView({ behavior: 'smooth', block: 'start' }); }); }
+
     async function handlePdf(file) {
       const bar = $('pdf-progress'), label = $('pdf-label'), sub = $('pdf-sub');
       try { if (jbQT) qtClearReturn(); } catch (e) { }   // 1st leg를 바꾸면 2nd leg는 비움
+      fplChk[1] = null; fplChk[2] = null; window.__ofpFpl1 = '';
       bar.classList.remove('hidden'); label.textContent = 'Reading PDF...';
       sub.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB`;
       try {
@@ -3491,7 +3607,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
         pdfEdto = parseEdto(fullText);
         detectAircraft(fplToApply);
         pdfFirCode = pdfFirList[0] || null;
-        $('fpl-input').value = fplToApply;
+        $('fpl-input').value = fplToApply; window.__ofpFpl1 = fplToApply;
         applyRoute(fplToApply);
 
         const parsed = parseOfpNotams(fullText);
@@ -3519,7 +3635,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
         { const cs1 = (pdfFlt && pdfFlt.callsign) || (($('fpl-input').value.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '');
           label.textContent = '✔ ' + (cs1 ? jbFlightNo(cs1).replace(/ \(.*\)$/, '') + ' ' : '') + (info.dep || '') + '→' + (info.dest || '');
           sub.textContent = `${pdf.numPages}p · ${nav.length} nav pts · ${firNotams.length} FIR NOTAMs`;
-          try { qtSyncTabs(); } catch (e) { } }
+          try { qtSyncTabs(); } catch (e) { } try { renderFplChk(); } catch (e) { } }
         refreshAll(true);
         showToast('OFP analysis complete');
       } catch (e) {
@@ -6849,6 +6965,8 @@ input,select,textarea,button{font-size:max(1em,14px)}
       if (lb) lb.textContent = on ? `✔ ${jbFlightNo((jbQT.fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '').replace(/ \(.*\)$/, '')} ${jbQT.meta.dep}→${jbQT.meta.dest}` : '2nd leg OFP (if required)';
       if (sb) sb.textContent = on ? `Altn ${jbQT.meta.altn || '--'} · ${(jbQT.altnNotams || []).length} NOTAMs · tap to replace` : hasMain ? 'Tap to attach PDF · or drop here' : 'Attach 1st leg first';
       if (rz) { rz.style.opacity = hasMain ? '' : '.45'; rz.style.pointerEvents = hasMain ? '' : 'none'; }
+      if (!on) fplChk[2] = null;
+      try { renderFplChk(); } catch (e) { }
       if (cl) cl.style.display = on ? '' : 'none';
     }
     function qtClearReturn() {
@@ -6857,7 +6975,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       qtSyncTabs();
     }
     async function qtAddReturnOfp(file) {
-      const prev = jbQT;
+      const prev = jbQT; fplChk[2] = null;
       try {
         const q = await jbLoadQT(file);
         q.meta = qtParseMeta(q);
@@ -8781,7 +8899,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
     $('btn-reset').addEventListener('click', () => {
       if ((pdfFlt || (typeof jbQT !== 'undefined' && jbQT)) && !confirm('This clears the OFP and all analysis results. Reset?')) return;
-      $('fpl-input').value = '';
+      $('fpl-input').value = ''; window.__ofpFpl1 = ''; fplChk[1] = null; fplChk[2] = null;
       pdfInput.value = '';
       $('pdf-label').textContent = '1st leg OFP';
       $('pdf-sub').textContent = 'Tap to attach PDF · or drop here';
@@ -9529,7 +9647,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     })();
 
     // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
-    const APP_VERSION = '1.6';
+    const APP_VERSION = '1.7';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
