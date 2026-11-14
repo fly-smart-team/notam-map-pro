@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NOTAM Pro</title>
+<style>body{margin:0;background:#0b1220;color:#cbd5e1;font:15px system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh}</style></head>
+<body><div id="msg">NOTAM Pro 불러오는 중…</div>
+<script>
+// Cloudflare Worker·정적 파일 요청을 Apps Script(google.script.run)로 돌려주는 어댑터
+(function () {
+  const GSR = google.script.run;   // 문서를 다시 쓰기 전에 붙잡아 둠
+  const RUN = req => new Promise((ok, no) => GSR.withSuccessHandler(ok).withFailureHandler(e => no(new Error((e && e.message) || e))).api(req));
+  const realFetch = window.fetch.bind(window);
+  const b64ToBytes = b => { const s = atob(b), a = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; };
+  window.__gasFileText = async name => { const r = await RUN({ k: 'file', name }); if (r.status !== 200) throw new Error('파일 없음: ' + name); return new TextDecoder('utf-8').decode(b64ToBytes(r.b64)); };
+  window.fetch = async function (input, init) {
+    init = init || {};
+    const url = typeof input === 'string' ? input : (input && input.url) || String(input);
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(url) && url.charAt(0) !== '/') {              // 상대경로 = 앱 파일
+      const name = url.split('?')[0].replace(/^\.\//, '');
+      const r = await RUN({ k: 'file', name });
+      if (r.status !== 200) return new Response('', { status: r.status || 404 });
+      return new Response(b64ToBytes(r.b64), { status: 200, headers: { 'Content-Type': r.mime || 'application/octet-stream' } });
+    }
+    let u = null; try { u = new URL(url); } catch (e) { }
+    if (u && /\.workers\.dev$/.test(u.hostname)) {                                 // 중계 서버 호출
+      let r;
+      if (/^\/(dgk|kac)\//.test(u.pathname)) r = await RUN({ k: 'dg', path: u.pathname, search: u.search });
+      else if (u.pathname === '/ai/notam-summary') { const h = init.headers || {}; r = await RUN({ k: 'ai', token: h['X-Access-Token'] || h['x-access-token'] || '', body: init.body || '{}' }); }
+      else if (u.pathname === '/health') r = await RUN({ k: 'health' });
+      else r = { status: 404, text: '{"error":"없는 경로입니다"}' };
+      return new Response(r.text, { status: r.status, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
+    }
+    return realFetch(input, init);
+  };
+  // 서비스 워커는 이 환경에서 쓸 수 없음 → 등록 시도 무시
+  try { delete Navigator.prototype.serviceWorker; } catch (e) { }
+  window.__GAS__ = true;
+  window.__gasFileText('index.html').then(html => {
+    // document.write 는 창(window)을 새로 만들어 어댑터가 사라지므로, DOM에 직접 끼워 넣고 스크립트를 순서대로 실행
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const scripts = [...doc.querySelectorAll('script')].map(o => { const n = document.createElement('script'); [...o.attributes].forEach(a => n.setAttribute(a.name, a.value)); n.textContent = o.textContent; o.replaceWith(document.createComment('s')); return n; });
+    document.title = doc.title || 'NOTAM Pro';
+    [...doc.documentElement.attributes].forEach(a => document.documentElement.setAttribute(a.name, a.value));
+    document.head.querySelectorAll('style,link,meta[name=viewport]').forEach(x => x.remove());
+    [...doc.head.children].forEach(c => { if (c.tagName !== 'TITLE') document.head.appendChild(document.importNode(c, true)); });
+    [...doc.body.attributes].forEach(a => document.body.setAttribute(a.name, a.value));
+    document.body.removeAttribute('style');
+    document.body.innerHTML = doc.body.innerHTML;
+    scripts.forEach(n => document.body.appendChild(n));
+  })
+    .catch(e => { document.getElementById('msg').textContent = '앱을 불러오지 못했습니다: ' + e.message; });
+})();
+</script></body></html>
