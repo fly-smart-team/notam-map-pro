@@ -920,7 +920,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/14 04:30 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro <span class="text-[11px] font-normal text-slate-400">AI 개인용</span></h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">Pro 11/14 10:30 ↻</button>
       <span class="ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="px-2.5 py-1.5 rounded-lg border border-sky-600/70 bg-sky-950/40 text-[12px] font-bold text-sky-200 hover:bg-sky-900/50">🔍 MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="px-2.5 py-1.5 rounded-lg border text-[12px] font-bold hover:opacity-90" style="border-color:#a78bfa;background:rgba(76,29,149,.35);color:#ddd6fe">🥶 Cold Temp</button>
@@ -3939,7 +3939,8 @@ input,select,textarea,button{font-size:max(1em,14px)}
       const RI = (melDB && melDB.meta && melDB.meta.ri) || {};
       // 이 비행 기번(예: HL8004)이 나오는 곳은 숫자 부분을 빨갛게
       const regNum = (/^HL(\d{4})$/.exec(reg) || [])[1] || '';
-      const hl = t => { const h = esc(t).replace(/\uE113/g, '■').replace(/\uE114/g, '●'); return regNum ? h.replace(new RegExp(`HL(${regNum})(?!\\d)`, 'g'), 'HL<span class="mel-reg">$1</span>') : h; };
+      const melRefLink = h => { if (!melDB) return h; const X = msBuild(); return h.replace(/(?<![\d-])(\d{2}-\d{2}-\d{2}[A-Z]?)(?![\dA-Za-z-])/g, (m, r) => { const k = X.resolve(r)[0]; return k ? `<span data-ms-ref="${k}" style="color:#7dd3fc;text-decoration:underline;font-weight:800;cursor:pointer;padding:1px 2px">${m}↗</span>` : m; }); };
+      const hl = t => { const h0 = esc(t).replace(/\uE113/g, '■').replace(/\uE114/g, '●'), h = melRefLink(h0); return regNum ? h.replace(new RegExp(`HL(${regNum})(?!\\d)`, 'g'), 'HL<span class="mel-reg">$1</span>') : h; };
       const pre = t => `<pre class="mono text-[12px] leading-relaxed whitespace-pre-wrap break-words text-slate-100 bg-slate-950/80 rounded p-2 mt-1">${hl(t)}</pre>`;
       const appChip = app => { const all = !app || /\bALL\b/.test(app), hit = !all && reg && app.includes(reg);
         return `<div class="text-[12px] mt-1 flex flex-wrap items-center gap-1.5"><span class="text-slate-400">적용 기체</span><span class="mono text-slate-300 break-words">${all ? 'ALL' : hl(app)}</span>${reg ? (all || hit ? `<span class="px-1.5 py-0.5 rounded bg-emerald-800 text-emerald-100 text-[11px] font-bold">✓ ${esc(reg)} 적용</span>` : `<span class="px-1.5 py-0.5 rounded bg-slate-700 text-slate-200 text-[11px] font-bold">${esc(reg)} 해당 없음</span>`) : ''}</div>`; };
@@ -4013,7 +4014,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       </div>`;
     }
     // ===== 🔍 MEL 검색 (ECAM 메시지 / MEL 항목) =====
-    const ms = { tab: 'ecam', q: '', view: null, open: {} };
+    const ms = { tab: 'ecam', q: '', view: null, open: {}, hist: [] };
     let msIdx = null, msIdxFor = null;
     function msBuild() {
       if (msIdx && msIdxFor === melDB) return msIdx;
@@ -4057,7 +4058,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       if (!melDB) { body.innerHTML = '<div class="p-3 text-[13px] text-amber-200">MEL 데이터가 없습니다. 2번 칸의 “📥 MEL 불러오기”로 먼저 불러오세요.</div>'; return; }
       if (ms.tab === 'ecam' && !X.ecam.length) { body.innerHTML = '<div class="p-3 text-[13px] text-amber-200 rounded-md border border-amber-600/60 bg-amber-950/30">이 기기에 저장된 MEL 데이터는 예전 버전이라 MEL ENTRIES(ECAM) 목록이 없습니다. 새 MEL 파일을 한 번만 불러오면 검색됩니다.<div class="mt-2"><button type="button" data-mel-load class="px-3 py-2 rounded-md bg-sky-600 text-white font-bold text-[13px]">📥 새 MEL 파일 불러오기</button></div><div class="text-[11.5px] text-slate-300 mt-2">파일: 대화로 보내드린 mel-new2.json (파일 앱에서 선택). 그 전에는 “MEL 항목” 탭으로 검색하세요.</div></div>'; return; }
       if (ms.view) {
-        const back = `<button type="button" data-ms-back class="mb-2 px-2 py-1 rounded-md border border-slate-600 text-[12px] text-slate-200">← 목록으로</button>`;
+        const back = `<button type="button" data-ms-back class="mb-2 px-2 py-1 rounded-md border border-slate-600 text-[12px] text-slate-200">${ms.hist.length ? '← 이전 항목' : '← 목록으로'}</button>`;
         body.innerHTML = back + (ms.view.type === 'ecam' ? msEcamDetail(ms.view.name) : K.card({ kind: 'MEL', no: ms.view.no })); body.scrollTop = 0; return;
       }
       const row = (a, b, attr) => `<button type="button" ${attr} class="w-full text-left px-2 py-1.5 rounded-md border border-slate-700 bg-slate-900/60 mb-1 flex items-center gap-2"><span class="mono text-[13px] text-white break-words">${a}</span><span class="text-[11.5px] text-slate-400 ml-auto text-right">${b}</span></button>`;
@@ -4103,13 +4104,14 @@ input,select,textarea,button{font-size:max(1em,14px)}
     }
     function msRefresh() { const ov = $('ms-overlay'); if (ov && ov.style.display !== 'none') msRender(); }
     document.addEventListener('click', e => {
-      const t = e.target.closest && e.target.closest('[data-ms-open],[data-ms-close],[data-ms-tab],[data-ms-ecam],[data-ms-item],[data-ms-back]'); if (!t) return;
-      if (t.dataset.msOpen !== undefined) msOpen(null);
+      const t = e.target.closest && e.target.closest('[data-ms-open],[data-ms-close],[data-ms-tab],[data-ms-ecam],[data-ms-item],[data-ms-back],[data-ms-ref]'); if (!t) return;
+      if (t.dataset.msRef) { const ov = $('ms-overlay'), open = ov && ov.style.display !== 'none'; if (open && ms.view) ms.hist.push(ms.view); else ms.hist = []; msOpen({ type: 'item', no: t.dataset.msRef }, 'item'); return; }
+      if (t.dataset.msOpen !== undefined) { ms.hist = []; msOpen(null); }
       else if (t.dataset.msClose !== undefined) $('ms-overlay').style.display = 'none';
-      else if (t.dataset.msTab) { ms.tab = t.dataset.msTab; ms.view = null; msRender(); }
+      else if (t.dataset.msTab) { ms.tab = t.dataset.msTab; ms.view = null; ms.hist = []; msRender(); }
       else if (t.dataset.msEcam) msOpen({ type: 'ecam', name: t.dataset.msEcam }, 'ecam');
       else if (t.dataset.msItem) { ms.view = { type: 'item', no: t.dataset.msItem }; msRender(); }
-      else if (t.dataset.msBack !== undefined) { ms.view = null; msRender(); }
+      else if (t.dataset.msBack !== undefined) { ms.view = ms.hist.length ? ms.hist.pop() : null; msRender(); }
     });
     document.addEventListener('toggle', e => { const d = e.target; if (d && d.dataset && d.dataset.msAta) { ms.open[d.dataset.msAta] = d.open; if (d.open && !d.querySelector('button')) msRender(); } }, true);
     document.addEventListener('click', async e => {
@@ -4119,20 +4121,34 @@ input,select,textarea,button{font-size:max(1em,14px)}
       if (!aiToken() && !aiAskToken()) return;
       const vs = L.op ? (L.op.vs && L.op.vs.length ? L.op.vs : [{ text: L.op.text }]) : [], opTxt = vs.map(v => v.text).join('\n');
       const key = 'notamPro.melAi.' + `${no}|${(L.it.text || '').length}|${opTxt.length}`;
-      const text = `[MEL 해설 요청] 이것은 NOTAM이 아니라 항공기 MEL 항목이다. 이 요청에는 '1~3문장' 규칙을 적용하지 않고 아래 형식을 최우선으로 따른다.
+      const HDR = `[MEL 해설 요청] 이것은 NOTAM이 아니라 항공기 MEL 항목이다. 이 요청에는 '1~3문장' 규칙을 적용하지 않고 아래 형식을 최우선으로 따른다.
 - 요약·재구성 금지. 원문 순서와 번호(1) 2) …, (o) (m), Note:)를 그대로 유지하고, 원문 한 줄(항목)을 한국어 한 줄로 옮긴다. 줄은 \n으로 나눈다.
-- 첫 줄은 '운항 조건:' 한 줄, 이어서 원문의 번호 항목을 한 줄씩. Note:는 Note: <After Door Closed> 처럼 원문 표기를 앞에 두고 뜻을 쓴다.
+- Note:는 Note: <After Door Closed> 처럼 원문 표기를 앞에 두고 뜻을 쓴다.
 - 원문에 없는 내용·추측 금지. 숫자·약어·스위치/버튼 이름(ENG BLEED pb-sw, X BLEED 등)·ECAM 메시지는 영어 원문 그대로 둔다.
-- 운항 절차가 있으면 '운항 절차:' 줄 아래에 단계별로 한 줄씩. 한 줄은 짧게(약 50자 안팎).
-MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}\n${L.it.text}${opTxt ? '\n[운항 절차]\n' + opTxt : ''}`.slice(0, 4000);
+- 한 줄은 짧게(약 50자 안팎). 입력의 일부만 주어져도 그 부분만 같은 방식으로 옮긴다.`;
+      const ttl = `MEL ${no} ${L.it.t}${L.it.cond ? ' · ' + L.it.cond : ''}`;
+      // 긴 항목은 AI 답이 길어져 중간에 잘려 JSON이 깨지므로, 짧은 조각으로 나눠 차례로 요청한다
+      const split = (t, max) => { const out = []; let cur = ''; for (const ln of String(t || '').split('\n')) { if (cur && (cur + '\n' + ln).length > max) { out.push(cur); cur = ln; } else cur = cur ? cur + '\n' + ln : ln; } if (cur.trim()) out.push(cur); return out; };
+      const parts = [];
+      split(L.it.text, 1200).forEach((c, i) => parts.push(`${HDR}\n${i === 0 ? "첫 줄은 '운항 조건:' 한 줄, 이어서 원문의 번호 항목을 한 줄씩.\n" + ttl + '\n' : '[MEL 원문 이어짐]\n'}${c}`));
+      split(opTxt, 1200).forEach((c, i) => parts.push(`${HDR}\n${i === 0 ? "[운항 절차 원문] 첫 줄은 '운항 절차:' 한 줄, 이어서 단계별로 한 줄씩.\n" : '[운항 절차 이어짐]\n'}${c}`));
       b.disabled = true; say('AI 해설 만드는 중…');
       try {
-        const res = await fetch(aiBase() + '/ai/notam-summary', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Access-Token': aiToken() }, body: JSON.stringify({ notams: [{ id: 'mel', text }] }) });
-        const d = await res.json().catch(() => ({}));
-        if (res.status === 401) { try { localStorage.removeItem(AI_TOKEN_KEY); } catch (_) { } throw new Error('접근 토큰이 맞지 않습니다'); }
-        if (!res.ok) throw new Error(d.error || `AI 서버 오류 ${res.status}`);
-        const it = (d.items || [])[0]; if (!it || !it.summary) throw new Error('AI가 해설을 만들지 못했습니다');
-        try { localStorage.setItem(key, it.summary); } catch (_) { }
+        const outLines = [];
+        for (let i = 0; i < parts.length; i++) {
+          say(`AI 해설 만드는 중… ${i + 1}/${parts.length}`);
+          let it = null, lastErr = '';
+          for (let tr = 0; tr < 2 && !it; tr++) {
+            const res = await fetch(aiBase() + '/ai/notam-summary', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Access-Token': aiToken() }, body: JSON.stringify({ notams: [{ id: 'mel', text: parts[i].slice(0, 3900) }] }) });
+            const d = await res.json().catch(() => ({}));
+            if (res.status === 401) { try { localStorage.removeItem(AI_TOKEN_KEY); } catch (_) { } throw new Error('접근 토큰이 맞지 않습니다'); }
+            if (!res.ok) { lastErr = d.error || `AI 서버 오류 ${res.status}`; continue; }
+            it = (d.items || [])[0]; if (!it || !it.summary) { it = null; lastErr = 'AI가 해설을 만들지 못했습니다'; }
+          }
+          if (!it) throw new Error(`${lastErr}${parts.length > 1 ? ` (${i + 1}/${parts.length}번째 조각)` : ''}`);
+          outLines.push(String(it.summary).trim());
+        }
+        try { localStorage.setItem(key, outLines.join('\n')); } catch (_) { }
         renderMelCard(); msRefresh();
       } catch (er) { b.disabled = false; const m = String((er && er.message) || ''); say(/fetch|network|load failed/i.test(m) ? '인터넷에 연결되어 있지 않습니다' : m); }
     });

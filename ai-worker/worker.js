@@ -113,7 +113,7 @@ const PROVIDERS = {
         },
         body: JSON.stringify({
           model: this.model(env),
-          max_tokens: 4096,
+          max_tokens: 8192,
           temperature: 0.2,
           response_format: { type: 'json_object' },
           messages: [
@@ -125,8 +125,9 @@ const PROVIDERS = {
       if (!res.ok) throw new Error(`DeepSeek ${res.status}: ${(await res.text()).slice(0, 200)}`);
       const data = await res.json();
       const text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      const cut = data.choices && data.choices[0] && data.choices[0].finish_reason === 'length';
       let parsed;
-      try { parsed = JSON.parse(text || ''); } catch { throw new Error('DeepSeek 응답이 JSON이 아님'); }
+      try { parsed = JSON.parse(text || ''); } catch { throw new Error(cut ? 'DeepSeek 응답이 길어 중간에 잘림' : 'DeepSeek 응답이 JSON이 아님'); }
       return cleanItems(parsed.items);
     },
   },
@@ -167,7 +168,7 @@ const PROVIDERS = {
         },
         body: JSON.stringify({
           model: this.model(env),
-          max_tokens: 4096,
+          max_tokens: 8192,
           system: SYSTEM_PROMPT,
           tools: [tool],
           tool_choice: { type: 'tool', name: tool.name },
