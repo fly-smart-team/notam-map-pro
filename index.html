@@ -955,31 +955,32 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
       <!-- 1. OFP 첨부 & 경로 -->
       <section id="sec-ofp" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3">
-        <h2 class="font-bold text-sm flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>1. OFP 첨부 & 비행경로</h2>
+        <div class="flex items-center gap-2">
+          <h2 class="font-bold text-sm flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>1. OFP 분석</h2>
+          <button id="btn-reset" type="button" style="margin-left:auto;background:#1e293b;border:1px solid #475569;color:#cbd5e1;border-radius:10px;padding:5px 11px;font-size:12px;font-weight:700">↺ 초기화</button>
+        </div>
 
-        <label id="dropzone" class="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-sky-700/60 hover:border-sky-400 rounded-xl p-4 cursor-pointer bg-slate-950/60 text-center">
-          <span id="pdf-label" class="text-xs font-bold text-sky-300">OFP PDF 파일 첨부</span>
-          <span id="pdf-sub" class="text-[10px] text-slate-400">클릭하거나 PDF를 끌어다 놓으세요</span>
-          <input id="pdf-input" type="file" accept="application/pdf,.pdf" class="hidden" />
-        </label>
-        <div id="pdf-progress" class="hidden text-[11px] text-sky-400 mono">PDF 분석 중...</div>
-        <button id="btn-ret-toggle" type="button" aria-expanded="false" class="self-start text-[12px] font-bold rounded-full px-3 py-1.5 border" style="background:rgba(49,46,129,.35);border-color:#6366f1;color:#c7d2fe">🔄 Return flight OFP (퀵턴) <span id="ret-toggle-st"></span> <span id="ret-toggle-arrow">▸ 펴기</span></button>
-        <div id="ret-wrap" class="flex items-stretch gap-2" style="display:none">
-          <label id="ret-dropzone" class="flex-1 flex flex-col items-center justify-center gap-0.5 border-2 border-dashed border-indigo-700/60 hover:border-indigo-400 rounded-xl p-3 cursor-pointer bg-indigo-950/20 text-center">
-            <span id="ret-pdf-label" class="text-xs font-bold text-indigo-300">🔄 Return flight OFP 첨부 (퀵턴·선택)</span>
-            <span id="ret-pdf-sub" class="text-[10px] text-slate-400">돌아오는 편 OFP를 추가하면 2번 운항정보·3번 노탐·Joint Brief에 반영됩니다</span>
-            <input id="ret-pdf-input" type="file" accept="application/pdf,.pdf" class="hidden" />
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch">
+          <label id="dropzone" class="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-sky-700/60 hover:border-sky-400 rounded-xl p-3 cursor-pointer bg-slate-950/60 text-center" style="min-height:92px;min-width:0;padding:26px 8px 8px">
+            <span id="pdf-label" class="text-xs font-bold text-sky-300" style="font-size:13px;overflow-wrap:anywhere">1st leg OFP</span>
+            <span id="pdf-sub" class="text-[10px] text-slate-400" style="overflow-wrap:anywhere">눌러서 PDF 첨부 · 끌어다 놓기</span>
+            <input id="pdf-input" type="file" accept="application/pdf,.pdf" class="hidden" />
           </label>
-          <button id="btn-ret-clear" type="button" style="display:none" class="px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold">✕ 빼기</button>
+          <div style="position:relative;min-width:0;display:flex">
+            <label id="ret-dropzone" class="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-indigo-700/60 hover:border-indigo-400 rounded-xl p-3 cursor-pointer bg-indigo-950/20 text-center" style="flex:1;min-height:92px;min-width:0;opacity:.45;pointer-events:none;padding:26px 8px 8px">
+              <span id="ret-pdf-label" class="text-xs font-bold text-indigo-300" style="font-size:13px;overflow-wrap:anywhere">2nd leg OFP (필요 시)</span>
+              <span id="ret-pdf-sub" class="text-[10px] text-slate-400" style="overflow-wrap:anywhere">1st leg 먼저 첨부</span>
+              <input id="ret-pdf-input" type="file" accept="application/pdf,.pdf" class="hidden" />
+            </label>
+            <button id="btn-ret-clear" type="button" title="2nd leg 빼기" style="display:none;position:absolute;top:5px;right:5px;width:26px;height:26px;border-radius:9999px;background:#1e293b;border:1px solid #475569;color:#e2e8f0;font-size:13px;font-weight:700;line-height:1">✕</button>
+          </div>
         </div>
+        <div id="pdf-progress" class="hidden text-[11px] text-sky-400 mono">PDF 분석 중...</div>
 
-        <textarea id="fpl-input" rows="3" placeholder="FPL 전문을 직접 붙여넣을 수도 있습니다 (선택)"
-          class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs mono text-slate-200 focus:outline-none focus:border-sky-500"></textarea>
-
-        <div class="flex gap-2">
-          <button id="btn-apply" class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 rounded-xl text-xs">경로 적용 & 노탐 매칭</button>
-          <button id="btn-reset" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 px-3 rounded-xl text-xs border border-slate-700">초기화</button>
-        </div>
+        <details class="pro-slim-hide"><summary style="cursor:pointer;font-size:12px;color:#94a3b8">FPL 직접 입력 (선택)</summary>
+          <textarea id="fpl-input" rows="3" placeholder="FPL 전문을 붙여넣으면 자동으로 적용됩니다"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs mono text-slate-200 focus:outline-none focus:border-sky-500" style="margin-top:6px"></textarea>
+        </details>
 
         <div id="route-summary" style="display:none" class="bg-slate-950/60 border border-slate-800 rounded-xl p-2.5 text-[11px] text-slate-400 mono whitespace-pre-wrap">경로 정보 없음</div>
         <div id="diag" class="hidden bg-slate-950/60 border border-slate-800 rounded-xl p-2.5 text-[11px] text-slate-300 mono flex flex-col gap-0.5">PDF를 첨부하면 인식 단계별 결과가 표시됩니다.</div>
@@ -3445,6 +3446,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
     async function handlePdf(file) {
       const bar = $('pdf-progress'), label = $('pdf-label'), sub = $('pdf-sub');
+      try { if (jbQT) qtClearReturn(); } catch (e) { }   // 1st leg를 바꾸면 2nd leg는 비움
       bar.classList.remove('hidden'); label.textContent = 'PDF 읽는 중...';
       sub.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB`;
       try {
@@ -3508,8 +3510,10 @@ input,select,textarea,button{font-size:max(1em,14px)}
         ]);
         renderEdtoBanner();
 
-        label.textContent = 'OFP PDF 분석 완료';
-        sub.textContent = `${pdf.numPages}페이지 · 항법로그 ${nav.length}점 · FIR 노탐 ${firNotams.length}건`;
+        { const cs1 = (pdfFlt && pdfFlt.callsign) || (($('fpl-input').value.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '');
+          label.textContent = '✔ ' + (cs1 ? jbFlightNo(cs1).replace(/ \(.*\)$/, '') + ' ' : '') + (info.dep || '') + '→' + (info.dest || '');
+          sub.textContent = `${pdf.numPages}p · 항법로그 ${nav.length}점 · FIR 노탐 ${firNotams.length}건`;
+          try { qtSyncTabs(); } catch (e) { } }
         refreshAll(true);
         showToast('OFP 분석 완료');
       } catch (e) {
@@ -6831,29 +6835,12 @@ input,select,textarea,button{font-size:max(1em,14px)}
       const on = !!(jbQT && jbQT.meta);
       document.querySelectorAll('[data-pkg1-tab="RALTN"]').forEach(b => { b.style.display = on ? '' : 'none'; });
       if (!on && currentPkg1Tab === 'RALTN') { currentPkg1Tab = 'DEST'; document.querySelectorAll('[data-pkg1-tab]').forEach(b => { b.className = b.dataset.pkg1Tab === 'DEST' ? 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-sky-600 text-white shadow' : 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-slate-800 text-slate-400 hover:text-slate-200'; }); }
-      const lb = $('ret-pdf-label'), sb = $('ret-pdf-sub'), cl = $('btn-ret-clear');
-      if (lb) lb.textContent = on ? `✔ Return flight OFP · ${jbFlightNo((jbQT.fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '')} ${jbQT.meta.dep}→${jbQT.meta.dest}` : '🔄 Return flight OFP 첨부 (퀵턴·선택)';
-      if (sb) sb.textContent = on ? `교체공항 ${jbQT.meta.altn || '--'} · 노탐 ${(jbQT.altnNotams || []).length}건 · 다른 파일을 올리면 교체됩니다` : '돌아오는 편 OFP를 추가하면 2번 운항정보·3번 노탐·Joint Brief에 반영됩니다';
+      const lb = $('ret-pdf-label'), sb = $('ret-pdf-sub'), cl = $('btn-ret-clear'), rz = $('ret-dropzone'), hasMain = !!pdfFlt;
+      if (lb) lb.textContent = on ? `✔ ${jbFlightNo((jbQT.fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || '').replace(/ \(.*\)$/, '')} ${jbQT.meta.dep}→${jbQT.meta.dest}` : '2nd leg OFP (필요 시)';
+      if (sb) sb.textContent = on ? `교체 ${jbQT.meta.altn || '--'} · 노탐 ${(jbQT.altnNotams || []).length}건 · 다시 누르면 교체` : hasMain ? '눌러서 PDF 첨부 · 끌어다 놓기' : '1st leg 먼저 첨부';
+      if (rz) { rz.style.opacity = hasMain ? '' : '.45'; rz.style.pointerEvents = hasMain ? '' : 'none'; }
       if (cl) cl.style.display = on ? '' : 'none';
-      try { retToggleSync(); } catch (e) { }
     }
-    // Return flight OFP 첨부란: 기본 접힘, 펴기/접기 선택은 기기에 기억
-    const RET_OPEN_KEY = 'retOfpOpen.v1';
-    function retToggleSync() {
-      let open = false; try { open = localStorage.getItem(RET_OPEN_KEY) === '1'; } catch (e) { }
-      const w = $('ret-wrap'), b = $('btn-ret-toggle'), a = $('ret-toggle-arrow'), st = $('ret-toggle-st');
-      if (!w || !b) return;
-      w.style.display = open ? '' : 'none'; b.setAttribute('aria-expanded', open ? 'true' : 'false');
-      if (a) a.textContent = open ? '▾ 접기' : '▸ 펴기';
-      const on = !!(typeof jbQT !== 'undefined' && jbQT && jbQT.meta);
-      if (st) st.innerHTML = on ? `<span style="color:#6ee7b7">✔ ${esc(jbFlightNo((jbQT.fpl.match(/\(FPL-([A-Z0-9]+)-/) || [])[1] || ''))} ${esc(jbQT.meta.dep)}→${esc(jbQT.meta.dest)}</span>` : '';
-    }
-    document.addEventListener('click', e => {
-      if (!e.target.closest || !e.target.closest('#btn-ret-toggle')) return;
-      let open = false; try { open = localStorage.getItem(RET_OPEN_KEY) === '1'; localStorage.setItem(RET_OPEN_KEY, open ? '0' : '1'); } catch (er) { open = !(($('ret-wrap') || {}).style || {}).display; }
-      retToggleSync();
-    });
-    setTimeout(() => { try { retToggleSync(); } catch (e) { } }, 0);
     function qtClearReturn() {
       jbQT = null; package1AirportNotams = (package1AirportNotams || []).filter(n => !n._ret);
       document.querySelectorAll('[data-jb-qt]').forEach(x => x.remove()); try { jbQTBtn(); } catch (e) { }
@@ -6889,7 +6876,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
         return true;
       } catch (e) { jbQT = prev; qtReattach(); alert('Return flight OFP를 읽지 못했습니다: ' + (e.message || e)); return false; }
     }
-    function qtPickReturnOfp() { const inp = $('ret-pdf-input'); if (inp) inp.click(); }
+    function qtPickReturnOfp() { if (!pdfFlt) { showToast('1st leg OFP를 먼저 첨부하세요'); return; } const inp = $('ret-pdf-input'); if (inp) inp.click(); }
     // Return flight OFP 기준 데이터 + 기상 카드 (퀵턴 합친 화면용)
     function qtRetData() {
       const q = jbQT; if (!q || !q.meta) return null;
@@ -8775,17 +8762,20 @@ input,select,textarea,button{font-size:max(1em,14px)}
       if (f) handlePdf(f);
     });
 
-    $('btn-apply').addEventListener('click', () => {
+    // FPL 직접 입력: 붙여넣고 칸을 벗어나면 자동 적용 (PDF 첨부는 자동 적용이라 별도 버튼 없음)
+    $('fpl-input').addEventListener('change', () => {
       const fpl = $('fpl-input').value.trim();
+      if (!fpl) return;
       applyRoute(fpl);
       refreshAll(true);
     });
 
     $('btn-reset').addEventListener('click', () => {
+      if ((pdfFlt || (typeof jbQT !== 'undefined' && jbQT)) && !confirm('OFP와 분석 결과를 모두 지웁니다. 초기화할까요?')) return;
       $('fpl-input').value = '';
       pdfInput.value = '';
-      $('pdf-label').textContent = 'OFP PDF 파일 첨부';
-      $('pdf-sub').textContent = '클릭하거나 PDF를 끌어다 놓으세요';
+      $('pdf-label').textContent = '1st leg OFP';
+      $('pdf-sub').textContent = '눌러서 PDF 첨부 · 끌어다 놓기';
       info = { dep:'', dest:'', altn:'', era:[], etdMinutes:null, etaMinutes:null, eetMinutes:null, flightDate:'' };
       pdfFlt = null; etdOverride = null; etaOverride = null; package1AirportNotams = []; package2AirportNotams = []; package2AreaNotams = []; era2Selected.clear();
       try { qtClearReturn(); } catch (e) { console.warn(e); }
