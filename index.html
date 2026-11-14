@@ -924,7 +924,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v1.4 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v1.5 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -1063,7 +1063,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
           <summary style="cursor:pointer;padding:7px 11px;font-size:13px;font-weight:700;color:#e2e8f0;list-style:none;display:flex;align-items:center;gap:8px"><span id="map-index-arrow" style="color:#94a3b8;font-size:11px">▸</span>Index <span style="font-weight:400;font-size:11px;color:#94a3b8">Legend · NOTAM types</span><span id="idx-note" style="margin-left:auto;font-size:11px;font-weight:700;color:#fbbf24"></span></summary>
           <div style="padding:6px 11px 10px;display:flex;flex-direction:column;gap:8px">
         <div class="flex flex-wrap gap-3 text-[10px] text-slate-400">
-              <span style="color:#34d399">● DEP · DEST</span><span style="color:#c084fc">● ALTN</span><span style="color:#22d3ee">● ERA</span><span style="color:#a3e635">● EDTO</span><span>🟦 수동 입력 도형</span><span>🟥 경로 교차 · 통과시각 유효</span><span>🟧 경로 교차 · 비활성</span><span>🟨 경로 미교차</span>
+              <span style="color:#34d399">● DEP · DEST</span><span style="color:#c084fc">● ALTN</span><span style="color:#22d3ee">● ERA</span><span style="color:#a3e635">● EDTO</span><span>🟦 Manual shape</span><span>🟥 Route crossing · valid at transit time</span><span>🟧 Route crossing · inactive</span><span>🟨 No crossing</span>
               
             </div>
             <div id="cat-chips" class="flex flex-wrap gap-1.5"></div>
@@ -3287,21 +3287,21 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
     // ================= 노탐 종류 분류 (지도 아이콘) =================
     const NOTAM_CATS = {
-      volcano: { e: '🌋', l: '화산' },
-      gnss: { e: '📡', l: 'GPS/GNSS 불가' },
-      rocket: { e: '🚀', l: '로켓·우주·비행시험' },
-      altrv: { e: '🔒', l: '고도 예약구역' },
-      mil: { e: '🎯', l: '군 활동·사격' },
-      prohibited: { e: '⛔', l: '금지구역' },
-      restricted: { e: '🚫', l: '제한구역' },
-      crane: { e: '🏗️', l: '크레인·장애물' },
-      flightcheck: { e: '✈️', l: '비행검사' },
-      fireworks: { e: '🎆', l: '불꽃·레이저쇼' },
-      navaid: { e: '📻', l: '항법시설 불능' },
-      uas: { e: '🛸', l: '무인기' },
-      hirf: { e: '☢️', l: '전파·레이더 위험' },
-      balloon: { e: '🎈', l: '관측 풍선' },
-      guide: { e: 'ℹ️', l: '항로·운영 지침' }
+      volcano: { e: '🌋', l: 'Volcano' },
+      gnss: { e: '📡', l: 'GPS/GNSS unavailable' },
+      rocket: { e: '🚀', l: 'Rocket · Space · Flight test' },
+      altrv: { e: '🔒', l: 'Altitude reservation' },
+      mil: { e: '🎯', l: 'Military activity · Firing' },
+      prohibited: { e: '⛔', l: 'Prohibited area' },
+      restricted: { e: '🚫', l: 'Restricted area' },
+      crane: { e: '🏗️', l: 'Crane · Obstacle' },
+      flightcheck: { e: '✈️', l: 'Flight check' },
+      fireworks: { e: '🎆', l: 'Fireworks · Laser show' },
+      navaid: { e: '📻', l: 'Navaid unserviceable' },
+      uas: { e: '🛸', l: 'UAS' },
+      hirf: { e: '☢️', l: 'HIRF · Radar hazard' },
+      balloon: { e: '🎈', l: 'Observation balloon' },
+      guide: { e: 'ℹ️', l: 'Route · Ops guidance' }
     };
     function classifyNotam(etext) {
       const u = String(etext || '').toUpperCase().slice(0, 240);
@@ -5778,7 +5778,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       const box = $('cat-chips'), keys = Object.keys(NOTAM_CATS).filter(k => counts[k]);
       { const n = $('idx-note'); if (n) n.textContent = catHidden.size ? `${catHidden.size} type${catHidden.size > 1 ? 's' : ''} hidden` : ''; }
       if (!keys.length) { box.innerHTML = ''; return; }
-      box.innerHTML = '<span class="text-[10px] text-slate-500 self-center">종류별 표시</span>' + keys.map(k =>
+      box.innerHTML = '<span class="text-[10px] text-slate-500 self-center">Show by type</span>' + keys.map(k =>
         `<button data-cat="${k}" class="cat-chip ${catHidden.has(k) ? 'off' : ''}"><span>${NOTAM_CATS[k].e}</span>${esc(NOTAM_CATS[k].l)} ${counts[k]}</button>`).join('');
     }
     $('cat-chips').addEventListener('click', e => {
@@ -8410,7 +8410,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
           const best = items.reduce((a, b) => b.level > a.level ? b : a), cat = NOTAM_CATS[best.n.cat];
           const c = L.latLng(items.reduce((a, x) => a + x.c.lat, 0) / items.length, items.reduce((a, x) => a + x.c.lng, 0) / items.length);
           const html = items.length === 1 ? best.layer.getPopup().getContent()
-            : `<div style="min-width:240px;max-width:340px;"><b>${cat.e} ${esc(cat.l)} · ${items.length}건</b><div style="max-height:230px;overflow:auto;margin-top:4px;">${items.map(x => `<div style="border-top:1px solid #cbd5e1;padding-top:3px;margin-top:3px;">${x.layer.getPopup().getContent()}</div>`).join('')}</div></div>`;
+            : `<div style="min-width:240px;max-width:340px;"><b>${cat.e} ${esc(cat.l)} · ${items.length} NOTAM${items.length > 1 ? 's' : ''}</b><div style="max-height:230px;overflow:auto;margin-top:4px;">${items.map(x => `<div style="border-top:1px solid #cbd5e1;padding-top:3px;margin-top:3px;">${x.layer.getPopup().getContent()}</div>`).join('')}</div></div>`;
           L.marker(c, { keyboard: false, icon: L.divIcon({ className: '', iconSize: [36, 36], iconAnchor: [18, 18],
             html: `<div class="cat-badge" style="--c:${best.color}"><span>${cat.e}</span>${items.length > 1 ? `<b>${items.length}</b>` : ''}</div>` }) })
             .bindPopup(html, { maxWidth: 380 })
@@ -9530,7 +9530,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     })();
 
     // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
-    const APP_VERSION = '1.4';
+    const APP_VERSION = '1.5';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
