@@ -925,7 +925,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
   <div id="fpl-global-alert" style="display:none;position:sticky;top:0;z-index:60;background:#b91c1c;color:#fff;font-weight:800;font-size:14px;text-align:center;padding:9px 12px;cursor:pointer;border-bottom:2px solid #fecaca"></div>
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.3 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.4 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -4988,7 +4988,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     function hcLogHtml(S, R) {
       hcLastR = R;
       const a = hcLogAuto(S); Object.keys(a).forEach(k => { if (!hcLogEdited[k]) hcLog[k] = a[k]; });
-      const L0 = hcLog, inp = (k, w, ph, cls = '') => `<input name="lg_${k}" value="${esc(L0[k] || '')}" placeholder="${esc(ph || '')}" autocomplete="off" class="w-full rounded px-1.5 py-1 text-[13px] ${cls}" style="min-width:${w}px;background:#fff;color:#0f172a;border:1px solid #94a3b8">`;
+      const L0 = hcLog, inp = (k, w, ph, cls = '') => `<input name="lg_${k}" value="${esc(L0[k] || '')}" placeholder="${esc(ph || '')}" autocomplete="off" class="w-full rounded px-1.5 py-1 text-[13px] ${cls}" style="min-width:${w}px;background:#fff!important;background-color:#fff!important;color:#0f172a!important;-webkit-text-fill-color:#0f172a;border:1px solid #94a3b8!important">`;
       const mb = (k, t) => `<button type="button" data-hc-lgm="${k}" class="block w-full text-left px-1 py-0.5 rounded text-[12.5px]" style="${L0.method === k ? 'background:#0f172a;color:#fff;font-weight:700' : 'color:#334155'}">${t}(${L0.method === k ? 'v' : '&nbsp;'})</button>`;
       const end = R && R.ok && /^\d{1,2}:\d{2}$/.test(L0.time || '') ? (() => { const [h, mi] = L0.time.split(':').map(Number), t0 = h * 60 + mi, fm = x => { const v = ((t0 + x) % 1440 + 1440) % 1440; return `${String(Math.floor(v / 60)).padStart(2, '0')}:${String(v % 60).padStart(2, '0')}`; };
         return R.at ? `허용 시간 끝 <b>${fm(R.min)}</b>` : `HOT 끝 <b>${R.min === R.max ? fm(R.min) : fm(R.min) + ' ~ ' + fm(R.max)}</b>`; })() : '';
@@ -9637,7 +9637,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     })();
 
     // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
-    const APP_VERSION = '2.3';
+    const APP_VERSION = '2.4';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
