@@ -925,7 +925,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
   <div id="fpl-global-alert" style="display:none;position:sticky;top:0;z-index:60;background:#b91c1c;color:#fff;font-weight:800;font-size:14px;text-align:center;padding:9px 12px;cursor:pointer;border-bottom:2px solid #fecaca"></div>
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v1.9 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.0 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -4536,7 +4536,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     let hotDoc = null, hotState = null;
     function hotItems(keys) {
       return keys.split(',').map(k => {
-        if (k[0] === 's') { const x = HOT_SPEC.find(y => y[0] === +k.slice(1)); return x && { p: x[1], a: x[2], l: `Table ${x[0]} · Type ${x[3]} ${hotTitle(x[4])}`, main: true }; }
+        if (k[0] === 's') { const x = HOT_SPEC.find(y => y[0] === +k.slice(1)); return x && { p: x[1], a: x[2], l: `Table ${x[0]} · Type ${x[3]} ${hotTitle(x[4])}`, main: true, fid: k }; }
         const g = HOT_GEN[+k.slice(1)]; return g && { p: g[0], a: g[1], l: g[2] };
       }).filter(Boolean);
     }
@@ -4549,13 +4549,16 @@ input,select,textarea,button{font-size:max(1em,14px)}
             <span class="font-bold text-cyan-200 text-sm">🧊 제빙액 지속시간(HOT) 표</span><span class="text-[11px] text-slate-400">FAA Winter 2026-2027</span>
             <label class="flex items-center gap-1 text-[11px] text-amber-200 ml-2"><input type="checkbox" data-hot-adj> 플랩·슬랫 미리 내림 (76% 조정표)</label>
             <span class="ml-auto flex gap-1"><button type="button" data-hot-zoom="-1" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-slate-200 text-sm">－</button><button type="button" data-hot-zoom="0" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-slate-200 text-[12px]">맞춤</button><button type="button" data-hot-zoom="1" class="px-2 py-1 rounded bg-slate-800 border border-slate-600 text-slate-200 text-sm">＋</button>
-            <button type="button" data-hc-open class="px-2.5 py-1 rounded bg-cyan-700 text-white text-[12px] font-bold">🧊 제방액 검색기</button><button type="button" data-hot-close class="px-2.5 py-1 rounded bg-rose-700 text-white text-[12px] font-bold">닫기 ✕</button></span></div>
+            <button type="button" data-hot-calctoggle class="px-2.5 py-1 rounded bg-cyan-700 text-white text-[12px] font-bold">🧊 Finder ▾</button><button type="button" data-hot-close class="px-2.5 py-1 rounded bg-rose-700 text-white text-[12px] font-bold">닫기 ✕</button></span></div>
+          <style>#hot-modal [data-hc-close]{display:none!important}</style>
           <div data-hot-tabs class="flex gap-1 flex-wrap px-3 py-2 bg-slate-950 border-b border-slate-800"></div>
+          <div data-hot-calc style="max-height:46vh;overflow:auto;border-bottom:2px solid #0e7490;background:#020617"></div>
           <div data-hot-view style="flex:1;overflow:auto;padding:8px;background:#0b1220"></div>
           <div class="px-3 py-1 text-[10px] text-slate-500 bg-slate-950">출처: FAA Holdover Time Guidelines Winter 2026-2027. 실제 적용은 회사 절차·최신 표 기준. 표 위 각주(제품·희석 비율·LOUT)를 함께 확인하세요.</div>`;
         document.body.appendChild(m);
         m.addEventListener('click', e => {
-          const t = e.target.closest('[data-hot-tab]'); if (t) { hotState.i = +t.dataset.hotTab; hotRender(); return; }
+          const ct = e.target.closest('[data-hot-calctoggle]'); if (ct) { const c = m.querySelector('[data-hot-calc]'); c.style.display = c.style.display === 'none' ? 'block' : 'none'; return; }
+          const t = e.target.closest('[data-hot-tab]'); if (t) { hotState.i = +t.dataset.hotTab; const it = hotState.items[hotState.i]; if (it && it.fid && hcS && hcData && hcData.fluids.find(f => f.id === it.fid)) { hcS.fluid = it.fid; try { hcDraw(true); } catch (er) { } } hotRender(); return; }
           const z = e.target.closest('[data-hot-zoom]'); if (z) { const d = +z.dataset.hotZoom; hotState.z = d ? Math.min(3, Math.max(0.6, hotState.z + d * 0.25)) : 1; hotRender(); return; }
           if (e.target.closest('[data-hot-close]')) { m.style.display = 'none'; document.body.style.overflow = ''; }
         });
@@ -4564,6 +4567,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       hotState = { items: hotItems(keys), i: 0, z: 1, adj: false };
       m.querySelector('[data-hot-adj]').checked = false;
       m.style.display = 'flex'; document.body.style.overflow = 'hidden';
+      { const c = m.querySelector('[data-hot-calc]'); c.style.display = 'block'; const f0 = hotState.items.filter(x => x.fid); const pick = f0.find(x => /Type IV/.test(x.l)) || f0[0]; hcOpen({ embed: c, fluid: pick && pick.fid }).then(() => setTimeout(() => { const o = c.querySelector('[data-hc-out]'); if (o) c.scrollTop = Math.max(0, o.offsetTop - 6); }, 60)).catch(() => { }); }
       hotRender();
     }
     async function hotRender() {
@@ -4837,9 +4841,10 @@ input,select,textarea,button{font-size:max(1em,14px)}
       const g = t => hcData.fluids.filter(f => f.type === t).map(f => `<option value="${f.id}" ${f.id === sel ? 'selected' : ''}>${esc(f.id.startsWith('s') ? `Table ${f.t} · ${hotTitle(f.name)}` : f.name)}</option>`).join('');
       return `<optgroup label="Type I">${g('I')}</optgroup><optgroup label="Type II">${g('II')}</optgroup><optgroup label="Type IV">${g('IV')}</optgroup>`;
     }
-    async function hcOpen() {
+    async function hcOpen(o) {
       try { await hcLoad(); } catch (e) { alert(e.message); return; }
       hcS = hcAuto();
+      if (o && o.fluid && hcData.fluids.find(f => f.id === o.fluid)) { hcS.fluid = o.fluid; hcS.src = hcS.src.filter(x => !/^제빙액:/.test(x)); hcS.src.push('제빙액: 이 노탐의 제품'); }
       let m = document.getElementById('hc-modal');
       if (!m) {
         m = document.createElement('div'); m.id = 'hc-modal';
@@ -4869,7 +4874,9 @@ input,select,textarea,button{font-size:max(1em,14px)}
           if (pk) { hcS.fluid = pk.dataset.hcPick; const fq = m.querySelector('[name="fq"]'); fq.value = ''; hcSuggest(''); m.querySelector('[name="fluid"]').value = hcS.fluid; hcDraw(false); const o = m.querySelector('[data-hc-out]'); o && o.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
         });
       }
-      m.style.display = 'block'; document.body.style.overflow = 'hidden';
+      if (o && o.embed) { o.embed.appendChild(m); m.style.cssText = 'position:relative;background:transparent;overflow:visible'; }
+      else { if (m.parentNode !== document.body) document.body.appendChild(m); m.style.cssText = 'position:fixed;inset:0;z-index:9600;background:rgba(2,6,23,.85);overflow:auto'; document.body.style.overflow = 'hidden'; }
+      m.style.display = 'block';
       hcDraw(true);
     }
     // 제빙액 검색: 단어 앞글자(여러 단어 가능) 또는 표 번호
@@ -9625,7 +9632,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     })();
 
     // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
-    const APP_VERSION = '1.9';
+    const APP_VERSION = '2.0';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
