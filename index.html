@@ -925,7 +925,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
   <div id="fpl-global-alert" style="display:none;position:sticky;top:0;z-index:60;background:#b91c1c;color:#fff;font-weight:800;font-size:14px;text-align:center;padding:9px 12px;cursor:pointer;border-bottom:2px solid #fecaca"></div>
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.0 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.1 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -4567,8 +4567,13 @@ input,select,textarea,button{font-size:max(1em,14px)}
       hotState = { items: hotItems(keys), i: 0, z: 1, adj: false };
       m.querySelector('[data-hot-adj]').checked = false;
       m.style.display = 'flex'; document.body.style.overflow = 'hidden';
-      { const c = m.querySelector('[data-hot-calc]'); c.style.display = 'block'; const f0 = hotState.items.filter(x => x.fid); const pick = f0.find(x => /Type IV/.test(x.l)) || f0[0]; hcOpen({ embed: c, fluid: pick && pick.fid }).then(() => setTimeout(() => { const o = c.querySelector('[data-hc-out]'); if (o) c.scrollTop = Math.max(0, o.offsetTop - 6); }, 60)).catch(() => { }); }
-      hotRender();
+      { const c = m.querySelector('[data-hot-calc]'), tabs = m.querySelector('[data-hot-tabs]'), view = m.querySelector('[data-hot-view]');
+        // 검색기가 표·결과를 모두 보여주므로 검색기만 크게 (겹치는 위쪽 탭·아래 원본 표는 숨김). 검색기가 안 열리면 예전 표 화면으로 복귀.
+        const only = on => { tabs.style.display = on ? 'none' : ''; view.style.display = on ? 'none' : ''; c.style.cssText = on ? 'flex:1;overflow:auto;background:#020617;display:block' : 'display:none'; m.querySelectorAll('[data-hot-zoom],[data-hot-adj],[data-hot-calctoggle]').forEach(x => { const t = x.closest('label') || x; t.style.display = on ? 'none' : ''; }); };
+        only(true);
+        const f0 = hotState.items.filter(x => x.fid), pick = f0.find(x => /Type IV/.test(x.l)) || f0[0];
+        hcOpen({ embed: c, fluid: pick && pick.fid }).then(() => { if (!c.querySelector('[data-hc-out]')) { only(false); hotRender(); } else setTimeout(() => { const o = c.querySelector('[data-hc-out]'); if (o) c.scrollTop = Math.max(0, o.offsetTop - 6); }, 60); }).catch(() => { only(false); hotRender(); }); }
+      return;
     }
     async function hotRender() {
       const m = document.getElementById('hot-modal'), S = hotState, it = S.items[S.i];
@@ -9632,7 +9637,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     })();
 
     // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
-    const APP_VERSION = '2.0';
+    const APP_VERSION = '2.1';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
