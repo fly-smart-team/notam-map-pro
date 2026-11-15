@@ -1,6 +1,6 @@
 {
  "note": "OFP 기상 차트 분석 (Claude 작성). 키 = 콜사인|출발|도착|운항일(UTC). 비행 전날 OFP를 주면 추가",
- "version": "2026-11-11 14:55Z",
+ "version": "2026-11-15 09:00Z",
  "items": {
   "KAL476|VVTS|RKSI|2026-10-26": {
    "flight": "KE476 호찌민(VVTS) → 인천(RKSI)",
@@ -1439,6 +1439,214 @@
      "what": "경로를 따라 자른 바람·기온·VWS(초록 6~9) 단면. 분홍 선이 계획 고도입니다.",
      "see": "SAMUL~GUNKU에서 아래 VWS 층이 FL220~FL345까지 올라와 계획 FL330이 걸립니다. 위 VWS 층은 약 FL400~FL490. 그 사이 FL350 전후가 가장 조용합니다. 대류권계면은 FL480 이상.",
      "apply": "FL350 유지가 가장 낫고, SAMUL 이후 FL330 강하는 VWS 층 통과 — 좌석벨트 사인. FL370 이상은 이득 없음."
+    }
+   ]
+  },
+  "AAR1165|RKSS|RJBB|2026-11-15": {
+   "flight": "AAR1165 김포(RKSS) → 간사이(RJBB) · HL8277 A321",
+   "etd": "08:20Z",
+   "eta": "09:40Z",
+   "trip": "1시간 20분",
+   "made": "2026-11-15 09:00Z",
+   "source": "OFP + Dispatched Weather Charts 21쪽 — 난기류 차트(06Z·12Z, FL250~FL400), SIGWX(06Z·12Z), 고도별 바람·기온(FL100·240·300·340), 단면도 · 운항관리 TURB 안내 · TAF",
+   "key": [
+    "전 구간 난기류: 순항 FL330은 FL300~FL350 난기류 띠 안이고, 운항관리도 'ESNEG~RJBB LGT~SEV TURB UP TO FL400' 안내. 비행이 1시간 20분으로 짧아 이륙 직후부터 강하 전까지 흔들림 여지가 계속 있음",
+    "가장 흔들릴 구간: KABKI~TONBI(이륙 46~55분 후, 09:06Z~09:15Z) — FL320~FL340 MOD 패치, OFP SR 3→4→7(TONBI 최대). 이후 SAEKI~TOD(FL330→FL320 강하)도 SR 5~6",
+    "SIGWX 12Z: 오사카 서쪽(경로 끝) 부근에 MOD(구역 1·3)와 SEV(구역 2, 꼭대기 FL400) 난기류 구역이 걸려 있고, 제트기류 중심(FL400 부근)이 간사이 쪽으로 지남. 간사이 남쪽 바다에는 OCNL CB(꼭대기 FL390)",
+    "고도 대안: 난기류 층이 FL300~FL350이라 FL330 앞뒤로는 큰 차이 없음. FL250~FL300은 상대적으로 약하지만 연료·관제상 이득이 작음. FL350 이상 FL400은 제트기류·SEV 구역에 가까워 비추천. 흔들리면 FL310(또는 FL290) 쪽 요청 검토",
+    "바람: 서풍 계열 순풍 — OFP 순항 중 26~29°/60~79KT 꼬리바람(P045~P060), 하강 직전 TONBI 이후 M030대 맞바람 성분. FL300 -43~-46°C, FL340 -48~-55°C",
+    "도착 간사이 TAF(AMD): 26007KT 7000 -SHRA FEW005 BKN020, TEMPO 0000~0600Z 2000 +SHRA BR. ETA 09:40Z는 TEMPO 종료(06Z) 이후라 시정 7000 -SHRA 기준이나 구름이 낮아 계기접근 가능성이 높음. 교체 나고야 RJGG 6000 -SHRA BKN012. 출발 김포 CAVOK 34006KT"
+   ],
+   "overall": [
+    {
+     "t": "이륙·상승 (08:20Z~08:41Z, 김포~TOC)",
+     "s": "김포 CAVOK, 바람 340°/6KT. 상승 중 강원 상공(TOC 이륙 21분 후)에 도달하며 흔들림 거의 없음(SR 0~3). 난기류 띠(FL300~)에 들어가기 전 서비스 준비."
+    },
+    {
+     "t": "동해 상공 (PILIT~FOGEL, 이륙 23~41분 후, 08:43Z~09:01Z)",
+     "s": "FL330 순항 시작, SR 3~6(AGSUS~LANAT 5~6). 난기류 차트상 FL300~FL350 약한~보통 띠 안. 서비스 가능하나 카트는 짧게. 후쿠오카 FIR 진입(LANAT)."
+    },
+    {
+     "t": "산인 연안 (KABKI~MIHOU, 이륙 46~49분 후, 09:06Z~09:09Z)",
+     "s": "SR 3~4, 비교적 안정하나 곧 보통 패치."
+    },
+    {
+     "t": "가장 흔들릴 구간 (TONBI, 이륙 55분 후, 09:15Z)",
+     "s": "FL320~FL340 MOD 패치, SR 7(최대). SAEKI~TOD(09:17Z~09:21Z) FL320 강하 중 SR 5~6. 좌석벨트 사인 켜고 서비스 정리 완료 권장."
+    },
+    {
+     "t": "강하·도착 (TOD 09:21Z~RJBB 09:40Z)",
+     "s": "TOD(E134 09.6) 후 SEV 구역·제트기류 가장자리 가능성. 간사이 약한 소나기, 낮은 구름. 좌석벨트 필수, 강하 전 METAR·ATIS 확인."
+    }
+   ],
+   "crew": {
+    "wxKo": "출발 김포는 맑고, 도착 간사이는 약한 비가 오고 구름이 낮을 수 있습니다.",
+    "wxEn": "Clear at departure in Gimpo. At Kansai, light showers and low clouds are possible on arrival.",
+    "enrouteKo": "총 비행 시간은 1시간 20분입니다. 경로 전체가 약한~보통 난기류 구간 안에 있고, 이륙 약 45분~1시간 후 일본 서부 상공에서 보통 정도의 흔들림이 예상됩니다.",
+    "enrouteEn": "Total flight time is 1 hour 20 minutes. The whole route is within a light to moderate turbulence zone, and moderate turbulence is expected from about 45 minutes to 1 hour after takeoff over western Japan.",
+    "turbKo": "총 비행 시간 1시간 20분으로 짧습니다. 이륙 약 25분 후(안정되는 대로)부터 서비스를 시작해 이륙 약 45분 후(착륙 약 35분 전)까지 끝내 주세요. 이륙 약 45분~1시간 후(착륙 약 35~20분 전)는 보통 정도의 흔들림이 예상되니 카트와 갤리를 고정하고 좌석에 앉아 벨트를 매 주시기 바랍니다. 서비스 중에도 흔들리면 즉시 중단해 주세요.",
+    "turbEn": "Total flight time is a short 1 hour 20 minutes. Please start the service about 25 minutes after takeoff, as soon as conditions allow, and finish by about 45 minutes after takeoff (about 35 minutes before landing). Moderate turbulence is expected from about 45 minutes to 1 hour after takeoff (about 35 to 20 minutes before landing), so please secure the carts and galley and be seated with seat belts fastened. Please stop the service immediately if it gets bumpy."
+   },
+   "charts": [
+    {
+     "page": 2,
+     "title": "경로 지도",
+     "valid": "-",
+     "what": "김포~간사이 경로와 비행 시간 요약입니다.",
+     "see": "김포에서 동해로 나가 산인·세토 내해 위를 지나 간사이로 향하는 짧은 경로. 총 1시간 20분.",
+     "apply": "비행이 짧아 서비스 시간이 촉박하므로 이륙 후 곧바로 준비."
+    },
+    {
+     "page": 3,
+     "title": "경로 단면도",
+     "valid": "-",
+     "what": "경로를 따라 자른 세로 단면도로 난기류·구름 층을 고도별로 보여줍니다.",
+     "see": "FL300~FL340 구간에 난기류 층이 이어지고 도착 쪽 구름이 두꺼움.",
+     "apply": "순항 FL330이 층 안이라 계속 약한 흔들림 가능."
+    },
+    {
+     "page": 4,
+     "title": "난기류 FL250~FL300",
+     "valid": "15일 06Z",
+     "what": "해당 고도 층의 난기류 예측입니다.",
+     "see": "경로 대부분 청정, 일본 서부에 약한 영역.",
+     "apply": "FL300 이하로 내리면 더 조용할 가능성."
+    },
+    {
+     "page": 5,
+     "title": "난기류 FL300~FL350",
+     "valid": "15일 06Z",
+     "what": "순항 고도가 포함된 층입니다.",
+     "see": "경로 전체가 약한~보통 영역, KABKI~TONBI에 보통 패치.",
+     "apply": "FL330 순항 중 흔들림 대비."
+    },
+    {
+     "page": 6,
+     "title": "난기류 FL310~FL350",
+     "valid": "15일 06Z",
+     "what": "FL310~FL350 층입니다.",
+     "see": "FL300~350과 비슷하나 보통 패치가 약간 좁아짐.",
+     "apply": "FL310 이하 대안 시 개선 가능."
+    },
+    {
+     "page": 7,
+     "title": "난기류 FL350~FL400",
+     "valid": "15일 06Z",
+     "what": "순항 위 층입니다.",
+     "see": "일본 서부에서 보통~강한 영역이 넓음.",
+     "apply": "FL350 이상으로 올라가는 것은 비추천."
+    },
+    {
+     "page": 8,
+     "title": "난기류 FL250~FL300",
+     "valid": "15일 12Z",
+     "what": "FL250~FL300 층(비행 시간 이후 시각).",
+     "see": "영역이 06Z보다 확대.",
+     "apply": "비행 중(08:20~09:40Z)은 06Z와 12Z 사이 중간 상태로 해석."
+    },
+    {
+     "page": 9,
+     "title": "난기류 FL300~FL350",
+     "valid": "15일 12Z",
+     "what": "순항 포함 층.",
+     "see": "경로를 따라 약한~보통 띠 지속.",
+     "apply": "전 구간 주의."
+    },
+    {
+     "page": 10,
+     "title": "난기류 FL310~FL350",
+     "valid": "15일 12Z",
+     "what": "FL310~FL350 층.",
+     "see": "보통 패치 유지.",
+     "apply": "흔들림이 크면 FL310 요청 검토."
+    },
+    {
+     "page": 11,
+     "title": "난기류 FL350~FL400",
+     "valid": "15일 12Z",
+     "what": "순항 위 층.",
+     "see": "제트기류 주변 보통~강한 영역.",
+     "apply": "상승 비추천."
+    },
+    {
+     "page": 12,
+     "title": "SIGWX",
+     "valid": "15일 06Z",
+     "what": "중요 기상 차트(난기류·CB·제트기류·권계면).",
+     "see": "일본 서쪽 난기류 구역과 제트기류가 경로 가까이.",
+     "apply": "도착 쪽 흔들림과 기상 레이더 확인."
+    },
+    {
+     "page": 13,
+     "title": "바람·기온 FL100",
+     "valid": "15일 06Z",
+     "what": "FL100 바람과 기온.",
+     "see": "약한 바람 -2~5°C.",
+     "apply": "상승·강하 중 영향 작음."
+    },
+    {
+     "page": 14,
+     "title": "바람·기온 FL240",
+     "valid": "15일 06Z",
+     "what": "FL240 바람과 기온.",
+     "see": "서풍 중간 -29~-30°C.",
+     "apply": "상승 중 약간의 풍속 변화."
+    },
+    {
+     "page": 15,
+     "title": "바람·기온 FL300",
+     "valid": "15일 06Z",
+     "what": "FL300 바람과 기온.",
+     "see": "서풍 강함 -43~-46°C.",
+     "apply": "순항 직하 층."
+    },
+    {
+     "page": 16,
+     "title": "바람·기온 FL340",
+     "valid": "15일 06Z",
+     "what": "순항 근처 FL340 바람과 기온.",
+     "see": "서풍 강함 -48~-55°C.",
+     "apply": "꼬리바람 60~80KT."
+    },
+    {
+     "page": 17,
+     "title": "SIGWX",
+     "valid": "15일 12Z",
+     "what": "12Z 중요 기상 차트.",
+     "see": "난기류 구역 1·3(MOD), 2(SEV, FL400 이상), 간사이 남쪽 OCNL CB(꼭대기 FL390), 제트기류 중심이 간사이 동쪽으로.",
+     "apply": "TOD 이후 간사이 접근 중 흔들림 주의."
+    },
+    {
+     "page": 18,
+     "title": "바람·기온 FL100",
+     "valid": "15일 12Z",
+     "what": "FL100 바람과 기온.",
+     "see": "북서~서풍 약함 1~4°C.",
+     "apply": "접근 중 약한 바람."
+    },
+    {
+     "page": 19,
+     "title": "바람·기온 FL240",
+     "valid": "15일 12Z",
+     "what": "FL240 바람과 기온.",
+     "see": "서풍 -29~-30°C.",
+     "apply": "강하 중 풍속 변화."
+    },
+    {
+     "page": 20,
+     "title": "바람·기온 FL300",
+     "valid": "15일 12Z",
+     "what": "FL300 바람과 기온.",
+     "see": "서풍 강함 -43~-46°C.",
+     "apply": "순항 직하 층."
+    },
+    {
+     "page": 21,
+     "title": "바람·기온 FL340",
+     "valid": "15일 12Z",
+     "what": "FL340 바람과 기온.",
+     "see": "서풍 강함 -48~-55°C.",
+     "apply": "순항 고도 근처 꼬리바람."
     }
    ]
   }
