@@ -2591,6 +2591,218 @@
     "lv": "C",
     "txt": "유도로 이름 미대조 (OSM 원본) · Jeppesen 20-9 참고사항"
    }
+  },
+  "EGKK": {
+   "name": "London Gatwick",
+   "date": "2026-11-16",
+   "amm": {
+    "bbox": [
+     -0.225,
+     51.135,
+     -0.14,
+     51.168
+    ],
+    "hs": [
+     {
+      "id": "HS2",
+      "at": [
+       "FR",
+       "ER"
+      ],
+      "r": 130,
+      "note": "08R/26L과 08L/26R 사이 FR·ER 연결 구간 — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS3",
+      "at": [
+       "Q",
+       "R"
+      ],
+      "r": 130,
+      "note": "RWY 26R 서쪽 Q·R 교차부(Q 정지위치 부근) — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS4",
+      "at": [
+       "N",
+       "N1"
+      ],
+      "r": 130,
+      "note": "N·N1·Z·P 교차부(J8 부근) — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     }
+    ],
+    "src": "Jeppesen 20-9A (24 JUL 26) · 20-8 · 20-8A · 20-8B (2 OCT 26) · FD Pro AMM 캡처(2026-11-16)",
+    "notesSrc": "Jeppesen 20-9A · 20-8 · 20-8A · 20-8B",
+    "notes": [
+     "활주로: 08R/26L 10,883 ft(3,317 m) · 08L/26R 8,402 ft(2,561 m). 지상 관제: GMC North 121.54 · GMC South 121.805.",
+     "날개폭 제한(20-9A): L(주기장 36 동쪽) 최대 200 ft/61 m · L(Q~S 사이)은 옆 도로 때문에 장애물 간격이 기준 미달(최소 139 ft/42.5 m) · Y(W1 정지위치~Y3) 최대 200 ft/61 m.",
+     "⚠ A321(35.8 m) 주의: 08L/26R 사용 중 J 유도로(S~J5 구간) 최대 164 ft/50 m, J(S~J8 구간) 최대 118 ft/36 m — 35.8 m라 여유 0.2 m.",
+     "Code D(36~52 m)·Code E(52~65 m) 항공기 사용 불가: AN(M 동쪽) · J(N 동쪽) · V(W 동쪽) · W · Z(N~W 사이). A321은 Code C라 해당 없음.",
+     "원격 제빙 구역: 제빙장 43(주기장 43E 부근)·Sierra(제빙 Sierra, 서쪽 S 유도로 부근).",
+     "임시 차트 20-8 (SUP 097/2026): 주기장 130~136을 130L·130·130R·131L·131·131R·132·133L·133·133R·134로 재배치(MARS). 2026년 10~11월 단계별 시행, SEGS 없음 — 모든 진입·이탈은 GAL 마샬러 유도. 노란 유도선·주기장 중심선·SNIB 제공. 원격 대기: 130·130L·130R·131·131L·131R·132 (681·683·685·687·689 푸시백 후 ATC 허가 시).",
+     "임시 차트 20-8A (SUP 106/2026): 정비구역 1에 신규 원격 주기장 RS1~RS4 (2026-10-05부터 약 2개월), 접근은 Y 유도로. SEGS·SNIB 없음 → 마샬러 유도, 연료 하이드란트·FEGP 없음.",
+     "임시 차트 20-8B (SUP 111/2026): 주기장 15·17·19·21에 15L·17L·17R·19L·21L·21R 중심선 추가 (2026년 11월부터 약 10개월). SEGS·SNIB 제공, 연료 하이드란트·FEGP 사용 가능.",
+     "AMM 캡처의 붉은 빗금 구역은 사용 불가·공사 구역 표시 — 노탐과 함께 확인."
+    ]
+   },
+   "ver": {
+    "lv": "C",
+    "txt": "유도로 이름 미대조 (OSM 원본) · Jeppesen 날개폭·임시 주기장 참고"
+   }
+  },
+  "ZGSZ": {
+   "name": "Shenzhen Baoan",
+   "date": "2026-11-16",
+   "amm": {
+    "bbox": [
+     113.77,
+     22.6,
+     113.85,
+     22.685
+    ],
+    "hs": [
+     {
+      "id": "HS1",
+      "at": [
+       "S",
+       "E"
+      ],
+      "r": 130,
+      "note": "E·S·R 일대 — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS2",
+      "at": [
+       "D",
+       "R"
+      ],
+      "r": 130,
+      "note": "D·R·Q 교차부 — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS3",
+      "at": [
+       "C",
+       "S"
+      ],
+      "r": 130,
+      "note": "C·S·D·W 교차부(활주로 15/33 서쪽) — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS4",
+      "at": [
+       "E11",
+       "16L/34R"
+      ],
+      "r": 130,
+      "note": "E11 · RWY 34R 시단 부근 — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS5",
+      "at": [
+       "C1",
+       "C2"
+      ],
+      "r": 130,
+      "note": "RWY 15 북쪽 끝 C1·C2·D 일대 — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS6",
+      "at": [
+       "E10",
+       "G"
+      ],
+      "r": 130,
+      "note": "E10 · G 일대(T3 터미널 서쪽) — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS7",
+      "at": [
+       "W",
+       "W2"
+      ],
+      "r": 130,
+      "note": "W·W2 교차부 — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS8",
+      "at": [
+       "G8",
+       "G"
+      ],
+      "r": 130,
+      "note": "G8·G 교차부 — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS9",
+      "at": [
+       "G9",
+       "G"
+      ],
+      "r": 130,
+      "note": "G9·G 교차부 — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS10",
+      "at": [
+       "E5",
+       "E"
+      ],
+      "r": 130,
+      "note": "E5·E 일대 — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS11",
+      "at": [
+       "G5",
+       "G"
+      ],
+      "r": 130,
+      "note": "G5·G 일대 — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS12",
+      "at": [
+       "W2",
+       "Q"
+      ],
+      "r": 130,
+      "note": "W2·Q·R 교차부 — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS13",
+      "at": [
+       "C3",
+       "C"
+      ],
+      "r": 130,
+      "note": "C3·C 일대 — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     },
+     {
+      "id": "HS14",
+      "at": [
+       "D6",
+       "C"
+      ],
+      "r": 130,
+      "note": "D6·C 일대 — 핫스폿 — AMM·Jeppesen 차트에 위치만 표시(설명 문구는 Airport Info·Take-off Mnms 페이지 참조). 위치 근사. 활주로 정지위치 표지를 ATC 허가 없이 넘지 말 것."
+     }
+    ],
+    "src": "Jeppesen 10-9B · 10-9C (6 NOV 26) · FD Pro AMM 캡처(2026-11-16)",
+    "notesSrc": "Jeppesen 10-9B · 10-9C",
+    "notes": [
+     "활주로: 15/33 11,155 ft(3,400 m) · 16L/34R 12,467 ft(3,800 m) · 16R/34L 11,811 ft(3,600 m).",
+     "주파수: Tower East 130.35 · Tower West1 118.45 · Tower West2 124.375 · GND East 121.65 · GND West 121.8 · APN01 122.7 · APN02 121.625 · APN03(위성 홀·북쪽 원격) 122.825. 점선 구역은 APN/GND/TWR 관제 구역.",
+     "⚠ 두 항공기가 D7·D8 또는 G7·G8에서 동시에 나란히 택시하는 것은 엄격히 금지.",
+     "활주로 경계등(RWY Guard lights): E5~E7·E9 유도로에 있음 — 진입 금지(No-entry) 표시 확인. 유도로 날개폭 제한은 공항 차트(AIRPORT) 참조.",
+     "핫스폿 HS1~HS14 위치는 AMM 캡처 기준 근사값 — 설명은 Jeppesen Airport Info·Take-off Mnms 참조. 지도에서 원을 누르면 이름만 표시.",
+     "주기장: 위성 홀(501~549·560~570), T3 터미널 301~376, 북쪽 주기장 220~285·22~78, 화물 56~70·K 방면, 남쪽 주기장 90~139·380~391."
+    ]
+   },
+   "ver": {
+    "lv": "C",
+    "txt": "유도로 이름 미대조 (OSM 원본) · Jeppesen 10-9B/9C 참고"
+   }
   }
  },
  "fix": {
