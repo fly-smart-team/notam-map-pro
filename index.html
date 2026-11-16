@@ -927,7 +927,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
   <div id="fpl-global-alert" style="display:none;position:sticky;top:0;z-index:60;background:#b91c1c;color:#fff;font-weight:800;font-size:14px;text-align:center;padding:9px 12px;cursor:pointer;border-bottom:2px solid #fecaca"></div>
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.10 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.11 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -5206,6 +5206,16 @@ input,select,textarea,button{font-size:max(1em,14px)}
           const x2 = c2.getContext('2d'); await p2.render({ canvasContext: x2, viewport: vp2 }).promise; ul(x2, R.npage, vp2.width / w0.width);
           const cap = document.createElement('div'); cap.style.cssText = 'font-size:11px;color:#475569;padding:4px 6px'; cap.textContent = `↓ ${R.npage}쪽 NOTES (빨간 밑줄 = 해당 각주)`;
           box.appendChild(cap); box.appendChild(c2);
+        }
+        // 선택한 제빙액 자기 표(예: Table 43)도 함께 보여줌 — 서리처럼 계산에 다른 표(Table 1)를 쓸 때도 제품 표를 바로 볼 수 있게
+        const f2 = hcData.fluids.find(x => x.id === hcS.fluid), pp = f2 && (hcS.adj ? f2.pa : f2.p);
+        if (!R.at && f2 && f2.type !== 'I' && pp && pp !== R.page) {
+          const cap2 = document.createElement('div'); cap2.style.cssText = 'font-size:12px;font-weight:700;color:#0e7490;padding:8px 6px 4px;border-top:2px dashed #94a3b8;margin-top:6px';
+          cap2.textContent = `↓ 선택한 제빙액의 표 — ${hcS.adj ? 'Table Adj-' + f2.t : 'Table ' + f2.t} (${pp}쪽)${/^Table (Adj-)?1\b/.test(R.table || '') ? ' · 서리는 제품 표에 열이 없어 위 Table 1의 공통 값을 씁니다' : ''}`;
+          box.appendChild(cap2);
+          const p3 = await hotDoc.getPage(pp), w3 = p3.getViewport({ scale: 1 }), vp3 = p3.getViewport({ scale: cssW * dpr / w3.width }), c3 = document.createElement('canvas');
+          c3.width = vp3.width; c3.height = vp3.height; c3.style.width = cssW + 'px';
+          await p3.render({ canvasContext: c3.getContext('2d'), viewport: vp3 }).promise; box.appendChild(c3);
         }
         const kd = document.createElement('div'); kd.style.cssText = 'background:#0b1220;padding:2px 8px 10px;border-radius:0 0 8px 8px';
         kd.innerHTML = R.at ? hcAtKoHtml(R) : (['snow', 'snfg', 'snra'].includes(hcS.precip) ? hotKoHtml(74, false).replace(/<div style="margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid #334155[\s\S]*$/, '') : '') + hotKoHtml(R.page, !!hcS.adj, R.notes);
