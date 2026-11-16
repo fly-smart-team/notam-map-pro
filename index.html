@@ -927,7 +927,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
   <div id="fpl-global-alert" style="display:none;position:sticky;top:0;z-index:60;background:#b91c1c;color:#fff;font-weight:800;font-size:14px;text-align:center;padding:9px 12px;cursor:pointer;border-bottom:2px solid #fecaca"></div>
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.13 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.14 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -983,7 +983,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
         <div id="fpl-chk-panel" style="display:flex;flex-direction:column;gap:8px"></div>
 
-        <details class="pro-slim-hide"><summary style="cursor:pointer;font-size:12px;color:#94a3b8">Enter FPL manually (optional)</summary>
+        <details style="display:none"><summary style="cursor:pointer;font-size:12px;color:#94a3b8">Enter FPL manually (optional)</summary>
           <textarea id="fpl-input" rows="3" placeholder="Paste the FPL — it is applied automatically"
             class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs mono text-slate-200 focus:outline-none focus:border-sky-500" style="margin-top:6px"></textarea>
         </details>
@@ -1282,7 +1282,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
 
       <!-- 6. 조종실 교대 근무 (3P · 2SET · 5P) -->
       <section id="sec-crew" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3">
-        <h2 class="font-bold text-sm flex items-center gap-2"><span class="sec-no">06</span>조종실 교대 근무 (CREW REST) <span class="font-normal text-[11px] text-slate-400">비행시간 균등</span></h2>
+        <h2 class="font-bold text-sm flex items-center gap-2"><span class="sec-no">06</span>조종실 교대 근무 (CREW REST)</h2>
         <div id="crew-box" class="flex flex-col gap-3"></div>
       </section>
     </div>
