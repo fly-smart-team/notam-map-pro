@@ -927,7 +927,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
   <div id="fpl-global-alert" style="display:none;position:sticky;top:0;z-index:60;background:#b91c1c;color:#fff;font-weight:800;font-size:14px;text-align:center;padding:9px 12px;cursor:pointer;border-bottom:2px solid #fecaca"></div>
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.17 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.18 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -9301,7 +9301,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
       }
       return out;
     }
-    const TWY_WHOLE = new RegExp(`\\b(?:TWY|TXL|TAXIWAY|TAXILANE)S?\\s+((?:${TWY_ID}(?:\\s*(?:,|AND|&)\\s*(?=(?:TWY\\s+)?[A-Z]{1,2}\\d{0,2}\\b))?)+)`, 'g');
+    const TWY_WHOLE = new RegExp(`\\b(?:TWY|TXL|TAXIWAY|TAXILANE)S?\\s+((?:${TWY_ID}(?:\\s*(?:,|AND|&)\\s*(?=(?:TWY\\s+)?[A-Z]{1,2}\\d{0,2}[A-Z]?\\b))?)+)`, 'g');
     // 노탐 → { kind, items:[{ref,a,b}] , partial }  (유도로 노탐이 아니면 null)
     function twyClauses(n) {
       const u = String(n.etext || n.rawText || '').toUpperCase().replace(/\s+/g, ' ');
@@ -9314,7 +9314,18 @@ input,select,textarea,button{font-size:max(1em,14px)}
       // 'RWY 13R LEAD OFF LGT AT TWY K' → K 중 활주로 접속부만
       const lo = u.match(new RegExp(`\\bRWY\\s*(\\d{2}[LRC]?)\\b.{0,40}?\\bLEAD[ -]?(ON|OFF|IN|OUT)\\b.{0,30}?\\bAT\\s+(?:TWY|TXL)\\s+(${TWY_ID})\\b`));
       if (lo) return { kind, items: [{ ref: lo[3], rwy: lo[1], lead: lo[2] }], partial: false };
-      for (const m of u.matchAll(TWY_BTN)) {
+      // 'TWY A(BTN B1 AND B3),A2,B2,A(BTN B3 AND B5),A(INT OF B3),B4 CLSD' — 쉼표 목록 속 괄호 구간·교차부를 먼저 따로 뽑음
+      const head0 = u.split(/\bRMKS?\b|\bREMARKS?\b|COMMENT\)/)[0];
+      if (/\w\s*\(\s*(?:BTN|BETWEEN|INT(?:ERSECTION)?)\b/.test(head0)) {
+        const PB = new RegExp(`\\b(${TWY_ID})\\s*\\(\\s*(?:BTN|BETWEEN)\\s+${TWY_END}\\s*(?:AND|TO|&)\\s+${TWY_END}\\s*\\)\\s*,?`, 'g');
+        const PI = new RegExp(`\\b(${TWY_ID})\\s*\\(\\s*INT(?:ERSECTION)?\\s+(?:OF|WITH)\\s+(?:TWY\\s+)?(${TWY_ID})\\s*\\)\\s*,?`, 'g');
+        for (const m of head0.matchAll(PB)) {
+          const a = m[2] ? 'S:' + stNorm(m[3]) : m[3], b = m[4] || (m[2] && /^\d+$/.test(m[5])) ? 'S:' + stNorm(m[5]) : m[5];
+          items.push({ ref: m[1], a, b }); rest = rest.replace(m[0], ' ');
+        }
+        for (const m of head0.matchAll(PI)) { items.push({ ref: m[1], at: m[2] }); rest = rest.replace(m[0], ' '); }
+      }
+      for (const m of [...rest.matchAll(TWY_BTN)]) {
         const a = m[2] ? 'S:' + stNorm(m[3]) : m[3], b = m[4] || (m[2] && /^\d+$/.test(m[5])) ? 'S:' + stNorm(m[5]) : m[5];   // 'BTN STAND 140 AND 27' → 둘 다 주기장
         items.push({ ref: m[1], a, b }); rest = rest.replace(m[0], ' ');
       }
@@ -9460,6 +9471,12 @@ input,select,textarea,button{font-size:max(1em,14px)}
           if (T.length) for (const ch of chains) { const J = twyJunction(ch, T, k); if (J.d < 80 && (!best || J.d < best.J.d)) best = { ch, J }; }
           if (best) { out.segs.push(twyCut(best.ch, best.J.cum, Math.max(0, best.J.t - 150), Math.min(best.J.len, best.J.t + 150))); out.desc.push(`${it.ref} · RWY ${it.rwy} 접속부 (리드 ${it.lead === 'ON' || it.lead === 'IN' ? '온' : '오프'} 등)`); }
           else out.miss.push(`${it.ref} (RWY ${it.rwy})`);
+          continue;
+        }
+        if (it.at) {   // 'A(INT OF B3)' → A 중 B3와 만나는 교차부 ±60 m
+          const T = twyTargets(D.ways, it.at, D); let best = null;
+          if (T.length) for (const ch of chains) { const J = twyJunction(ch, T, k); if (J.d < 80 && (!best || J.d < best.J.d)) best = { ch, J }; }
+          if (best) { out.segs.push(twyCut(best.ch, best.J.cum, Math.max(0, best.J.t - 60), Math.min(best.J.len, best.J.t + 60))); out.desc.push(`${it.ref} · ${it.at} 교차부`); } else out.miss.push(`${it.ref} (${it.at} 교차부)`);
           continue;
         }
         if (it.a) {
@@ -9947,7 +9964,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     })();
 
     // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
-    const APP_VERSION = '2.17';
+    const APP_VERSION = '2.18';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
