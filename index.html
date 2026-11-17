@@ -927,7 +927,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
   <div id="fpl-global-alert" style="display:none;position:sticky;top:0;z-index:60;background:#b91c1c;color:#fff;font-weight:800;font-size:14px;text-align:center;padding:9px 12px;cursor:pointer;border-bottom:2px solid #fecaca"></div>
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.19 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.20 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -1612,7 +1612,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     const ABBR_KEEP = new Set('RWY TWY TXL TWYL ILS VOR DME NDB VORTAC TACAN GPS GNSS GBAS GLS RNAV RNP LOC LLZ GP PAPI ALS PALS VASIS ATIS ATC ACC APP TWR ARTCC FIR CTA CTR ATZ MOA TRA SID STAR IAP ODP AIP AIC AIRAC SUP NOTAM SNOWTAM SIGMET UTC FL NM KM KT AGL AMSL MSL DA DH MDA MEA MOCA MRA MSA OCA OCH HAT TCH RVR QNH QFE QDM QDR ETA ETD EOBT EET EAT PBN RAIM ADS-B ADS-C CPDLC RVSM SSR PSR PAR ASR SMR TAR WAAS LPV LNAV VNAV UAS VFR IFR VMC IMC CAT TDZ ARP PCN TORA TODA ASDA LDA SAR RFF RCC FAF FAP IAF MAPT COP CRP CDR MNPS FATO PJE IRS MLS SDF IM MM OM MKR ABN IBN BCN LDI WDI REDL RCLL RTHL RTZL STWL RESA SWY DTHR LIH LIL LIM VDGS APU GPU TCAS EGPWS ICAO FAA RWYCC RCR H24 HJ HN HO HX FM MAP DP GS TL MIN MON RAG END NR ID CH SR SS EST TYP PLN OBS MAG GEO INT NA ACT AD AFIS AFTN AIS PAX VIP MTOW SVC NOF STN'.split(' '));
     const ABBR_RE = /(?<![A-Z0-9\/\-])(ADS-[BC]|U\/S|[A-Z][A-Z0-9]{1,7})(?![A-Z0-9\/\-])/g;
     // 해설에서 뺄 기본 약어 (조종사에게 익숙한 것)
-    const ABBR_BASIC = new Set('RWY TWY ILS LOC GP GS DME VOR NDB ATC TWR APP APCH ARR DEP FL FT NM KT UTC ACFT AIP NOTAM SID STAR IAP PAPI THR VIS RVR QNH ETD ETA FREQ MIN INFO GPS FIR ATS ACC'.split(' '));
+    const ABBR_BASIC = new Set('RWY TWY ILS LOC GP GS DME VOR NDB ATC TWR APP APCH ARR DEP FL FT NM KT UTC ACFT AIP NOTAM SID STAR IAP PAPI THR VIS RVR QNH ETD ETA FREQ MIN INFO GPS FIR ATS ACC U/S RNAV MDA INOP ALT IAS SFC VORTAC TEMPO RMK EMERG TKOF LDG CTC FLT'.split(' '));
     function abbrIn(text) {
       const seen = new Set(), out = [];
       String(text || '').toUpperCase().replace(/\n\s*[A-G]\)\s*/g, '\n').replace(ABBR_RE, m => { if (NOTAM_ABBR[m] && !seen.has(m) && !ABBR_BASIC.has(m)) { seen.add(m); out.push(m); } return m; });
@@ -9979,7 +9979,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     })();
 
     // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
-    const APP_VERSION = '2.18';
+    const APP_VERSION = '2.20';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
