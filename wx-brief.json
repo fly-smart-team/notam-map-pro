@@ -1,6 +1,6 @@
 {
  "note": "OFP 기상 차트 분석 (Claude 작성). 키 = 콜사인|출발|도착|운항일(UTC). 비행 전날 OFP를 주면 추가",
- "version": "2026-11-15 09:00Z",
+ "version": "2026-11-18 01:30Z",
  "items": {
   "KAL476|VVTS|RKSI|2026-10-26": {
    "flight": "KE476 호찌민(VVTS) → 인천(RKSI)",
@@ -1647,6 +1647,106 @@
      "what": "FL340 바람과 기온.",
      "see": "서풍 강함 -48~-55°C.",
      "apply": "순항 고도 근처 꼬리바람."
+    }
+   ]
+  },
+  "AAR351|RKSI|ZYYJ|2026-11-18": {
+   "flight": "AAR351 인천(RKSI) → 옌지(ZYYJ) · HL8586 A321",
+   "etd": "04:05Z",
+   "eta": "06:04Z",
+   "trip": "1시간 59분",
+   "made": "2026-11-18 01:30Z",
+   "source": "OFP + Dispatched Weather Charts(10~15쪽) — FL300·340·390 바람·기온, SIGWX(FL250~FL630), 난기류(ASC FL180~FL450), 경로 단면도 · 운항관리 TURB 안내 · TAF",
+   "key": [
+    "난기류는 약함: 경로 전 구간 OFP 흔들림 지수(SR)가 0~5, 순항(FL320→FL330) 중에는 0~3. 난기류 차트(05Z)에서 경로 위에는 패치가 거의 없고, 보통(MOD) 패치는 경로 동쪽(동해·일본 쪽)과 한반도 남쪽에 몰려 있음. 운항관리 안내는 일반 주의 문구 수준",
+    "그래도 조심할 곳: 상승 중 NOPIK~ANSIM(이륙 12~18분 후, 04:17Z~04:23Z)과 AGAVO(SR 5, 이륙 25분 후)까지는 SR 2~5로 약한 흔들림 가능. 경로 단면도(15쪽)에서 DONVO~NODAL 아래쪽(FL100~FL150대) 바람 변화 구간이 있어 이 구간 상승·하강 시 짧은 흔들림 가능",
+    "고도 대안: 난기류 문제는 크지 않아 현 FL320~FL330 유지가 무난. 굳이 바꾼다면 FL300(바람 약 5KT 약함)이나 FL340~FL360(맞바람 112~117KT로 늘어 연료 불리). 서쪽 구간 CHI 전까지는 제트기류 맞바람 107~109KT라 고도를 올릴수록 맞바람이 세지므로 상승 요청은 비추천",
+    "바람: 인천~CHI 서쪽 구간은 250~270°/95~110KT 강한 맞바람(COMP M074~M109), CHI에서 북쪽으로 꺾인 뒤 LJB~TOD는 24~27°/60~85KT 순풍(P030~P045). 항로가 서해→보하이만→중국 동북으로 도는 모양이라 전반 맞바람·후반 순풍. FL300 -43~-46°C, FL340 -47~-52°C",
+    "출발 인천 TAF: 32013KT 9999 BKN040, 이륙 후 07Z부터 TEMPO 33015G33KT 6000 -RA. 이륙(04:05Z)은 TEMPO 시작 전이라 북서풍 13KT 정도. 옌지(ZYYJ) ETA 06:04Z TAF: 28008G14MPS(약 16G27KT) 6000 SCT033, 기온 약 +1°C. 서풍 돌풍 있으니 접근 중 풍향·돌풍 확인. 특별공항(YNJ)",
+    "교체 ZYCC TAF: 28004MPS 6000 SCT030, TEMPO 04Z~08Z에 2500 -SN. 옌지 도착 후 교체 도착 시간(06:50Z 안팎)이 TEMPO(눈) 시간에 걸림 — 교체 사용 시 시정 2500·눈 가능성 인지"
+   ],
+   "overall": [
+    {
+     "t": "이륙·상승 (04:05Z~04:22Z, 인천~TOC)",
+     "s": "인천 북서풍 13KT, 구름 BKN040, 시정 양호. 상승 중 NOPIK~BINIL(SR 2~3)에서 약한 흔들림 가능. 비 TEMPO는 07Z부터라 이륙에는 영향 적음."
+    },
+    {
+     "t": "서해 순항 (ANSIM~AGAVO, 이륙 18~25분 후, 04:23Z~04:30Z)",
+     "s": "FL320 순항, 서쪽으로 맞바람 106~109KT. SR 2~5로 AGAVO 부근이 이번 구간 최대. 서비스 시작은 안정되는 대로(이륙 약 25분 후) 가능."
+    },
+    {
+     "t": "보하이만·중국 해안 (DONVO~CHI, 이륙 32~49분 후, 04:37Z~04:54Z)",
+     "s": "FL321~FL331, SR 2~3. 난기류 차트에 경로 위 패치 없음. 제트기류 맞바람이 약해지며 CHI에서 북쪽으로 꺾음. 서비스 진행하기 좋은 구간."
+    },
+    {
+     "t": "중국 동북 내륙 (NODAL~LJB, 이륙 56분~1시간 28분 후, 05:01Z~05:33Z)",
+     "s": "FL331 순풍(P030~P036), SR 0~1로 가장 안정. 서비스 마무리(이륙 약 1시간 25분 후까지) 권장."
+    },
+    {
+     "t": "동진·강하 (APESI~TOD~KANVU, 이륙 1시간 28분~1시간 45분 후, 05:33Z~05:50Z)",
+     "s": "순풍 P038~P045, SR 1~2. TOD 05:46Z 후 FL331→강하. 난기류 차트상 경로 동쪽(130°E)에 패치가 있으나 경로와는 떨어져 있음."
+    },
+    {
+     "t": "접근·착륙 (KANVU~YNJ~ZYYJ, 05:50Z~06:04Z)",
+     "s": "옌지 서풍 돌풍(약 16G27KT 가능), 시정 6000, 구름 SCT033. 지상 기온 약 0~+1°C. 좌석벨트 사인 켜고 정리 완료. 교체 ZYCC는 TEMPO 눈."
+    }
+   ],
+   "crew": {
+    "wxKo": "출발 인천은 흐리지만 시정은 좋고, 도착 옌지는 구름이 조금 있으며 서풍이 강하게 불 수 있습니다. 기온은 영하에 가깝습니다.",
+    "wxEn": "Incheon is cloudy but visibility is good at departure. Yanji has a few clouds with possible strong west winds. Temperatures are near freezing.",
+    "enrouteKo": "총 비행 시간은 1시간 59분입니다. 경로 전체에 큰 난기류는 예상되지 않으며 흔들림은 대부분 약한 수준입니다. 이륙 후 약 25분 이내(서해 상공)와 강하·착륙 직전에 약간 흔들릴 수 있습니다.",
+    "enrouteEn": "Total flight time is 1 hour 59 minutes. No significant turbulence is expected along the route and most of it should be light. Some light bumps are possible within about 25 minutes after takeoff (over the Yellow Sea) and during descent and landing.",
+    "turbKo": "총 비행 시간 1시간 59분입니다. 이륙 약 25분 후(안정되는 대로) 서비스를 시작해 이륙 약 1시간 25분 후(착륙 약 35분 전)까지 끝내 주세요. 전 구간 흔들림이 약해 서비스는 무난할 것으로 보이지만, 강하 시작(이륙 약 1시간 40분 후) 전에 카트와 갤리를 고정하고 좌석에 앉아 벨트를 매 주시기 바랍니다. 서비스 중 흔들리면 즉시 중단해 주세요.",
+    "turbEn": "Total flight time is 1 hour 59 minutes. Please start the service about 25 minutes after takeoff, as soon as conditions allow, and finish by about 1 hour 25 minutes after takeoff (about 35 minutes before landing). Turbulence should be light throughout, so the service should go smoothly, but please secure the carts and galley and be seated with seat belts fastened before descent begins (about 1 hour 40 minutes after takeoff). Please stop the service immediately if it gets bumpy."
+   },
+   "charts": [
+    {
+     "page": 10,
+     "title": "FL300/300hPa 바람·기온",
+     "valid": "18일 06Z",
+     "what": "순항 고도 바로 아래 층의 바람과 기온입니다.",
+     "see": "서해~보하이만에서 서풍 계열 맞바람 약 100KT, 기온 -44~-49°C. 경로 후반 동쪽으로는 서풍 순풍 -50°C 안팎.",
+     "apply": "맞바람이 강한 서쪽 구간은 연료·도착 시각 확인, 고도 변경 시 바람 차 5~10KT 수준."
+    },
+    {
+     "page": 11,
+     "title": "FL340/250hPa 바람·기온",
+     "valid": "18일 06Z",
+     "what": "FL330~FL340 층의 바람입니다.",
+     "see": "서쪽 구간 맞바람이 FL300보다 더 세고 -47~-52°C.",
+     "apply": "FL340 이상 상승은 맞바람이 늘어 비추천."
+    },
+    {
+     "page": 12,
+     "title": "FL390/200hPa 바람·기온",
+     "valid": "18일 06Z",
+     "what": "순항보다 높은 층 참고용입니다.",
+     "see": "FL390은 바람이 비슷하게 강하고 -50~-53°C. 경로 위 제트기류 코어는 FL350~FL400 부근.",
+     "apply": "FL390까지 올라갈 이유 없음."
+    },
+    {
+     "page": 13,
+     "title": "SIGWX FL250~FL630",
+     "valid": "18일 06Z",
+     "what": "중요 기상 현상 예상도입니다.",
+     "see": "경로 위에는 CB·난기류 표기 없음. 서쪽에 제트기류 화살표, 동쪽 일본 쪽에 제트 축·점선(FL400대) 있음.",
+     "apply": "경로가 SIGWX 구역을 피하므로 우회 불필요."
+    },
+    {
+     "page": 14,
+     "title": "난기류 ASC FL180~FL450",
+     "valid": "18일 05Z",
+     "what": "고도 FL180~FL450 사이 난기류 예상도입니다.",
+     "see": "경로 위는 거의 비어 있음. 보통(MOD, 하늘색)과 보통~강(노랑)은 동쪽(130°E 이동)과 한반도 남쪽에 집중. 빨강(SEV)도 동쪽 멀리 있음.",
+     "apply": "현 FL330 유지, 경로 변경 필요 없음."
+    },
+    {
+     "page": 15,
+     "title": "경로 단면도",
+     "valid": "18일 06Z",
+     "what": "경로를 따라 자른 세로 단면(바람·기온·VWS)입니다.",
+     "see": "순항 FL330 부근 바람이 일정. 초록 윤곽(VWS 6~9)은 DONVO~NODAL 아래쪽(FL100~FL150)에만 있어 상승·하강 때 잠깐 영향.",
+     "apply": "순항 고도에는 영향 없음. 상승 중 짧은 흔들림만 참고."
     }
    ]
   }
