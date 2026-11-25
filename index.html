@@ -928,7 +928,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
   <div id="fpl-global-alert" style="display:none;position:sticky;top:0;z-index:60;background:#b91c1c;color:#fff;font-weight:800;font-size:14px;text-align:center;padding:9px 12px;cursor:pointer;border-bottom:2px solid #fecaca"></div>
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.27 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.28 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목·운항 절차" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -4051,6 +4051,10 @@ input,select,textarea,button{font-size:max(1em,14px)}
     // 해설(한국어 요약)은 OFP를 올릴 때마다 mel-ko.json 에 추가 — 원문이 아니라 요약만 들어 있어 토큰 없이 읽음
     let melKo = {};
     fetch('mel-ko.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).then(j => { melKo = j || {}; try { renderMelCard(); } catch (e) { } }).catch(() => { });
+    // 운항 절차(OpsProc) 한국어 해설 — 478개, 원문 요약(참고용)
+    let melOpsKo = {};
+    fetch('mel-ops-ko.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).then(j => { melOpsKo = j || {}; try { renderMelCard(); msRefresh(); } catch (e) { } }).catch(() => { });
+    const opKoOf = no => { const o = melDB && melDB.ops && melDB.ops[no]; const k = o && o.alias ? o.alias : no; return melOpsKo[k] || ''; };
     let melExtra = {};
     fetch('mel-extra.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).then(j => { melExtra = j || {}; try { renderMelCard(); msRefresh(); } catch (e) { } }).catch(() => { });
     const opOf = no => { let o = melDB && melDB.ops && melDB.ops[no]; if (o && o.alias) o = melDB.ops[o.alias] || null; return o || null; };
@@ -4114,7 +4118,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
           const fits = v => !v.app || /\bALL\b/.test(v.app) || (reg && v.app.includes(reg));
           const mine = reg ? vs.filter(fits) : [], others = vs.filter(v => !mine.includes(v));
           const blk = v => `<div class="mt-1">${v.app ? appChip(v.app) : ''}${pre(v.text)}</div>`;
-          opHtml = `<div class="mt-2 rounded-md border border-rose-600/60 bg-rose-950/30 p-1.5"><div class="text-[13px] font-bold text-rose-200">🧑‍✈️ 운항 절차 원문 (OpsProc ${esc(x.no)})</div>
+          opHtml = opGloss(x.no) + `<div class="mt-2 rounded-md border border-rose-600/60 bg-rose-950/30 p-1.5"><div class="text-[13px] font-bold text-rose-200">🧑‍✈️ 운항 절차 원문 (OpsProc ${esc(x.no)})</div>
             ${(mine.length ? mine : vs).map(blk).join('')}
             ${mine.length && others.length ? `<details class="mt-1"><summary class="cursor-pointer select-none text-[12px] text-slate-300">다른 기체판 ${others.length}개 (${esc(reg)} 해당 없음)</summary>${others.map(blk).join('')}</details>` : ''}
             ${!L.op.vs ? '<div class="text-[11px] text-slate-500 mt-1">※ 기체별로 절차가 다를 수 있습니다 — 원본 MEL의 Applicable to 확인</div>' : ''}</div>`;
@@ -4138,7 +4142,8 @@ input,select,textarea,button{font-size:max(1em,14px)}
           ${x.kind === 'CDL' ? '<div class="text-[12px] text-slate-400 mt-1">CDL(외형 결함 목록) 항목입니다 — 성능 감소(무게·연료) 여부는 OFP·CDL 원문으로 확인하세요.</div>' : ''}
         </div>`;
       };
-      return { reg, RI, hl, pre, appChip, card };
+      const opGloss = no => { const g = opKoOf(no); return g ? `<div class="mt-2 text-[13px] leading-snug text-slate-100 rounded-md bg-sky-950/40 border border-sky-800/60 px-2 py-1.5"><span class="mr-1 px-1 py-0.5 rounded bg-sky-700 text-white text-[10px] font-bold align-middle">해설</span>${glossBody(g)}<div class="text-[11px] text-slate-400 mt-1">AI가 원문을 요약한 참고용 해설입니다 — 판단은 원문 기준입니다.</div></div>` : ''; };
+      return { reg, RI, hl, pre, appChip, card, opGloss };
     }
     function renderMelCard() {
       const box = $('mel-card'); if (!box) return;
@@ -4202,6 +4207,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
         <div class="mono text-[16px] font-bold text-white break-words">${esc(no)}</div><div class="text-[13px] font-bold text-sky-200">${esc(title)}${it && it.cond ? ' · ' + esc(it.cond) : ''}</div>
         <div class="text-[11.5px] text-slate-400">ATA ${esc(no.slice(0, 2))} ${esc(msAta(no.slice(0, 2)))}${vs.length > 1 ? ` · 기체별 ${vs.length}개 판` : ''}</div>
         ${it ? `<div class="mt-1"><button type="button" data-ms-ref="${esc(it === melDB.items[no] ? no : no.replace(/\([A-Z]\)$/, ''))}" class="px-2 py-1 rounded-md border border-sky-600/70 bg-sky-950/40 text-sky-100 text-[12px] font-bold">📄 MEL 항목 원문 보기 ↗</button></div>` : ''}
+        ${K.opGloss(no)}
         <div class="mt-2 rounded-md border border-rose-600/60 bg-rose-950/30 p-1.5">
           ${(mine.length ? mine : vs).map(blk).join('')}
           ${mine.length && others.length ? `<details class="mt-1"><summary class="cursor-pointer select-none text-[12px] text-slate-300">다른 기체판 ${others.length}개 (${esc(reg)} 해당 없음)</summary>${others.map(blk).join('')}</details>` : ''}
@@ -10018,7 +10024,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     })();
 
     // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
-    const APP_VERSION = '2.27';
+    const APP_VERSION = '2.28';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
