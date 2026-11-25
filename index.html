@@ -928,7 +928,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
   <div id="fpl-global-alert" style="display:none;position:sticky;top:0;z-index:60;background:#b91c1c;color:#fff;font-weight:800;font-size:14px;text-align:center;padding:9px 12px;cursor:pointer;border-bottom:2px solid #fecaca"></div>
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.25 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.26 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
         <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목·운항 절차" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
@@ -4053,10 +4053,11 @@ input,select,textarea,button{font-size:max(1em,14px)}
     fetch('mel-ko.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).then(j => { melKo = j || {}; try { renderMelCard(); } catch (e) { } }).catch(() => { });
     let melExtra = {};
     fetch('mel-extra.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).then(j => { melExtra = j || {}; try { renderMelCard(); msRefresh(); } catch (e) { } }).catch(() => { });
+    const opOf = no => { let o = melDB && melDB.ops && melDB.ops[no]; if (o && o.alias) o = melDB.ops[o.alias] || null; return o || null; };
     function melLookup(no) {
       if (!melDB) return null;
       const it = melDB.items[no] || melDB.items[no.replace(/\([A-Z]\)$/, '')]; if (!it) return null;
-      return { it, op: melDB.ops[no] || null, ko: melKo[no] || (melDB.ko || {})[no] || '' };
+      return { it, op: opOf(no), ko: melKo[no] || (melDB.ko || {})[no] || '' };
     }
     const melCabin = no => ((melDB && melDB.meta && melDB.meta.cabinAta) || ['25-2', '25-3', '25-4', '25-6', '33-2', '33-5', '35-', '38-', '44-']).some(a => no.startsWith(a));
     function melKit() {
@@ -4190,7 +4191,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
         <div class="mt-3 text-[13px] font-bold text-sky-200">📘 연결된 MEL 항목 ${itemNos.length ? itemNos.length + '건' : ''}</div>${items || '<div class="text-[12px] text-slate-400 mt-1">연결된 MEL 항목이 없습니다 (조건란에 항목 번호 없음).</div>'}`;
     }
     function msOpsDetail(no) {
-      const K = melKit(), op = melDB.ops[no], it = melDB.items[no] || melDB.items[no.replace(/\([A-Z]\)$/, '')];
+      const K = melKit(), op = opOf(no), it = melDB.items[no] || melDB.items[no.replace(/\([A-Z]\)$/, '')];
       if (!op) return '<div class="p-2 text-[13px] text-amber-200">운항 절차를 찾지 못했습니다.</div>';
       const reg = K.reg, vs = op.vs && op.vs.length ? op.vs : [{ app: '', text: op.text }];
       const fits = v => !v.app || /\bALL\b/.test(v.app) || (reg && v.app.includes(reg));
@@ -4233,7 +4234,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
           html = Object.keys(g).sort().map(a => `<details data-ms-ata="e${a}" ${ms.open['e' + a] ? 'open' : ''} class="mb-1"><summary class="cursor-pointer select-none px-2 py-1.5 rounded-md bg-slate-800 text-[13px] font-bold text-slate-100">ATA ${a} ${esc(msAta(a))} <span class="text-slate-400 font-normal">· ${g[a].length}</span></summary><div class="mt-1">${ms.open['e' + a] ? g[a].map(n => row(esc(n), '', `data-ms-ecam="${esc(n)}"`)).join('') : ''}</div></details>`).join('');
         }
       } else if (ms.tab === 'ops') {
-        const ops = melDB.ops || {}, it = melDB.items, ok = Object.keys(ops).sort();
+        const ops = melDB.ops || {}, it = melDB.items, ok = Object.keys(ops).filter(k => !ops[k].alias).sort();
         const ttl = k => ops[k].t || (it[k] && it[k].t) || '';
         const lab = k => `${esc(k)} ${esc(ttl(k))}${it[k] && it[k].cond ? ' · ' + esc(it[k].cond) : ''}`;
         if (q) {
@@ -10017,7 +10018,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     })();
 
     // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
-    const APP_VERSION = '2.25';
+    const APP_VERSION = '2.26';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
