@@ -928,9 +928,9 @@ input,select,textarea,button{font-size:max(1em,14px)}
   <div id="fpl-global-alert" style="display:none;position:sticky;top:0;z-index:60;background:#b91c1c;color:#fff;font-weight:800;font-size:14px;text-align:center;padding:9px 12px;cursor:pointer;border-bottom:2px solid #fecaca"></div>
   <header class="border-b border-slate-800 bg-slate-900/80 px-4 py-3">
     <div class="max-w-[1800px] mx-auto flex items-center gap-2">
-      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.24 ↻</button>
+      <h1 class="font-bold text-lg text-white">NOTAM Pro</h1><button type="button" id="app-ver" title="눌러서 최신 버전으로 업데이트" class="text-[10px] text-slate-400 font-mono-code px-1.5 py-0.5 rounded border border-slate-700 hover:text-white">v2.25 ↻</button>
       <span class="hdr-row ml-auto flex items-center gap-1.5">
-        <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
+        <button type="button" data-ms-open title="MEL 검색 — MEL ENTRIES·MEL 항목·운항 절차" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>MEL</button>
         <button type="button" data-ctc-open title="Cold Temperature 고도보정 계산 — FOM 4.4.2.2" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/></svg>Cold Temp</button>
         <button id="btn-hidden" type="button" title="FOM S13.1 위험물 검색 · 보조배터리 Wh 계산" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l9 16H3z"/><path d="M12 10v4.5M12 17.2v.1"/></svg>DG</button>
         <button id="btn-wind" type="button" title="바람 제한치 계산 · 활주로 상태(Braking Action) — FOM 4.5/5.8 · FCRM 1.17 · FCOM RCAM" class="hdr-btn" ><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5M3 12h16a2.5 2.5 0 1 1-2.5 2.5M3 16h8a2 2 0 1 1-2 2"/></svg>Wind</button>
@@ -4189,6 +4189,24 @@ input,select,textarea,button{font-size:max(1em,14px)}
       return `<div class="text-[15px] font-bold text-amber-200 mono break-words">${esc(name)}</div><div class="text-[11.5px] text-slate-400">ATA ${esc(X.ecam[ids[0]].ata)} ${esc(msAta(X.ecam[ids[0]].ata))}${ids.length > 1 ? ` · 기체별 ${ids.length}개 판` : ''}</div>${ents}
         <div class="mt-3 text-[13px] font-bold text-sky-200">📘 연결된 MEL 항목 ${itemNos.length ? itemNos.length + '건' : ''}</div>${items || '<div class="text-[12px] text-slate-400 mt-1">연결된 MEL 항목이 없습니다 (조건란에 항목 번호 없음).</div>'}`;
     }
+    function msOpsDetail(no) {
+      const K = melKit(), op = melDB.ops[no], it = melDB.items[no] || melDB.items[no.replace(/\([A-Z]\)$/, '')];
+      if (!op) return '<div class="p-2 text-[13px] text-amber-200">운항 절차를 찾지 못했습니다.</div>';
+      const reg = K.reg, vs = op.vs && op.vs.length ? op.vs : [{ app: '', text: op.text }];
+      const fits = v => !v.app || /\bALL\b/.test(v.app) || (reg && v.app.includes(reg));
+      const mine = reg ? vs.filter(fits) : [], others = vs.filter(v => !mine.includes(v));
+      const blk = v => `<div class="mt-1">${v.app ? K.appChip(v.app) : ''}${K.pre(v.text)}</div>`;
+      const title = op.t || (it && it.t) || '';
+      return `<div class="text-[11px] text-rose-300 font-bold">🧑‍✈️ MEL OPERATIONAL PROCEDURE</div>
+        <div class="mono text-[16px] font-bold text-white break-words">${esc(no)}</div><div class="text-[13px] font-bold text-sky-200">${esc(title)}${it && it.cond ? ' · ' + esc(it.cond) : ''}</div>
+        <div class="text-[11.5px] text-slate-400">ATA ${esc(no.slice(0, 2))} ${esc(msAta(no.slice(0, 2)))}${vs.length > 1 ? ` · 기체별 ${vs.length}개 판` : ''}</div>
+        ${it ? `<div class="mt-1"><button type="button" data-ms-ref="${esc(it === melDB.items[no] ? no : no.replace(/\([A-Z]\)$/, ''))}" class="px-2 py-1 rounded-md border border-sky-600/70 bg-sky-950/40 text-sky-100 text-[12px] font-bold">📄 MEL 항목 원문 보기 ↗</button></div>` : ''}
+        <div class="mt-2 rounded-md border border-rose-600/60 bg-rose-950/30 p-1.5">
+          ${(mine.length ? mine : vs).map(blk).join('')}
+          ${mine.length && others.length ? `<details class="mt-1"><summary class="cursor-pointer select-none text-[12px] text-slate-300">다른 기체판 ${others.length}개 (${esc(reg)} 해당 없음)</summary>${others.map(blk).join('')}</details>` : ''}
+        </div>
+        ${!op.vs ? '<div class="text-[11px] text-slate-500 mt-1">※ 기체별로 절차가 다를 수 있습니다 — 원본 MEL의 Applicable to 확인</div>' : ''}`;
+    }
     function msRender() {
       const body = $('ms-body'); if (!body) return;
       const X = msBuild(), K = melKit(), q = ms.q.trim().toLowerCase();
@@ -4197,9 +4215,10 @@ input,select,textarea,button{font-size:max(1em,14px)}
       document.querySelectorAll('[data-ms-tab]').forEach(b => { const on = b.dataset.msTab === ms.tab; b.style.background = on ? '#0369a1' : '#1e293b'; b.style.color = on ? '#fff' : '#cbd5e1'; });
       if (!melDB) { body.innerHTML = '<div class="p-3 text-[13px] text-amber-200">MEL 데이터가 없습니다. 2번 칸의 “📥 MEL 불러오기”로 먼저 불러오세요.</div>'; return; }
       if (ms.tab === 'ecam' && !X.ecam.length) { body.innerHTML = '<div class="p-3 text-[13px] text-amber-200 rounded-md border border-amber-600/60 bg-amber-950/30">이 기기에 저장된 MEL 데이터는 예전 버전이라 MEL ENTRIES(ECAM) 목록이 없습니다. 새 MEL 파일을 한 번만 불러오면 검색됩니다.<div class="mt-2"><button type="button" data-mel-load class="px-3 py-2 rounded-md bg-sky-600 text-white font-bold text-[13px]">📥 새 MEL 파일 불러오기</button></div><div class="text-[11.5px] text-slate-300 mt-2">파일: 대화로 보내드린 mel-new2.json (파일 앱에서 선택). 그 전에는 “MEL 항목” 탭으로 검색하세요.</div></div>'; return; }
+      if (ms.tab === 'ops' && !Object.keys(melDB.ops || {}).length) { body.innerHTML = '<div class="p-3 text-[13px] text-amber-200 rounded-md border border-amber-600/60 bg-amber-950/30">이 기기에 저장된 MEL 데이터에 운항 절차(Operational Procedures)가 없습니다. MEL을 새로 받으면 나옵니다.<div class="mt-2"><button type="button" data-mel-load class="px-3 py-2 rounded-md bg-sky-600 text-white font-bold text-[13px]">🔄 MEL 새로 받기</button></div></div>'; return; }
       if (ms.view) {
         const back = `<button type="button" data-ms-back class="mb-2 px-2 py-1 rounded-md border border-slate-600 text-[12px] text-slate-200">${ms.hist.length ? '← 이전 항목' : '← 목록으로'}</button>`;
-        body.innerHTML = back + (ms.view.type === 'ecam' ? msEcamDetail(ms.view.name) : K.card({ kind: 'MEL', no: ms.view.no })); body.scrollTop = 0; return;
+        body.innerHTML = back + (ms.view.type === 'ecam' ? msEcamDetail(ms.view.name) : ms.view.type === 'ops' ? msOpsDetail(ms.view.no) : K.card({ kind: 'MEL', no: ms.view.no })); body.scrollTop = 0; return;
       }
       const row = (a, b, attr) => `<button type="button" ${attr} class="w-full text-left px-2 py-1.5 rounded-md border border-slate-700 bg-slate-900/60 mb-1 flex items-center gap-2"><span class="mono text-[13px] text-white break-words">${a}</span><span class="text-[11.5px] text-slate-400 ml-auto text-right">${b}</span></button>`;
       let html = '';
@@ -4212,6 +4231,17 @@ input,select,textarea,button{font-size:max(1em,14px)}
         } else {
           const g = {}; names.forEach(n => { (g[ln(n).ata] = g[ln(n).ata] || []).push(n); });
           html = Object.keys(g).sort().map(a => `<details data-ms-ata="e${a}" ${ms.open['e' + a] ? 'open' : ''} class="mb-1"><summary class="cursor-pointer select-none px-2 py-1.5 rounded-md bg-slate-800 text-[13px] font-bold text-slate-100">ATA ${a} ${esc(msAta(a))} <span class="text-slate-400 font-normal">· ${g[a].length}</span></summary><div class="mt-1">${ms.open['e' + a] ? g[a].map(n => row(esc(n), '', `data-ms-ecam="${esc(n)}"`)).join('') : ''}</div></details>`).join('');
+        }
+      } else if (ms.tab === 'ops') {
+        const ops = melDB.ops || {}, it = melDB.items, ok = Object.keys(ops).sort();
+        const ttl = k => ops[k].t || (it[k] && it[k].t) || '';
+        const lab = k => `${esc(k)} ${esc(ttl(k))}${it[k] && it[k].cond ? ' · ' + esc(it[k].cond) : ''}`;
+        if (q) {
+          const hit = ok.filter(k => k.toLowerCase().includes(q) || ttl(k).toLowerCase().includes(q) || (ops[k].text || '').toLowerCase().includes(q) || (ops[k].vs || []).some(v => (v.text || '').toLowerCase().includes(q))).slice(0, 80);
+          html = `<div class="text-[11.5px] text-slate-400 mb-1">운항 절차 ${hit.length}건${hit.length === 80 ? ' (상위 80)' : ''}</div>` + hit.map(k => row(lab(k), '', `data-ms-ops="${esc(k)}"`)).join('');
+        } else {
+          const g = {}; ok.forEach(k => { (g[k.slice(0, 2)] = g[k.slice(0, 2)] || []).push(k); });
+          html = `<div class="text-[11.5px] text-slate-400 mb-1">MEL Operational Procedures ${ok.length}건 · ATA를 눌러 펼치세요</div>` + Object.keys(g).sort().map(a => `<details data-ms-ata="o${a}" ${ms.open['o' + a] ? 'open' : ''} class="mb-1"><summary class="cursor-pointer select-none px-2 py-1.5 rounded-md bg-slate-800 text-[13px] font-bold text-slate-100">ATA ${a} ${esc(msAta(a))} <span class="text-slate-400 font-normal">· ${g[a].length}</span></summary><div class="mt-1">${ms.open['o' + a] ? g[a].map(k => row(lab(k), '', `data-ms-ops="${esc(k)}"`)).join('') : ''}</div></details>`).join('');
         }
       } else {
         const keys = X.keys, it = melDB.items;
@@ -4232,8 +4262,8 @@ input,select,textarea,button{font-size:max(1em,14px)}
         ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:#0d1117;display:flex;flex-direction:column';
         ov.innerHTML = `<div style="padding:10px 12px;border-bottom:1px solid #1b232d;display:flex;flex-direction:column;gap:8px">
           <div style="display:flex;align-items:center;gap:8px"><b style="color:#7fa6cf;font-size:15px">🔍 MEL 검색</b><span id="ms-sub" style="font-size:11px;color:#94a3b8"></span><button type="button" data-mel-load style="margin-left:auto;padding:4px 8px;border-radius:8px;border:1px solid #0ea5e9;background:#0c4a6e;color:#e0f2fe;font-size:12px;font-weight:700">📥 MEL 파일</button><button type="button" data-ms-close style="color:#cbd5e1;font-size:18px;padding:0 6px">✕</button></div>
-          <input id="ms-q" type="search" placeholder="MEL ENTRIES(ECAM 제목) / MEL 번호·제목 검색 (예: PACK, 21-52, 연료)" style="width:100%;padding:9px 10px;border-radius:8px;background:#141a22;border:1px solid #2c3744;color:#fff;font-size:15px" autocomplete="off">
-          <div style="display:flex;gap:6px"><button type="button" data-ms-tab="ecam" style="flex:1;padding:7px;border-radius:8px;font-size:13px;font-weight:700">MEL ENTRIES</button><button type="button" data-ms-tab="item" style="flex:1;padding:7px;border-radius:8px;font-size:13px;font-weight:700">MEL 항목 (목차순)</button></div></div>
+          <input id="ms-q" type="search" placeholder="ECAM 제목 / MEL 번호·제목 / 운항 절차 검색 (예: PACK, 21-52, 연료)" style="width:100%;padding:9px 10px;border-radius:8px;background:#141a22;border:1px solid #2c3744;color:#fff;font-size:15px" autocomplete="off">
+          <div style="display:flex;gap:6px"><button type="button" data-ms-tab="ecam" style="flex:1;padding:7px;border-radius:8px;font-size:13px;font-weight:700">MEL ENTRIES</button><button type="button" data-ms-tab="item" style="flex:1;padding:7px;border-radius:8px;font-size:13px;font-weight:700">MEL 항목</button><button type="button" data-ms-tab="ops" style="flex:1;padding:7px;border-radius:8px;font-size:13px;font-weight:700">운항 절차</button></div></div>
           <div id="ms-body" style="flex:1;overflow:auto;padding:10px 12px;color:#e2e8f0"></div>`;
         document.body.appendChild(ov);
         $('ms-q').addEventListener('input', e => { ms.q = e.target.value; ms.view = null; msRender(); });
@@ -4244,11 +4274,12 @@ input,select,textarea,button{font-size:max(1em,14px)}
     }
     function msRefresh() { const ov = $('ms-overlay'); if (ov && ov.style.display !== 'none') msRender(); }
     document.addEventListener('click', e => {
-      const t = e.target.closest && e.target.closest('[data-ms-open],[data-ms-close],[data-ms-tab],[data-ms-ecam],[data-ms-item],[data-ms-back],[data-ms-ref]'); if (!t) return;
+      const t = e.target.closest && e.target.closest('[data-ms-open],[data-ms-close],[data-ms-tab],[data-ms-ecam],[data-ms-item],[data-ms-ops],[data-ms-back],[data-ms-ref]'); if (!t) return;
       if (t.dataset.msRef) { const ov = $('ms-overlay'), open = ov && ov.style.display !== 'none'; if (open && ms.view) ms.hist.push(ms.view); else ms.hist = []; msOpen({ type: 'item', no: t.dataset.msRef }, 'item'); return; }
       if (t.dataset.msOpen !== undefined) { ms.hist = []; msOpen(null); }
       else if (t.dataset.msClose !== undefined) $('ms-overlay').style.display = 'none';
       else if (t.dataset.msTab) { ms.tab = t.dataset.msTab; ms.view = null; ms.hist = []; msRender(); }
+      else if (t.dataset.msOps) msOpen({ type: 'ops', no: t.dataset.msOps }, 'ops');
       else if (t.dataset.msEcam) msOpen({ type: 'ecam', name: t.dataset.msEcam }, 'ecam');
       else if (t.dataset.msItem) { ms.view = { type: 'item', no: t.dataset.msItem }; msRender(); }
       else if (t.dataset.msBack !== undefined) { ms.view = ms.hist.length ? ms.hist.pop() : null; msRender(); }
@@ -9986,7 +10017,7 @@ input,select,textarea,button{font-size:max(1em,14px)}
     })();
 
     // 앱 버전: 업데이트(푸시)할 때마다 0.1씩 올림 (1.0 → 1.1 … 1.9 → 2.0). index.html 의 #app-ver 글자와 같이 바꿀 것
-    const APP_VERSION = '2.24';
+    const APP_VERSION = '2.25';
     // ===== 버전 표시 · 눌러서 강제 업데이트 (홈 화면 바로가기에서 예전 버전이 남을 때) =====
     $('app-ver').addEventListener('click', async () => {
       if (!navigator.onLine) { showToast('오프라인입니다 — 인터넷 연결 후 다시 눌러 주세요'); return; }
